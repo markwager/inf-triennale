@@ -1,0 +1,1 @@
+ls: impossibile accedere a '/pippo': File o directory non esistente

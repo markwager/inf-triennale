@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": ".."
+		},
+		{
+			"path": "../union_sorted"
+		},
+		{
+			"path": "../intersec_sorted"
+		}
+	],
+	"settings": {}
+}

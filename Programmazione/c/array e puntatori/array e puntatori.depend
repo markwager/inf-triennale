@@ -1,0 +1,6 @@
+# depslib dependency file v1.0
+1733156996 source:/home/valerio/Scrivania/c/array e puntatori/main.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+

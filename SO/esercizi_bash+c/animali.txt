@@ -1,0 +1,6 @@
+cane	mammifero	domestico
+gatto	mammifero	domestico
+leone	mammifero	selvatico
+aquila	uccello	selvatico
+pappagallo	uccello	domestico
+lucertola	rettile	selvatico

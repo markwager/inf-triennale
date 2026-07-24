@@ -1,0 +1,1 @@
+Qui dentro ci saranno teoria ed esercizi su vari comandi e strumenti in Linux trattati nelle lezioni di Reti 

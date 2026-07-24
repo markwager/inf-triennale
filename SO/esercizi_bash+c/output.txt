@@ -1,0 +1,17 @@
+cane
+cane
+gatto
+gatto
+leone
+leone
+leone
+orso
+Questo va in output.txt
+ep httpd
+Questo va in output.txt
+740  6400 pts/1    Ss   09:47   0:00 bash
+valerio     6618  0.0  0.0   7344  3328 pts/1    T    10:28   0:00 /bin/bash ./countdown.sh 120
+valerio     6619  0.0  0.0   7344  3584 pts/1    T    10:28   0:00 /bin/bash ./countdown.sh 100
+valerio     6620  0.0  0.0   7344  3328 pts/1    T    10:28   0:00 /bin/bash ./countdown.sh 150
+valerio    34896  0.0  0.0   6568  2304 pts/1    S+   21:09   0:00 grep bash
+Questo va in output.txt

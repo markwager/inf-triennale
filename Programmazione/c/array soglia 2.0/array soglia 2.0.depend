@@ -1,0 +1,6 @@
+# depslib dependency file v1.0
+1733842903 source:/home/valerio/Scrivania/c/array soglia 2.0/main.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+

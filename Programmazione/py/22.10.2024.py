@@ -1,0 +1,133 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Tue Oct 22 09:12:39 2024
+
+@author: valerio
+"""
+def trova_pos(a,v):
+    b=[]
+    i=0
+    #n=len(a)
+#input a una lista, v un valore
+#restituisce una lista di interi contenente le posizioni di v in a
+    while i<len(a): #O(1) perchè in realtà legge solo una volta la lunghezza della stringa
+        if a[i]==v: #O(1)
+            b.append(i)
+        i+=1
+    return b
+
+#complessità temporale: O(n) nel caso peggiore
+
+a=[1,2,3,4,5,6,9,7]
+print(trova_pos(a, 6))
+
+# In[]
+
+a=[1,2,3,4,5,6,9,7]
+n=len(a)
+
+for i in  range(n):#range va da 0 a n-1
+    print(a[i])
+    
+# In[nuova versione]
+
+def trova_pos(a,v):
+    b=[]
+    #n=len(a)
+#input a una lista, v un valore
+#restituisce una lista di interi contenente le posizioni di v in a
+    for i in range(len(a)): #O(1) perchè in realtà legge solo una volta la lunghezzza della stringa
+        if a[i]==v: #O(1)
+            b.append(i)
+    return b
+
+#complessità temporale: O(n) nel caso peggiore
+
+a=[1,2,3,4,5,6,9,7]
+print(trova_pos(a, 6))
+
+# In[]
+
+a='cia0 sono v4ll1'
+b=''
+
+#stampa a ed evidenziare con asterisco le vocali e con cancelletto le cifre decimali
+
+for x in a:
+    if(x in 'aeiouAEIOU'): #O(1)
+        b+='*'
+    elif(x>='0' and x<='9'): #O(1)
+        b+='#'
+    else:
+        b+=' ' #O(i)
+print(a)
+print(b)
+
+#costo temporale: O(n^2) perchè la formazione di una nuova string costa la sommatoria che parte da i=1 fino ad n.
+#quindi il costo è n(n+1)/2 ---> Theta(n^2)
+#algoritmo efficiente: riesce a minimizzare il numerori di operazioni elementari (o elementari)
+#op.aritm:scalari, op.assegnamneto:scalare, confronto tra booleani: scalari
+ 
+# In[versione più efficiente: non c'è la creazione di una stringa]
+
+
+a='cia0 sono v4ll1'
+b=[]
+
+#stampa a ed evidenziare con asterisco le vocali e con cancelletto le cifre decimali
+
+for x in a:
+    if(x in 'aeiouAEIOU'): #O(1)
+        b.append('*')
+    elif(x>='0' and x<='9'): #O(1)
+        b.append('#') #O(1)
+    else:
+        b.append(' ') #O(1)
+print(a)
+print(''.join(b))
+
+# In[]
+
+a=[1,2,3,4,5,6,9,7]
+#n=len(a)
+b=a #O(1) aliasing cioè b non è una copia di a, ma è un altro nome per lo stesso oggetto
+b[0]=100
+print(a)
+c=a[:]#O(n) perchè è una copia
+a[1]=200
+print(a)
+print(b)
+print(c)
+
+print(id(a))#funzione che identifica l'oggetto
+print(id(b))#il valore è ovviamente uguale a quello precedente
+print(id(c))
+
+# In[]
+
+def del_item(a,v):
+#a una lista, v è un valore, return None. Elimina da a le occorrenze di v
+    for i in range(len(a)):
+        if a[i]==v:
+            del a[i]
+    return None
+a=[1,2,3,4,6]
+print(del_item(a, 2))
+
+
+# In[]
+
+def del_item(a,v):
+#a una lista, v è un valore, return None. Elimina da a le occorrenze di v
+    i=0
+    n=len(a)
+    while i<n:
+        if a[i]==v:
+            del a[i] #O(n)
+            n-=1
+        else:
+            i+=1
+a=[1,2,3,4,6]
+print(del_item(a, 2))
+print(a)

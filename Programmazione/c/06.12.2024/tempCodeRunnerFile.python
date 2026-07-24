@@ -1,0 +1,15 @@
+"""
+Si scriva una funzione chiamata unique che prende in input una lista di numeri e restituisca una nuova lista contenente solo gli elementi di a che compaiono una sola volta
+"""
+
+def unique(L):
+    for i in range(len(L)):
+        count=0
+        for j in range(1,len(L)):
+            if L[i]==L[j]:
+                count+=1
+        if count==1:
+            return(L[i])
+
+L=[1,2,6,9,1,4,6,2,3,1,9,7,6]
+print(unique(L))
