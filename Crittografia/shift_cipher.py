@@ -20,7 +20,7 @@ def encryption(x,k):
     return y
 
 y=encryption(x,k)
-print(y)
+print("Testo cifrato:",y)
 
 def decryption(y, k):
     x=""
@@ -32,4 +32,4 @@ def decryption(y, k):
     return x
 
 ris=decryption(y,k)
-print(ris)
+print("Testo decifrato:",ris)
