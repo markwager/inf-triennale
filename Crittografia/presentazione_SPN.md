@@ -1,3 +1,8 @@
+---
+title: 'Presentazione Progetto: Crittosistema SPN, Crittoanalisi Differenziale e Attacco IA'
+
+---
+
 
 
 # Presentazione Progetto: Crittosistema SPN, Crittoanalisi Differenziale e Attacco IA
