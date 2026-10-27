@@ -334,19 +334,14 @@ Per estendere l'analisi da una singola S-box all'intero cifrario (es. sui primi 
 
 > [!example] Example 4.7 (Costruzione della Traccia Differenziale a 3 Round con $R_p = 27/1024$)
 > 
-> Costruiamo una traccia differenziale sui primi **3 round** dell'SPN dell'Example 4.1 che attiva in totale solo **4 S-box**: $S_3^1, S_4^1$ nel Round 1, $S_2^2$ nel Round 2, e $S_3^3$ nel Round 3 (Figura 4.5 del libro).
-> 
->   
+> Costruiamo la traccia differenziale sui primi **3 round** dell'SPN dell'Example 4.1 che attiva in totale solo **4 S-box**: **$S_2^1$** nel Round 1, **$S_3^2$** nel Round 2, e **$S_2^3, S_3^3$** nel Round 3:
 > 
 > 1. **Scelta del Differenziale del Plaintext ($x'$):**
+>    Scegliamo coppie di testi in chiaro $(x, x^*)$ aventi differenza iniziale:
+>    $$x' = u'^1 = \texttt{0000 1011 0000 0000}_2 = \mathbf{\texttt{0B00}_{16}}$$
 >     
->     Scegliamo coppie di testi in chiaro $(x, x^*)$ aventi differenza iniziale:
+>    
 >     
->       
->     
->     $$x' = u'^1 = \texttt{0000 1011 0000 0000}_2 = \mathbf{\texttt{0B00}_{16}}$$
->     
->     _(Nota: nel libro viene mostrato come esempio principale sulla Figura 4.5 la traccia che attiva $S_2^1$ al Round 1, $S_3^2$ al Round 2, e $S_2^3, S_3^3$ al Round 3 a partire da $x' = \texttt{0B00}_{16}$. Vediamo tutti i passaggi esatti bit per bit di questa traccia del libro!)_
 >     
 >       
 >     
