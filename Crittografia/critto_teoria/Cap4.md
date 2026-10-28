@@ -145,47 +145,16 @@ Tutti gli attacchi di crittoanalisi lineare e differenziale del Capitolo 4 vengo
 
 ## 4.4 Crittoanalisi Differenziale (Differential Cryptanalysis)
 
-Sviluppata da Eli Biham e Adi Shamir (1990), la **Crittoanalisi Differenziale** è un attacco di tipo **chosen-plaintext** (testo in chiaro scelto) contro i cifrari a blocchi iterati.
+Sviluppata da Eli Biham e Adi Shamir (1990), la **Crittoanalisi Differenziale** è un attacco di tipo **chosen-plaintext** (a testo in chiaro scelto) applicato ai cifrari a blocchi iterati.
 
+### 4.4.1 Definizione del Modello di Attacco (secondo Stinson) e Invarianza dello XOR
 
-### 4.4.1 Idea di Base e Invarianza dello XOR rispetto alla Chiave
+Nella crittoanalisi differenziale si assume che l'attaccante abbia un gran numero di tuple $(x, x^*, y, y^*)$, in cui il valore dello XOR tra i testi in chiaro $x' = x \oplus x^*$ è fisso e noto. Gli elementi di testo in chiaro ($x$ e $x^*$) vengono cifrati utilizzando la medesima chiave segreta $K$, producendo rispettivamente i testi cifrati $y$ e $y^*$.
 
-Invece di studiare come un singolo input $x$ si trasforma in $y$ (come fa la crittoanalisi lineare), la crittoanalisi differenziale prende **coppie di testi in chiaro** $(x, x^*)$ che presentano una differenza XOR fissa e nota:
-
-  
-
-$$x' = x \oplus x^*$$
-
-e analizza come questa differenza (detta **input XOR** o differenziale di input) si propaga attraverso i vari round del cifrario generando particolari differenze di output (**output XOR**).
-
-  
-
-- **Perché si usano le differenze XOR? (Il "Miracolo" dell'eliminazione delle sottochiavi):**
-    
-    Consideriamo lo step di Key Mixing in ingresso al round $r$, dove i due stati intermedi $w^{r-1}$ e $(w^{r-1})^*$ vengono sommati modulo 2 con la stessa sottochiave segreta $K^r$, producendo $u^r = w^{r-1} \oplus K^r$ e $(u^r)^* = (w^{r-1})^* \oplus K^r$. Calcoliamo la differenza XOR tra i due ingressi alle S-box:
-    
-      
-    
-    $$u'^r = u^r \oplus (u^r)^* = (w^{r-1} \oplus K^r) \oplus ((w^{r-1})^* \oplus K^r) = w^{r-1} \oplus (w^{r-1})^* \oplus (K^r \oplus K^r) = w'^{r-1}$$
-    
-    **La sottochiave $K^r$ sparisce completamente!** Lo XOR con la sottochiave non altera minimamente la differenza tra i due stati.
-    
-      
-    
-- **E la permutazione $\pi_P$?**
-    
-    Essendo un semplice riordino lineare dei fili, la permutazione $\pi_P$ si limita a spostare di posizione i bit del differenziale in modo completamente deterministico (con probabilità $1$):
-    
-      
-    
-    $$w'^r = \pi_P(v'^r)$$
-    
-- **Dove nasce l'incertezza probabilistica?**
-    
-    Le **S-box** sono l'unico componente non lineare del cifrario: per una S-box non vale $\pi_S(u \oplus u^*) = \pi_S(u) \oplus \pi_S(u^*)$. Tuttavia, la distribuzione delle differenze di output $v' = \pi_S(u) \oplus \pi_S(u^*)$ a fronte di una data differenza di input $u' = u \oplus u^*$ **non è uniforme**, ma presenta forti picchi statistici sfruttabili dall'attaccante!
-    
-      
-    
+Per ciascuna di queste tuple, l'attaccante procede come segue:
+1. **Decifratura parziale dell'ultimo round:** Si inizia a decifrare a ritroso i testi cifrati $y$ e $y^*$ (limitatamente all'ultimo round del cifrario) provando tutte le possibili **chiavi candidate** (*candidate keys*) per le S-box attive dell'ultimo round.
+2. **Verifica della differenza sullo stato intermedio e incremento dei contatori:** Per ciascuna chiave candidata, si calcolano i valori di determinati bit dello stato intermedio (l'ingresso $u^{N_r}$ alle S-box dell'ultimo round) e si verifica se il loro XOR ($u'^{N_r} = u^{N_r} \oplus (u^{N_r})^*$) coincide con un valore specifico, ovvero il valore più probabile previsto dalla traccia differenziale per il dato XOR di input $x'$. Ogni volta che tale condizione si verifica, si incrementa di $1$ un contatore associato a quella specifica chiave candidata.
+3. **Individuazione della sottochiave corretta:** Al termine del processo su tutte le tuple, ci si aspetta che la chiave candidata che ha accumulato il conteggio di frequenza più elevato contenga i valori corretti per i bit della sottochiave dell'ultimo round.
 
 ### 4.4.2 Differenziali delle S-box, Tabella $N_D$ e Rapporto di Propagazione ($R_p$)
 
@@ -317,7 +286,7 @@ Analizziamo formalmente una singola S-box $\pi_S : \{0, 1\}^\ell \to \{0, 1\}^\e
 
 ### 4.4.3 Tracce Differenziali (Differential Trails) su Più Round
 
-Per estendere l'analisi da una singola S-box all'intero cifrario (es. sui primi $N_r - 1$ round), **concateniamo le differenze di input e output delle S-box attive** (perchè sono le uniche che hanno un'influenza probabilistica) round dopo round in modo che **l'uscita permutata del round $r$**, cioè $w'^r = \pi_P(v'^r)$, **coincida esattamente con l'ingresso $u'^{r+1}$ del round $r+1$**. Questa **sequenza concatenata di differenziali** si chiama **traccia differenziale** (_differential trail_ o _characteristic_).
+Per estendere l'analisi da una singola S-box all'intero cifrario (es. sui primi $N_r - 1$ round), **concateniamo i rapporti di propagazione di modo che le differenze di input e output delle S-box attive** (perchè sono le uniche che hanno un'influenza probabilistica) round dopo round in modo che **l'uscita permutata del round $r$**, cioè $w'^r = \pi_P(v'^r)$, **coincida esattamente con l'ingresso $u'^{r+1}$ del round $r+1$**. Questa **sequenza concatenata di differenziali** si chiama **traccia differenziale** (_differential trail_ o _characteristic_).
 
   
 
