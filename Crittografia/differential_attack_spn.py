@@ -1,3 +1,4 @@
+
 import random
 
 # COSTANTI E IMPOSTAZIONI BASE
@@ -299,3 +300,65 @@ def punto_c_attacco(probabilita_traccia):
         print("Risultato: Attacco Differenziale Riuscito.")
     else:
         print("Risultato: Attacco Fallito.")
+
+# MENU INTERATTIVO PRINCIPALE
+def main():
+    while True:
+        print("\n==================================================")
+        print("  CRITTOGRAFIA SPN - MENU PRINCIPALE")
+        print("==================================================")
+        print("1. Cifra un messaggio")
+        print("2. Decifra un messaggio")
+        print("3. Esegui Crittoanalisi (Es. 4.16 - Punti a, b, c)")
+        print("0. Esci")
+        
+        scelta = input("Scegli un'opzione: ")
+        
+        if scelta == "0":
+            print("Chiusura del programma.")
+            break
+            
+        elif scelta == "1":
+            print("\n--- CIFRATURA ---")
+            chiave_str = input("Inserisci la chiave maestra a 80 bit (es. 0x1234567890ABCDEF1234): ")
+            try:
+                chiavi = key_from_hex(chiave_str)
+                messaggio = input("Inserisci il messaggio in chiaro da cifrare: ")
+                blocchi_cifrati = encrypt_message(messaggio, chiavi)
+                esadecimale = "".join(format(b, "04X") for b in blocchi_cifrati)
+                binario = "".join(format(b, "016b") for b in blocchi_cifrati)
+                print("Messaggio cifrato in esadecimale: " + esadecimale)
+                print("Messaggio cifrato in binario: " + binario)
+            except ValueError as e:
+                print("Errore: " + str(e))
+                
+        elif scelta == "2":
+            print("\n--- DECIFRATURA ---")
+            chiave_str = input("Inserisci la chiave maestra a 80 bit (es. 0x1234567890ABCDEF1234): ")
+            try:
+                chiavi = key_from_hex(chiave_str)
+                cifrato_str = input("Inserisci il testo cifrato in esadecimale: ")
+                cifrato_str = cifrato_str.replace(" ", "").replace("\n", "")
+                
+                if len(cifrato_str) % 4 != 0:
+                    print("Errore: La stringa esadecimale deve avere una lunghezza multipla di 4.")
+                    continue
+                    
+                blocchi_cifrati = [int(cifrato_str[i:i+4], 16) for i in range(0, len(cifrato_str), 4)]
+                binario = "".join(format(b, "016b") for b in blocchi_cifrati)
+                print("Testo cifrato inserito in binario: " + binario)
+                
+                msg_decifrato = decrypt_message(blocchi_cifrati, chiavi)
+                print("Messaggio decifrato: " + msg_decifrato)
+            except ValueError as e:
+                print("Errore: " + str(e))
+                
+        elif scelta == "3":
+            tabella = punto_a_ddt()
+            prob = punto_b_traccia(tabella)
+            punto_c_attacco(prob)
+            
+        else:
+            print("Opzione non valida. Riprova.")
+
+main()
