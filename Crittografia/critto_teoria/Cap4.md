@@ -1041,11 +1041,11 @@ _(Se il messaggio originale non ha lunghezza multipla esatta di $n$ bit, prima d
 
 #### Proprietà e Vulnerabilità Critica di ECB
 
-- **Pro:** È completamente **parallelizzabile** sia in cifratura che in decifratura, e un errore di trasmissione su $y_j$ corrompe solo il blocco $x_j$.
+- **Pro:** È completamente **parallelizzabile** (cifratura e decifratura simultanea di più blocchi) sia in cifratura che in decifratura, e un errore di trasmissione su $y_j$ corrompe solo il blocco $x_j$.
     
       
     
-- **Contro (Perché NON va mai usato):** È **deterministico** a livello di blocco. Se due blocchi di testo in chiaro sono identici ($x_i = x_j$), producono esattamente **lo stesso blocco di testo cifrato** ($y_i = y_j$).
+- **Contro (Perché NON va mai usato):** Se due blocchi di testo in chiaro sono identici ($x_i = x_j$), producono esattamente **lo stesso blocco di testo cifrato** ($y_i = y_j$).
     
       
     - _Conseguenza pratica:_ Non nasconde i pattern dei dati! Cifrando ad esempio un'immagine bitmap in modalità ECB, le aree di colore uniforme producono blocchi cifrati identici e la sagoma dell'immagine rimane perfettamente visibile a occhio nudo a Oscar; inoltre un attaccante attivo può riordinare, duplicare o sostituire singoli blocchi cifrati (_cut-and-paste attack_) senza che Bob se ne accorga.
@@ -1159,18 +1159,18 @@ Sia $\text{ctr} \in \{0, 1\}^n$ un valore iniziale scelto (spesso composto da un
 
 ### Tabella di Confronto Rapido: ECB vs CBC vs CTR
 
-|**Caratteristica**|**ECB**|**CBC**|**CTR**|
-|---|---|---|---|
-|**Tipo di schema**|Block Cipher puro|Block Cipher incatenato|Stream Cipher sincrono|
-|**Nasconde i pattern ($x_i = x_j$)?**|❌ **NO** ($y_i = y_j$)|✅ Sì (grazie a $IV$ e chaining)|✅ Sì (grazie al contatore $T_j$)|
-|**Cifratura parallelizzabile?**|✅ Sì|❌ **NO** (sequenziale)|✅ **Sì** (100% + precomputabile)|
-|**Decifratura parallelizzabile?**|✅ Sì|✅ **Sì**|✅ **Sì** (100% + precomputabile)|
-|**Richiede funzione inversa $d_K$?**|Sì|Sì|❌ **NO** (usa solo $e_K$!)|
-|**Richiede Padding?**|Sì|Sì (vulnerabile a Padding Oracle!)|❌ **NO**|
+| **Caratteristica**                    | **ECB**                | **CBC**                            | **CTR**                          |     |     |
+| ------------------------------------- | ---------------------- | ---------------------------------- | -------------------------------- | --- | --- |
+| **Tipo di schema**                    | Block Cipher puro      | Block Cipher incatenato            | Stream Cipher sincrono           |     |     |
+| **Nasconde i pattern ($x_i = x_j$)?** | ❌ **NO** ($y_i = y_j$) | ✅ Sì (grazie a $IV$ e chaining)    | ✅ Sì (grazie al contatore $T_j$) |     |     |
+| **Cifratura parallelizzabile?**       | ✅ Sì                   | ❌ **NO** (sequenziale)             | ✅ **Sì** (100% + precomputabile) |     |     |
+| **Decifratura parallelizzabile?**     | ✅ Sì                   | ✅ **Sì**                           | ✅ **Sì** (100% + precomputabile) |     |     |
+| **Richiede funzione inversa $d_K$?**  | Sì                     | Sì                                 | ❌ **NO** (usa solo $e_K$!)       |     |     |
+| **Richiede Padding?**                 | Sì                     | Sì (vulnerabile a Padding Oracle!) | ❌ **NO**                         |     |     |
 
 ## 4.7.1 Padding Oracle Attack sulla Modalità CBC
 
-Scoperto da **Serge Vaudenay nel 2002**, il **Padding Oracle Attack** è uno degli attacchi pratici più devastanti della crittografia moderna (ha colpito protocolli reali come SSL/TLS, IPsec e WTLS). Dimostra come un attaccante (Oscar), senza conoscere la chiave segreta $K$, possa **decifrare completamente qualsiasi blocco cifrato in modalità CBC** sfruttando semplicemente il messaggio di errore (`"Padding valido"` vs `"Errore di padding"`) restituito da un server!
+Scoperto da **Serge Vaudenay nel 2002**, il **Padding Oracle Attack** è uno degli attacchi pratici più devastanti della crittografia moderna. Dimostra come un attaccante (Oscar), senza conoscere la chiave segreta $K$, possa **decifrare completamente qualsiasi blocco cifrato in modalità CBC** sfruttando semplicemente il messaggio di errore (`"Padding valido"` vs `"Errore di padding"`) restituito da un server!
 
   
 
@@ -1184,7 +1184,7 @@ Supponiamo che il cifrario operi su blocchi di **$B$ byte** (es. $B = 16$ byte p
     
       
     
-2. Si aggiungono in coda esattamente **$b$ byte tutti uguali al valore numerico $b$** (scritto in esadecimale):
+2. Si aggiungono in coda esattamente **$b$ byte di valore $b$** (scritto in esadecimale):
     
       
     - Se manca **1 byte** ($b=1$): il blocco deve terminare con **`01`**.
@@ -1214,7 +1214,7 @@ Quando il server (Bob) riceve un ciphertext in modalità CBC, lo decifra e contr
 
 ### B. Il Modello dell'Attacco: Cos'è il "Padding Oracle"?
 
-Supponiamo che esista un server (**Padding Oracle**) a cui Oscar può inviare qualsiasi coppia di blocchi cifrati $(y_0, y_1)$ in modalità CBC (un attacco di tipo _chosen-ciphertext_ adattivo). Il server decifra $(y_0, y_1)$ con la sua chiave segreta $K$ calcolando:
+Supponiamo che esista un oracolo (**Padding Oracle**) a cui Oscar può inviare qualsiasi coppia di blocchi cifrati $(y_0, y_1)$ in modalità CBC (un attacco di tipo _chosen-ciphertext_ adattivo). Oracolo decifra $(y_0, y_1)$ con la sua chiave segreta $K$ calcolando:
 
   
 
@@ -1233,7 +1233,7 @@ e controlla se $x_1$ termina con un padding PKCS #7 valido:
       
     
 
-Il server **non rivela mai il testo decifrato**, ma quel singolo bit di risposta (`VALID` / `INVALID`) basta a Oscar per decifrare l'intero blocco $x_1$ byte per byte senza conoscere $K$!
+L'oracolo **non rivela mai il testo decifrato**, ma quel singolo bit di risposta (`VALID` / `INVALID`) basta a Oscar per decifrare l'intero blocco $x_1$ byte per byte senza conoscere $K$!
 
   
 
@@ -1257,13 +1257,13 @@ Oscar costruisce un blocco modificato $w = (r_1, r_2, \dots, r_{B-1}, i)$ in cui
 
   
 
-1. Il server decifra $y_1$ ottenendo il blocco in chiaro modificato:
+1. Oracolo decifra $y_1$ ottenendo il blocco in chiaro modificato:
     
       
     
     $$x'_1 = d_K(y_1) \oplus w$$
     
-2. Guardiamo cosa succede all'**ultimo byte** $x'_{1,B}$ di questo blocco decifrato dal server:
+1. Guardiamo cosa succede all'**ultimo byte** $x'_{1,B}$ di questo blocco decifrato dall'oracolo:
     
     Poiché $d_K(y_1)_B = x_{1,B} \oplus y_{0,B}$, sostituendo otteniamo l'equazione fondamentale dell'attacco:
     
@@ -1271,13 +1271,13 @@ Oscar costruisce un blocco modificato $w = (r_1, r_2, \dots, r_{B-1}, i)$ in cui
     
     $$x'_{1,B} = d_K(y_1)_B \oplus i = x_{1,B} \oplus y_{0,B} \oplus i$$
     
-3. Al variare di $i \in \{0, 1, \dots, 255\}$, il byte $x'_{1,B}$ assume tutti i 256 valori possibili esattamente una volta!
+2. Al variare di $i \in \{0, 1, \dots, 255\}$, il byte $x'_{1,B}$ assume tutti i 256 valori possibili esattamente una volta!
     
-    Quando il tentativo $i$ scelto da Oscar fa sì che l'ultimo byte diventi esattamente **`01`** ($x'_{1,B} = \texttt{01}_{16}$), il server vede un blocco che termina con `01` e risponde **`VALID`**!
+    Quando il tentativo $i$ scelto da Oscar fa sì che l'ultimo byte diventi esattamente **`01`** ($x'_{1,B} = \texttt{01}_{16}$), l'oracolo vede un blocco che termina con `01` e risponde **`VALID`**!
     
       
     
-4. Non appena il server risponde `VALID` per un certo valore $i$, Oscar sa che:
+3. Non appena il server risponde `VALID` per un certo valore $i$, Oscar sa che:
     
       
     
@@ -1351,7 +1351,7 @@ Per trovare il byte $x_{1,B-k+1}$:
     
     $$w_j = y_{0,j} \oplus x_{1,j} \oplus k$$
     
-    (così gli ultimi $k-1$ byte decifrati dal server valgono già tutti $k$).
+    (così gli ultimi $k-1$ byte decifrati dall'oracolo valgono già tutti $k$).
     
       
     
@@ -1435,475 +1435,315 @@ Per trovare il byte $x_{1,B-k+1}$:
 >Ecco la sezione **4.8 Stream Ciphers** (dall'introduzione fino a tutto il paragrafo **4.8.1**, escludendo 4.8.2 e 4.8.3), strutturata e formattata nello stesso identico stile del tuo file `Cap4.md` così da poterla incollare direttamente in coda ai tuoi appunti.
 
 
-## 4.8 Stream Ciphers (Cifrari a Flusso)
-
-A differenza dei cifrari a blocchi (che dividono il messaggio in blocchi di lunghezza fissa cifrandone uno alla volta con la stessa chiave $K$), uno **Stream Cipher** utilizza la chiave segreta $K$ per generare una sequenza di bit chiamata **keystream** (flusso di chiave) $z_1 z_2 \dots$ della stessa lunghezza del plaintext, cifrando e decifrando il messaggio un bit alla volta tramite l'operazione di **XOR ($\oplus$)**:
+Ecco la riscrittura completa della sezione **4.8 Stream Ciphers** e della sottosezione **4.8.1 Correlation Attack on a Combination Generator**, redatta seguendo **esclusivamente** la terminologia, le definizioni, i simboli ($L_1, L_2, L_3, L$, ecc.) e gli esempi (incluso l'**Example 4.5** con la **Table 4.6**) presenti nel libro di Stinson (_Cryptography: Theory and Practice_).
 
   
 
-$$\text{Cifratura: } y_i = x_i \oplus z_i \qquad \qquad \text{Decifratura: } x_i = y_i \oplus z_i$$
-
-Questo approccio nasce per superare il limite pratico del _One-Time Pad_: anziché richiedere una chiave casuale lunga quanto l'intero messaggio, uno stream cipher espande una chiave segreta $K$ corta in una lunga sequenza di bit (la keystream) dall'aspetto pseudocasuale.
+Sono stati rimossi tutti i termini esterni non usati in questa sezione dal libro (come _seed_, _Geffe generator_, _multiplexer_, _correlation-immune_, _ciclo di clock_, _polinomio primitivo_, ecc.).
 
   
 
-### Richiamo: Stream Cipher Sincroni e Limite degli LFSR Lineari
-
-Nella Sezione 2.1.7 abbiamo definito formalmente uno **Stream Cipher sincrono** come un sistema in cui la keystream $z_1 z_2 \dots$ viene generata a partire dalla sola chiave $K$ (tramite un generatore $g$), in modo completamente indipendente dal testo in chiaro.
+  
 
   
 
-Il metodo più semplice ed efficiente in hardware per generare una lunga keystream binaria a partire da una chiave corta di $m$ bit consiste nell'utilizzare un **LFSR (Linear Feedback Shift Register)** a $m$ stadi (introdotto nel Capitolo 2):
+## 4.8 Stream Ciphers
 
   
 
-- Lo stato iniziale del registro contiene i bit della chiave segreta $K = (k_1, k_2, \dots, k_m)$.
-    
-      
-    
-- Ad ogni ciclo di clock, i bit successivi della keystream vengono calcolati tramite una **relazione di ricorrenza lineare** di grado $m$ su $\mathbb{Z}_2$:
-    
-      
-    
-    $$z_{i+m} = \left( \sum_{j=0}^{m-1} c_j z_{i+j} \right) \bmod 2$$
-    
-    (Se il polinomio di feedback associato è primitivo, la sequenza prodotta ha periodo massimo pari a $2^m - 1$).
-    
-      
-    
-- **Perché un singolo LFSR NON è sicuro? (Vulnerabilità alla Crittoanalisi Known-Plaintext):** Come visto nella Sezione 2.2.5 (Example 2.14), un singolo LFSR è **completamente lineare**. Se l'attaccante (Oscar) conosce appena **$2m$ bit consecutivi di plaintext** $x_1, \dots, x_{2m}$ e i corrispondenti bit di ciphertext $y_1, \dots, y_{2m}$, può ricavare immediatamente i primi $2m$ bit della keystream facendo lo XOR ($z_i = x_i \oplus y_i$) e impostare un sistema lineare di $m$ equazioni in $m$ incognite, invertendo una matrice $m \times m$ di bit della keystream per trovare tutti i coefficienti segreti dell'LFSR e ricostruire l'intera sequenza futura:
-    
-      
-    
-    $$\begin{pmatrix} c_0 \\ c_1 \\ \vdots \\ c_{m-1} \end{pmatrix} = \begin{pmatrix} z_1 & z_2 & \dots & z_m \\ z_2 & z_3 & \dots & z_{m+1} \\ \vdots & \vdots & \ddots & \vdots \\ z_m & z_{m+1} & \dots & z_{2m-1} \end{pmatrix}^{-1} \begin{pmatrix} z_{m+1} \\ z_{m+2} \\ \vdots \\ z_{2m} \end{pmatrix} \bmod 2$$
-    
+  
 
-### I 3 Metodi di Progettazione per Introdurre Non-Linearità negli LFSR
-
-Poiché gli LFSR sono velocissimi in hardware e producono sequenze con ottime proprietà statistiche e periodi molto lunghi, i progettisti di stream cipher non li hanno abbandonati, ma hanno cercato modi per **distruggere la linearità** dell'LFSR aggiungendo componenti **non lineari**.
+Abbiamo introdotto gli **stream ciphers** nella Sezione 2.1.7, dove abbiamo menzionato l'uso di un **linear feedback shift register (LFSR)** come possibile tecnica per generare un **keystream**. Tuttavia, un singolo LFSR non produce uno stream cipher sicuro, come mostrato nella Sezione 2.2.5 (poiché tutte le operazioni sono lineari, è vulnerabile a un **known-plaintext attack** risolvendo un sistema di equazioni lineari).
 
   
 
-Nell'introduzione della Sezione 4.8 vengono presentati i **tre schemi classici di generatori basati su LFSR**:
+Nonostante ciò, l'idea di utilizzare gli LFSR per costruire stream ciphers rimane molto attraente grazie all'efficienza degli LFSR e al fatto che possono avere un **large period** (periodo molto lungo). Sono state quindi proposte varie tecniche per "combinare" gli LFSR in modo da ottenere uno stream cipher efficiente e sicuro. Invece di prendere direttamente l'output di un LFSR come keystream, si produce un keystream a partire da un certo numero (uno o più di uno) di LFSR utilizzando un'opportuna **boolean function** (funzione booleana) o qualche altro meccanismo.
 
   
 
-1. **Combination Generator (Generatore a Combinazione):**
+Tre dei metodi più comuni per fare questo sono i seguenti:
+
+  
+
+- **combination generator**,
     
       
-    - Si utilizzano **$r$ diversi LFSR** in parallelo (aventi lunghezze $m_1, m_2, \dots, m_r$, solitamente scelte a due a due coprime per massimizzare il periodo complessivo).
-        
-          
-        
-    - Indichiamo con $z_1^j, z_2^j, \dots$ la sequenza prodotta dal $j$-esimo LFSR ($1 \le j \le r$).
-        
-          
-        
-    - Ad ogni istante $i \ge 1$, i bit in uscita dai singoli LFSR vengono combinati attraverso una funzione booleana **non lineare** $f : (\mathbb{Z}_2)^r \to \mathbb{Z}_2$, chiamata **combining function** (funzione di combinazione), per produrre il bit finale della keystream:
-        
-          
-        
-        $$z_i = f\left(z_i^1, z_i^2, \dots, z_i^r\right)$$
-        
-    - La chiave segreta del sistema è costituita dagli stati iniziali (i _seed_) di tutti gli $r$ LFSR (mentre i polinomi di feedback dei singoli LFSR e la funzione $f$ sono pubblici).
-        
-          
-        
-2. **Filter Generator (Generatore a Filtro):**
+    
+- **filter generator**, e
     
       
-    - Si utilizza **un singolo LFSR** composto da $m$ stadi.
-        
-          
-        
-    - Invece di usare direttamente l'uscita lineare del registro come keystream, a ogni passo $i$ si applica una funzione booleana non lineare $f : (\mathbb{Z}_2)^m \to \mathbb{Z}_2$ (detta **filtering function**, funzione di filtraggio) all'intero stato corrente di $m$ bit dell'LFSR (o a un sottoinsieme dei suoi stadi):
-        
-          
-        
-        $$z_i = f(z_i, z_{i+1}, \dots, z_{i+m-1})$$
-        
-3. **Shrinking Generator (Generatore a Contrazione):**
+    
+- **shrinking generator**.
     
       
-    - Si utilizzano **due LFSR** (chiamiamoli $\text{LFSR}_1$, che genera la sequenza $z_1^1, z_2^1, \dots$, e $\text{LFSR}_2$, che genera la sequenza di controllo $z_1^2, z_2^2, \dots$).
+    
+
+Ecco le descrizioni di questi generatori così come presentate nel libro:
+
+  
+
+1. **Combination generator:** In un **combination generator**, abbiamo un certo numero, diciamo $r$, di LFSR. Supponiamo che il $j$-esimo LFSR generi il keystream $z_1^j, z_2^j, \dots$. L'idea di base è usare una **boolean function** $f : (\mathbb{Z}_2)^r \to \mathbb{Z}_2$ per combinare gli $r$ keystreams in un nuovo keystream $z_1 z_2 \dots$, tramite la regola:
+    
+      
+    
+    $$z_i = f(z_i^1, \dots, z_i^r), \qquad i = 1, 2, \dots$$
+    
+    La funzione $f$ è chiamata **combining function**. Si noti che è desiderabile che gli $r$ LFSR abbiano periodi che siano **pairwise relatively prime** (coprimi a due a due): questo assicurerà che l'input alla _combining function_ abbia il periodo più lungo possibile (ovvero, il prodotto dei periodi degli $r$ LFSR).
+    
+      
+    
+2. **Filter generator:** In un **filter generator**, utilizziamo un singolo LFSR, avente diciamo $m$ **stages** (stadi). Ma invece di prendere come bit del keystream i bit che vengono prodotti dall'LFSR, applichiamo una **boolean function** (avente $m$ input, chiamata in seguito anche **filtering function** o **filter function**) all'intero **state** (stato) di $m$ bit dell'LFSR. L'output della funzione booleana in qualsiasi istante dato costituisce un bit del keystream.
+    
+      
+    
+3. **Shrinking generator:** In uno **shrinking generator**, utilizziamo due LFSR. I bit del keystream sono ottenuti dal primo LFSR. Tuttavia, alcuni di questi bit vengono scartati (**discarded**), a seconda dell'output del secondo LFSR:
+    
+      
+    - Se il secondo LFSR dà in output uno `0`, allora l'output del primo LFSR viene scartato (_discarded_);
         
           
         
-    - Ad ogni ciclo di clock entrambi i registri avanzano di un passo, ma il bit di $\text{LFSR}_2$ viene usato per decidere se tenere o scartare il bit di $\text{LFSR}_1$:
-        
-          
-        - Se **$z_i^2 = 1$**, il bit $z_i^1$ viene **emesso in uscita** come prossimo bit della keystream.
-            
-              
-            
-        - Se **$z_i^2 = 0$**, il bit $z_i^1$ viene **scartato** (non viene emesso nulla in quel ciclo).
-            
-              
-            
-    - In questo modo la sequenza del primo LFSR viene "contratta" (_shrunk_) in modo irregolare, distruggendo la sincronia lineare.
+    - Se il secondo LFSR dà in output un `1`, allora l'output del primo LFSR diventa il successivo bit del keystream.
         
           
         
 
-> [!example] Esempio Illustrativo dei 3 Generatori (Combination, Filter e Shrinking)
-> 
-> Vediamo con un piccolo esempio numerico come lavorano i tre schemi a confronto:
-> 
->   
-> 
-> - **Caso A – Combination Generator ($r = 3$ LFSR):**
->     
->     Supponiamo che al passo $i=1, 2, 3, 4$ i tre LFSR producano le sequenze:
->     
->       
->     - $\text{LFSR}_1$: `1, 0, 1, 1`
->         
->           
->         
->     - $\text{LFSR}_2$: `0, 1, 1, 0`
->         
->           
->         
->     - $\text{LFSR}_3$: `1, 1, 0, 0` Usando come _combining function_ $f(a, b, c) = (a \wedge b) \oplus (\neg a \wedge c)$, otteniamo bit per bit:
->         
->           
->         
->     - $i=1$: $f(1, 0, 1) = (1 \cdot 0) \oplus (0 \cdot 1) = \mathbf{0}$
->         
->           
->         
->     - $i=2$: $f(0, 1, 1) = (0 \cdot 1) \oplus (1 \cdot 1) = \mathbf{1}$
->         
->           
->         
->     - $i=3$: $f(1, 1, 0) = (1 \cdot 1) \oplus (0 \cdot 0) = \mathbf{1}$
->         
->           
->         
->     - $i=4$: $f(1, 0, 0) = (1 \cdot 0) \oplus (0 \cdot 0) = \mathbf{0}$
->         
->         La keystream emessa è quindi **`0110`**.
->         
->           
->         
-> - **Caso B – Filter Generator ($1$ solo LFSR di $m=3$ stadi):**
->     
->     Supponiamo che il singolo LFSR abbia stato interno al tempo $i=1$ pari a $(s_0, s_1, s_2) = (1, 1, 0)$ e la funzione di filtro sia $f(s_0, s_1, s_2) = (s_0 \wedge s_1) \oplus s_2$.
->     
->     Allora il bit di keystream emesso in quell'istante è $z_1 = (1 \cdot 1) \oplus 0 = \mathbf{1}$. Poi l'LFSR fa scorrere i suoi bit di una posizione e si ricalcola $f$ sul nuovo stato interno.
->     
->       
->     
-> - **Caso C – Shrinking Generator ($2$ LFSR):**
->     
->     Supponiamo che i due LFSR generino i seguenti 6 bit:
->     
->       
->     - $\text{LFSR}_1$ (Dati $z_i^1$): $\quad \ \ \texttt{1, 0, 1, 1, 0, 1}$
->         
->           
->         
->     - $\text{LFSR}_2$ (Selettore $z_i^2$): $\texttt{1, 0, 0, 1, 1, 0}$
->         
->         Teniamo $z_i^1$ **solo quando $z_i^2 = 1$** (cioè agli indici $i = 1, 4, 5$):
->         
->           
->         
->     - $i=1$ ($z_1^2 = 1$) $\implies$ emette $z_1^1 = \mathbf{1}$
->         
->           
->         
->     - $i=2$ ($z_2^2 = 0$) $\implies$ _scarta_ $z_2^1$
->         
->           
->         
->     - $i=3$ ($z_3^2 = 0$) $\implies$ _scarta_ $z_3^1$
->         
->           
->         
->     - $i=4$ ($z_4^2 = 1$) $\implies$ emette $z_4^1 = \mathbf{1}$
->         
->           
->         
->     - $i=5$ ($z_5^2 = 1$) $\implies$ emette $z_5^1 = \mathbf{0}$
->         
->           
->         
->     - $i=6$ ($z_6^2 = 0$) $\implies$ _scarta_ $z_6^1$
->         
->         Dai 6 cicli di clock esce una keystream contratta di soli 3 bit: **`110`**.
->         
->           
->         
-
-## 4.8.1 Correlation Attack on a Combination Generator (Attacco di Correlazione)
-
-Sebbene un _Combination Generator_ utilizzi una funzione booleana non lineare $f$ per mascherare i singoli LFSR, se la funzione $f$ non è progettata con estrema attenzione il sistema può essere completamente distrutto da un attacco statistico di tipo _divide-and-conquer_ (divide et impera) noto come **Correlation Attack** (Attacco di Correlazione, introdotto da Thomas Siegenthaler).
+  
 
   
 
-### 1. Il Problema della Ricerca Esaustiva vs Divide-et-Impera
-
-Consideriamo un Combination Generator formato da $r$ LFSR aventi lunghezze (gradi dei polinomi di feedback) pari a $m_1, m_2, \dots, m_r$.
+## 4.8.1 Correlation Attack on a Combination Generator
 
   
 
-- Assumiamo che i polinomi di feedback dei singoli LFSR e la funzione di combinazione $f : (\mathbb{Z}_2)^r \to \mathbb{Z}_2$ siano **pubblici**.
-    
-      
-    
-- La **chiave segreta $K$** consiste nelle $r$ tuple di riempimento iniziale (_initial states_) dei singoli registri:
-    
-      
-    
-    $$K = (K^1, K^2, \dots, K^r) \qquad \text{con } K^j \in (\mathbb{Z}_2)^{m_j} \setminus \{\mathbf{0}\}$$
-    
-    (Lo stato formato da tutti zeri `00...0` è sempre escluso perché in un LFSR produrrebbe solo una sequenza infinita di zeri).
-    
-      
-    
-- Pertanto, il numero di possibili chiavi iniziali per il $j$-esimo LFSR è esattamente **$2^{m_j} - 1$**.
-    
-      
-    
-- Se Oscar volesse attaccare il generatore con una **ricerca esaustiva (forza bruta)** provando tutte le combinazioni simultaneamente, dovrebbe testare un numero di chiavi pari al **prodotto**:
-    
-      
-    
-    $$\prod_{j=1}^{r} \left(2^{m_j} - 1\right) \approx 2^{m_1 + m_2 + \dots + m_r}$$
-    
-    che diventa rapidamente infattibile se la somma $\sum m_j$ è grande.
-    
-      
-    
+  
 
-**L'idea del Correlation Attack:** E se invece di indovinare tutte le $r$ sottochiavi contemporaneamente, Oscar riuscisse a trovare $K^1, K^2, \dots, K^r$ **una alla volta in modo indipendente**? In quel caso il numero di tentativi scenderebbe dal _prodotto_ alla semplice **somma** $\sum_{j=1}^r (2^{m_j} - 1)$!
+In questa sezione descriviamo un attacco al **combination generator**, noto come **correlation attack**. Questo attacco può essere condotto quando esistono **correlations** (correlazioni) tra gli output degli LFSR (che sono gli input della _combining function_) e l'output della _combining function_.
 
   
 
-### 2. Correlazione Statistica nella Tabella di Verità di $f$
+### 1. Analisi della Combining Function e delle Correlazioni
 
-Trattiamo i bit $z_1, z_2, \dots, z_r$ in ingresso alla funzione combinatrice $f(z_1, \dots, z_r)$ come variabili aleatorie binarie indipendenti e uniformemente distribuite, tali cioè che per ogni $j = 1, \dots, r$ e per ogni $z \in \{0, 1\}$ valga:
-
-  
-
-$$\Pr[z_j = z] = \frac{1}{2}$$
-
-Di conseguenza, ciascuna delle $2^r$ righe della tabella di verità di $f(z_1, \dots, z_r)$ ha probabilità esattamente $\frac{1}{2^r}$.
+Supponiamo di avere $r = 3$ LFSR e che la **combining function** sia:
 
   
 
-- **Condizione per una buona funzione combinatrice (Bilanciamento):** Innanzitutto, affinché la keystream finale non abbia una prevalenza banale di `0` o di `1`, la funzione $f$ deve essere **bilanciata**, cioè la colonna di uscita della sua tabella di verità deve contenere esattamente $2^{r-1}$ zeri e $2^{r-1}$ uni:
+$$f(z_1, z_2, z_3) = (z_1 \wedge z_2) \oplus (z_2 \wedge z_3) \oplus z_3$$
+
+(dove $\wedge$ indica la congiunzione logica AND e $\oplus$ indica l'_exclusive-or_). La **truth table** (tabella di verità) per la funzione booleana $f$ è data da:
+
+  
+
+|**z1​**|**z2​**|**z3​**|**f(z1​,z2​,z3​)**|
+|---|---|---|---|
+|`0`|`0`|`0`|`0`|
+|`0`|`0`|`1`|`1`|
+|`0`|`1`|`0`|`0`|
+|`0`|`1`|`1`|`0`|
+|`1`|`0`|`0`|`0`|
+|`1`|`0`|`1`|`1`|
+|`1`|`1`|`0`|`1`|
+|`1`|`1`|`1`|`1`|
+
+Se trattiamo $z_1, z_2, z_3$ come **independent, uniformly distributed random binary variables** (variabili binarie aleatorie indipendenti e uniformemente distribuite, tali che $\Pr[z_j = 0] = \Pr[z_j = 1] = 1/2$ per $j = 1, 2, 3$), allora ciascuna delle 8 righe della tabella di verità si verifica con probabilità $1/8$, e anche l'output $z = f(z_1, z_2, z_3)$ assume i valori `0` e `1` con probabilità $1/2$.
+
+  
+
+Tuttavia, confrontando la colonna di output $z = f(z_1, z_2, z_3)$ con ciascuna delle colonne di input $z_1, z_2, z_3$ nelle 8 righe della tabella, osserviamo che per tutti e tre gli input vale:
+
+  
+
+$$\Pr[z = z_j] = \frac{3}{4}, \qquad \text{per } j = 1, 2, 3$$
+
+(Infatti: $z = z_1$ in 6 righe su 8; $z = z_2$ in 6 righe su 8; $z = z_3$ in 6 righe su 8). È proprio possibile utilizzare questa **correlation** per cercare la **initial key** (chiave iniziale) per ciascuno dei tre LFSR.
+
+  
+
+### 2. Modello dell'Attacco: Brute Force Search vs Correlation Attack ("Divide-and-Conquer")
+
+Per rendere preciso l'attacco, facciamo le seguenti assunzioni (come nel libro):
+
+  
+
+- I tre LFSR (ovvero le **linear recurrence relations**) sono noti.
     
       
     
-    $$\Pr[f(z_1, \dots, z_r) = 0] = \Pr[f(z_1, \dots, z_r) = 1] = \frac{1}{2}$$
-    
-- **La Falla (Correlazione tra l'uscita $f$ e un singolo input $z_j$):** Anche se $f$ è perfettamente bilanciata, calcoliamo per ciascun input $z_j$ ($1 \le j \le r$) la probabilità $p_j$ che l'uscita della funzione combinatrice coincida esattamente con il bit del $j$-esimo LFSR:
+- La **combining function** $f$ è nota.
     
       
     
-    $$p_j = \Pr\left[ f(z_1, \dots, z_r) = z_j \right]$$
-    
-    (che si calcola semplicemente contando in quante righe su $2^r$ della tabella di verità il valore di $f(z_1, \dots, z_r)$ è uguale a $z_j$, e dividendo per $2^r$).
+- La **key** (chiave) consiste quindi negli **initial states** (stati iniziali, chiamati anche **initial keys** o **initial keystream bits**) dei tre LFSR componenti.
     
       
-    - Se **$p_j \neq \frac{1}{2}$**, diciamo che esiste una **correlazione** tra la keystream finale $z_i$ e la sequenza $z_i^j$ del $j$-esimo LFSR!
+    
+- Supponiamo che il $j$-esimo LFSR corrisponda a una _linear recurrence_ di **degree** $L_j$ (per $j = 1, 2, 3$). Allora la chiave per lo stream cipher risultante ha lunghezza totale:
+    
+      
+    
+    $$L = L_1 + L_2 + L_3$$
+    
+
+Come nella Sezione 2.2.5, consideriamo un **known plaintext attack**, il quale ci permette immediatamente di calcolare i **keystream bits**. L'obiettivo è determinare gli $L$ **initial keystream bits**:
+
+  
+
+1. **Confronto con la Brute Force Search:** A scopo di confronto, osserviamo che c'è sempre l'opzione di effettuare una **brute force search** per la chiave. Per ciascuna possibile **L-bit key**, possiamo generare un keystream usando i tre LFSR insieme alla _combining function_ data. Se il keystream generato è identico al keystream che abbiamo determinato dal _known plaintext attack_, allora possiamo essere certi di aver trovato la chiave corretta. Poiché si tratta di una _brute force search_, nel caso peggiore (_worst case_) potremmo dover considerare tutte le:
+    
+      
+    
+    $$2^L = 2^{L_1} \times 2^{L_2} \times 2^{L_3}$$
+    
+    chiavi (o sequenze) fino a trovare quella corretta. Se $L$ è sufficientemente grande, questo potrebbe non essere fattibile.
+    
+      
+    
+2. **Strategia del Correlation Attack ("Divide-and-Conquer"):** Sfruttando le correlazioni tra gli input di $f$ e il suo output, possiamo rendere la ricerca molto più efficiente. Le correlazioni ci permettono di cercare l'**initial state** di ciascun LFSR **separatamente** (per questo motivo ci si riferisce talvolta a questo metodo come a un **"divide-and-conquer" attack**):
+    
+      
+    - Supponiamo di concentrarci sul primo LFSR e di tirare a indovinare (_guess_) un keystream iniziale consistente di $L_1$ bit.
+        
+          
+        
+    - Generiamo quindi una sequenza di bit usando questo LFSR e la confrontiamo con la sequenza degli **actual keystream bits** (i veri bit del keystream).
+        
+          
+        
+    - Se la **guessed initial key** (chiave iniziale ipotizzata) è **corretta**, allora ci aspettiamo che il **75%** dei bit generati dall'LFSR coincida (**agree**) con il keystream (poiché $\Pr[z = z_1] = 3/4$).
+        
+          
+        
+    - Se invece la **guessed initial key** è **errata**, allora ci aspettiamo che il **50%** dei bit generati dall'LFSR coincida con il keystream.
+        
+          
+        
+    - La strategia consiste quindi nel considerare tutte le $2^{L_1}$ possibili _initial keys_ (o più precisamente le $2^{L_1} - 1$ possibili _nonzero initial keys_) per questo LFSR e, per ciascuna _initial key_, generare un flusso di bit, tenendo traccia di quale flusso di bit corrisponde più da vicino (_most closely matches_) ai veri bit del keystream. Se disponiamo di un numero sufficiente di bit del keystream, possiamo essere molto fiduciosi che questa _initial key_ sia davvero quella corretta.
+        
+          
+        
+3. **Costo Computazionale dell'Attacco:** Effettuando una **exhaustive search** sui $2^{L_1}$ possibili stati iniziali, siamo in grado di determinare $L_1$ bit della chiave. Possiamo ripetere questo attacco per il secondo e per il terzo LFSR e ottenere così l'intera chiave di $L$ bit. Il calcolo totale richiesto da questo attacco può essere stimato in:
+    
+      
+    
+    $$2^{L_1} + 2^{L_2} + 2^{L_3}$$
+    
+    poiché gli attacchi sui tre LFSR vengono condotti separatamente. Questo valore è molto più piccolo rispetto al _brute force attack_ che richiede approssimativamente $2^L = 2^{L_1} \times 2^{L_2} \times 2^{L_3}$ sequenze da testare nel caso peggiore.
+    
+      
+    - **Confronto concreto con parametri particolari:** Supponiamo $L_1 = 19, L_2 = 21$ e $L_3 = 23$. Allora la _brute force search_ richiede di testare $2^{63}$ possibili chiavi (un numero molto grande), mentre il _correlation attack_ testa solamente $2^{19} + 2^{21} + 2^{23} < 2^{24}$ chiavi, il che può essere fatto molto velocemente.
         
           
         
 
-### 3. Analisi del Generatore di Geffe (Geffe Generator)
-
-L'esempio classico analizzato da Stinson (presente anche nell'Esercizio 4.18) utilizza $r = 3$ LFSR combinati tramite la funzione nota come **Geffe Generator**:
+  
 
   
 
-$$f(z_1, z_2, z_3) = (z_1 \wedge z_2) \oplus (\neg z_1 \wedge z_3)$$
-
-(In aritmetica algebrica su $\mathbb{Z}_2$, ricordando che $\wedge$ è il prodotto e $\neg z_1 = 1 \oplus z_1$, questa funzione si scrive equivalentemente come:
+### 3. Esempio Pratico Completo dal Libro (Example 4.5)
 
   
 
-$$f(z_1, z_2, z_3) = z_1 z_2 \oplus (1 \oplus z_1) z_3 = z_1 z_2 \oplus z_3 \oplus z_1 z_3 \bmod 2$$
-
-oppure, permutando gli indici dei registri come nel testo della Sezione 4.8.1, $f(z_1, z_2, z_3) = z_1 z_2 \oplus z_2 z_3 \oplus z_3$).
-
   
 
-- **Interpretazione intuitiva del Geffe Generator:** Il registro $z_1$ funziona come un **selettore (multiplexer)**:
-    
-      
-    - Ogni volta che **$z_1 = 1$**, l'uscita di $f$ copia esattamente **$z_2$**.
-        
-          
-        
-    - Ogni volta che **$z_1 = 0$**, l'uscita di $f$ copia esattamente **$z_3$**.
-        
-          
-        
-
-Costruiamo la **Tabella di Verità completa** delle $2^3 = 8$ righe per $f(z_1, z_2, z_3) = (z_1 \wedge z_2) \oplus (\neg z_1 \wedge z_3)$ e controlliamo in quali righe $f$ coincide con $z_1$, con $z_2$ e con $z_3$:
-
-  
-
-|**z1​**|**z2​**|**z3​**|**f(z1​,z2​,z3​)**|**Coincide con z1​? (f=z1​)**|**Coincide con z2​? (f=z2​)**|**Coincide con z3​? (f=z3​)**|
-|---|---|---|---|---|---|---|
-|`0`|`0`|`0`|**`0`**|✅ Sì|✅ Sì|✅ Sì|
-|`0`|`0`|`1`|**`1`**|❌ No|❌ No|✅ Sì|
-|`0`|`1`|`0`|**`0`**|✅ Sì|❌ No|✅ Sì|
-|`0`|`1`|`1`|**`1`**|❌ No|✅ Sì|✅ Sì|
-|`1`|`0`|`0`|**`0`**|❌ No|✅ Sì|✅ Sì|
-|`1`|`0`|`1`|**`0`**|❌ No|✅ Sì|❌ No|
-|`1`|`1`|`0`|**`1`**|✅ Sì|✅ Sì|❌ No|
-|`1`|`1`|`1`|**`1`**|✅ Sì|✅ Sì|✅ Sì|
-|**Totale**|||**4 zeri, 4 uni (Bilanciata)**|**4 su 8**|**6 su 8**|**6 su 8**|
-
-Dalla tabella leggiamo immediatamente le tre probabilità di correlazione:
-
-  
-
-1. $\Pr[f(z_1, z_2, z_3) = z_1] = \frac{4}{8} = \mathbf{\frac{1}{2}}$ _(Nessuna correlazione con il 1° LFSR)_.
-    
-      
-    
-2. $\Pr[f(z_1, z_2, z_3) = z_2] = \frac{6}{8} = \mathbf{\frac{3}{4} = 0.75}$ _(Forte correlazione del **75%** con il 2° LFSR!)_.
-    
-      
-    
-3. $\Pr[f(z_1, z_2, z_3) = z_3] = \frac{6}{8} = \mathbf{\frac{3}{4} = 0.75}$ _(Forte correlazione del **75%** con il 3° LFSR!)_.
-    
-      
-    
-
-### 4. Come Funziona l'Attacco di Correlazione Passo-Passo
-
-Supponiamo che Oscar conduca un attacco _known-plaintext_ e abbia a disposizione **$N$ bit consecutivi della keystream** $z_1, z_2, \dots, z_N$ (ottenuti facendo lo XOR tra $N$ bit di testo in chiaro e $N$ bit di testo cifrato: $z_i = x_i \oplus y_i$).
-
-  
-
-Poiché $\Pr[z_i = z_i^2] = \frac{3}{4}$, la keystream pubblica $z_1, \dots, z_N$ che Oscar ha in mano **coincide nel 75% delle posizioni con la sequenza segreta del 2° LFSR** (e nel 75% delle posizioni con la sequenza segreta del 3° LFSR)!
-
-  
-
-Ecco come Oscar recupera l'intera chiave segreta $K = (K^1, K^2, K^3)$ un pezzo alla volta:
-
-  
-
-1. **Attacco isolato al 2° LFSR (per trovare $K^2$):**
-    
-      
-    - Ci sono solo $2^{m_2} - 1$ possibili stati iniziali candidati per il 2° LFSR.
-        
-          
-        
-    - Per ciascuno stato iniziale candidato $\tilde{K}^2$, Oscar fa girare il 2° LFSR da solo per $N$ passi, generando una sequenza candidata $\tilde{z}_1^2, \tilde{z}_2^2, \dots, \tilde{z}_N^2$.
-        
-          
-        
-    - Oscar confronta bit a bit la sequenza candidata con la vera keystream $z_1, \dots, z_N$ e conta il numero di coincidenze (**matches**), ovvero il numero di indici $1 \le i \le N$ tali che $\tilde{z}_i^2 = z_i$:
-        
-          
-        - Se $\tilde{K}^2$ è **sbagliata**, la sequenza generata si comporta come una stringa casuale rispetto a $z_i$, quindi il numero atteso di match su $N$ bit è circa:
-            
-              
-            
-            $$E[\text{matches (chiave errata)}] = \frac{1}{2} N = \mathbf{0.50 \, N}$$
-            
-        - Se $\tilde{K}^2 = K^2$ è la **chiave iniziale VERA**, poiché $\Pr[z_i = z_i^2] = \frac{3}{4}$, il numero atteso di match su $N$ bit balza a:
-            
-              
-            
-            $$E[\text{matches (chiave vera)}] = \frac{3}{4} N = \mathbf{0.75 \, N}$$
-            
-    - Se $N$ è sufficientemente grande (basta un multiplo modesto della lunghezza $m_2$), la chiave candidata che ottiene una percentuale di match vicina al **75%** si stacca nettamente da tutte le altre (ferme attorno al 50%), svelando $K^2$!
-        
-          
-        
-2. **Attacco isolato al 3° LFSR (per trovare $K^3$):**
-    
-      
-    - Esattamente nello stesso modo, poiché $\Pr[z_i = z_i^3] = \frac{3}{4}$, Oscar testa separatamente le $2^{m_3} - 1$ chiavi candidate del 3° LFSR su $N$ bit di keystream e individua la vera chiave $K^3$ come l'unica che produce circa **$0.75 \, N$ match**.
-        
-          
-        
-3. **Recupero finale del 1° LFSR (per trovare $K^1$):**
-    
-      
-    - Anche se il 1° LFSR non era correlato con l'uscita ($p_1 = 1/2$), ormai Oscar **conosce già i veri $K^2$ e $K^3$**!
-        
-          
-        
-    - Gli basta quindi provare tutte le $2^{m_1} - 1$ possibili chiavi iniziali $\tilde{K}^1$ del 1° LFSR combinandole con i veri $K^2$ e $K^3$ dentro l'intero generatore: la chiave $K^1$ corretta sarà l'unica a riprodurre il **100% dei bit** della keystream osservata!
-        
-          
-        
-
-> [!example] Esempio Numerico Completo del Libro (Sezione 4.8.1)
-> 
-> Consideriamo un Combination Generator con $r = 3$ LFSR combinati dalla funzione vista sopra (con $p_2 = 3/4$ e $p_3 = 3/4$), aventi lunghezze:
+> [!example] Example 4.5 (Correlation Attack su 3 LFSR con $L_1 = 5, L_2 = 7, L_3 = 9$) Supponiamo di avere tre LFSR, con $L_1 = 5, L_2 = 7$ e $L_3 = 9$ (quindi la chiave complessiva è una **21-bit key**, con $L = 5 + 7 + 9 = 21$). Questi LFSR implementano rispettivamente le seguenti **linear recurrence relations**:
 > 
 >   
 > 
-> - **$\text{LFSR}_1$:** grado $m_1 = 5$ $\implies 2^5 - 1 = \mathbf{31}$ possibili stati iniziali $K^1$.
->     
->       
->     
-> - **$\text{LFSR}_2$:** grado $m_2 = 7$ $\implies 2^7 - 1 = \mathbf{127}$ possibili stati iniziali $K^2$.
->     
->       
->     
-> - **$\text{LFSR}_3$:** grado $m_3 = 9$ $\implies 2^9 - 1 = \mathbf{511}$ possibili stati iniziali $K^3$.
->     
->       
->     
+> $$\begin{aligned} > a_i &= a_{i-3} + a_{i-5} \\ > b_i &= b_{i-6} + b_{i-7} \\ > c_i &= c_{i-5} + c_{i-9} > \end{aligned}$$
 > 
-> **1. Confronto del numero di chiavi da testare:**
+> dove tutta l'aritmetica è modulo 2. Supponiamo di aver ottenuto i seguenti **90 bit del keystream** da un _known plaintext attack_:
 > 
 >   
 > 
-> - Con una ricerca esaustiva cieca su tutti e tre i registri, Oscar dovrebbe testare:
->     
->       
->     
->     $$31 \times 127 \times 511 = \mathbf{2.011.807 \text{ combinazioni}}$$
->     
-> - Con il **Correlation Attack**, Oscar attacca i tre registri separatamente testando in tutto solo:
->     
->       
->     
->     $$127 + 511 + 31 = \mathbf{669 \text{ combinazioni!}}$$
->     
+> Plaintext
 > 
-> **2. Risultati sperimentali dell'attacco nel libro:**
+> ```
+> 011011001010000111101100000110
+> 001111100101000111110100010111
+> 001100110010100001001111000100
+> ```
+> 
+> **Passo 1: Attacco al primo LFSR ($L_1 = 5$)** Iniziamo confrontando i primi **30 bit** del keystream con i 30 bit generati dal primo LFSR usando le $2^5 - 1 = 31$ possibili diverse **nonzero initial keys**. Per ciascuna _bitstring_ generata dall'LFSR, contiamo il **number of agreements** (numero di concordanze / **matches**) con il **true keystream** (vero keystream), ottenendo i dati presentati nella **Table 4.6** del libro:
 > 
 >   
 > 
-> - **Attacco al 2° LFSR ($m_2 = 7$):** Oscar utilizza **$N = 60$ bit** della keystream.
+> **TABLE 4.6: Possible keystreams (per il 1° LFSR su 30 bit)**
+> 
+>   
+> 
+> |**Initial key (primi 5 bit)**|**Bitstring di 30 bit generata dal 1° LFSR**|**Agreements (su 30)**|
+> |---|---|---|
+> |`00001`|`000010010110011111000110111010`|15|
+> |`00010`|`000100101100111110001101110101`|12|
+> |`00011`|`000110111010100001001011001111`|15|
+> |`00100`|`001001011001111100011011101010`|12|
+> |`00101`|`001011001111100011011101010000`|19|
+> |`00110`|`001101110101000010010110011111`|12|
+> |`00111`|`001111100011011101010000100101`|15|
+> |`01000`|`010000100101100111110001101110`|15|
+> |`01001`|`010010110011111000110111010100`|12|
+> |`01010`|`010100001001011001111100011011`|15|
+> |`01011`|`010110011111000110111010100001`|16|
+> |`01100`|`011001111100011011101010000100`|19|
+> |**`01101`**|**`011011101010000100101100111110`**|**24**|
+> |`01110`|`011101010000100101100111110001`|15|
+> |`01111`|`011111000110111010100001001011`|16|
+> |`10000`|`100001001011001111100011011101`|16|
+> |`10001`|`100011011101010000100101100111`|15|
+> |`10010`|`100101100111110001101110101000`|12|
+> |`10011`|`100111110001101110101000010010`|15|
+> |`10100`|`101000010010110011111000110111`|16|
+> |`10101`|`101010000100101100111110001101`|15|
+> |`10110`|`101100111110001101110101000010`|16|
+> |`10111`|`101110101000010010110011111000`|11|
+> |`11000`|`110001101110101000010010110011`|11|
+> |`11001`|`110011111000110111010100001001`|16|
+> |`11010`|`110101000010010110011111000110`|19|
+> |`11011`|`110111010100001001011001111100`|12|
+> |`11100`|`111000110111010100001001011001`|11|
+> |`11101`|`111010100001001011001111100011`|16|
+> |`11110`|`111100011011101010000100101100`|15|
+> |`11111`|`111110001101110101000010010110`|16|
+> 
+> Per ciascuna riga della Table 4.6, i primi cinque bit costituiscono la **initial key** per l'LFSR. Osserviamo che la _initial key_ **`01101`** genera una _bitstring_ che concorda (_agrees_) con il keystream in **24 bit (su 30)**, mentre nessun'altra _initial key_ genera una _bitstring_ che concorda con il keystream in più di 19 bit. Pertanto sospettiamo fortemente che **`01101`** sia la _initial key_ per il primo LFSR.
+> 
+>   
+> 
+> **Passo 2: Attacco al secondo ($L_2 = 7$) e al terzo LFSR ($L_3 = 9$)** Possiamo ripetere questo processo per gli altri due LFSR. È consigliabile svolgere questi calcoli con più bit del keystream, poiché il numero di possibili _initial keys_ è maggiore (per la precisione, il numero di _nonzero initial keys_ è $2^7 - 1 = 127$ e $2^9 - 1 = 511$, rispettivamente, per gli ultimi due LFSR). Supponiamo di usare **60 keystream bits** per attaccare il secondo LFSR e **90 keystream bits** per attaccare il terzo LFSR:
+> 
+>   
+> 
+> - **Per il secondo LFSR:** la _initial key_ **`1100110`** produce **48 matches (su 60 bit)**, mentre nessun'altra possibile _initial key_ produce più di 39 matches.
 >     
 >       
->     - Valore atteso di match per la chiave vera: $\frac{3}{4} \times 60 = \mathbf{45}$ match (contro $\frac{1}{2} \times 60 = 30$ per le chiavi errate).
->         
->           
->         
->     - Provando tutte le $127$ possibili chiavi iniziali a 7 bit, la chiave iniziale **`1100110`** produce **48 match su 60** ($80\%$), mentre nessuna delle altre 126 chiavi candidate supera i 39 match! Quindi $K^2 = \texttt{1100110}$.
->         
->           
->         
-> - **Attacco al 3° LFSR ($m_3 = 9$):** Oscar utilizza **$N = 90$ bit** della keystream.
 >     
->       
->     - Valore atteso di match per la chiave vera: $\frac{3}{4} \times 90 = \mathbf{67.5}$ match (contro $\frac{1}{2} \times 90 = 45$ per le chiavi errate).
->         
->           
->         
->     - Provando tutte le $511$ possibili chiavi iniziali a 9 bit, la chiave iniziale **`011011001`** produce **67 match su 90** ($74.4\%$), mentre nessuna delle altre 510 chiavi candidate supera i 59 match! Quindi $K^3 = \texttt{011011001}$.
->         
->           
->         
-> - **Recupero del 1° LFSR ($m_1 = 5$):** Fissati $K^2 = \texttt{1100110}$ e $K^3 = \texttt{011011001}$, Oscar prova le 31 possibili chiavi a 5 bit per il primo registro e trova immediatamente l'unica che genera l'esatta keystream intercettata.
+> - **Per il terzo LFSR:** osserviamo un tipo simile di "separazione" (_separation_). La _initial key_ **`011011001`** produce **67 matches (su 90 bit)**, ma nessun'altra possibile _initial key_ produce più di 59 matches.
 >     
 >       
 >     
+> 
+> **Passo 3: Verifica finale della 21-bit key** Avendo identificato quelle che riteniamo essere le tre componenti della **21-bit key**, è una buona verifica controllare di avere davvero la chiave corretta. Ciò si fa facilmente usando il generatore per calcolare i bit del keystream e confrontandoli poi con i **true keystream bits** ottenuti dal _known plaintext attack_. Se abbiamo davvero la _21-bit key_ corretta, i due keystreams devono essere identici. In questo esempio, possiamo confermare che il keystream corretto si ottiene dalle tre _initial keys_ che abbiamo identificato (`01101`, `1100110`, `011011001`).
+> 
+>   
 
-- **Nota finale sulla progettazione (Immunità alla Correlazione):** Per difendersi da questo attacco, una _combining function_ $f(z_1, \dots, z_r)$ deve essere scelta in modo tale che $\Pr[f(z_1, \dots, z_r) = z_j] = \frac{1}{2}$ per ogni singolo $j$ (e più in generale deve essere _correlation-immune di ordine $k$_, ovvero non deve presentare correlazioni nemmeno con lo XOR di sottoinsiemi di $k$ input contemporaneamente, pur mantenendo un alto grado algebrico non lineare).
+  
+
+  
+
+### 4. Numero di Keystream Bits Richiesti per il Successo dell'Attacco
+
+  
+
+  
+
+Tecniche della teoria della probabilità possono essere utilizzate per predire quanti **keystream bits** sono richiesti affinché l'attacco abbia successo con alta probabilità. In generale, il numero di bit del keystream richiesti dipenderà dalla **correlation** (una correlazione più alta corrisponde a un minor numero di bit del keystream richiesti) e dal **degree of the recurrence relations** (ovvero il numero di _stages_ negli LFSR). LFSR più grandi richiederanno solitamente più bit del keystream.
+
+  
+
+È stato suggerito che un attacco su un LFSR avente $L_i$ _stages_ avrà successo se il numero di bit del keystream, $N$, è almeno:
+
+  
+
+$$N \ge \frac{L_i}{\left(p - \frac{1}{2}\right)^2}$$
+
+dove $p$ è la **predicted correlation** (correlazione predetta). Si noti che l'Example 4.5 ha avuto successo anche con un numero inferiore di bit del keystream (infatti per $p = 3/4$, il denominatore vale $(3/4 - 1/2)^2 = 1/16$, per cui la formula suggerirebbe $N \ge 16 L_i$, ovvero $80, 112$ e $144$ bit rispettivamente per $L_1=5, L_2=7, L_3=9$, mentre nell'esempio sono bastati $30, 60$ e $90$ bit).

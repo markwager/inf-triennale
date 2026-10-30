@@ -1,544 +1,697 @@
+
 # Capitolo 5: Funzioni di Hash e Autenticazione dei Messaggi
 
-Nei capitoli precedenti abbiamo studiato i crittosistemi simmetrici (a blocchi e a flusso), il cui obiettivo primario è garantire la **confidenzialità** (*secrecy*): impedire a un avversario passivo (Oscar) di leggere il contenuto di un messaggio in chiaro $x$ intercettando il testo cifrato $y$.
 
-Tuttavia, come già anticipato nel Capitolo 1 e dimostrato drammaticamente dal *Padding Oracle Attack* (Sezione 4.7.1), la sola confidenzialità **non protegge l'integrità dei dati né l'autenticità dell'origine**: un avversario attivo può intercettare un messaggio in transito, alterarne i bit o forgiare un messaggio completamente nuovo fingendosi Alice.
 
-Il **Capitolo 5** introduce i due strumenti crittografici fondamentali progettati per garantire l'**integrità dei dati** e l'**autenticazione del messaggio**:
-1. **Funzioni di Hash Crittografiche (*Cryptographic Hash Functions*, Sezioni 5.1–5.4):** Funzioni pubbliche (prive di chiave) che comprimono un messaggio di lunghezza arbitraria in una breve impronta digitale (*message digest*) di lunghezza fissa.
-2. **Codici di Autenticazione dei Messaggi (*Message Authentication Codes - MAC*, Sezione 5.5):** Funzioni dotate di una chiave segreta condivisa $K$ che producono un *tag di autenticazione*, culminando nei moderni schemi di **Crittografia Autenticata (*Authenticated Encryption*)** come la modalità **Galois/Counter Mode (GCM, Sezione 5.5.3)**.
+Nei capitoli precedenti abbiamo studiato i crittosistemi a chiave segreta (block ciphers e stream ciphers), il cui obiettivo è garantire la confidenzialità (_secrecy_). Tuttavia, la sola cifratura non protegge l'**integrità dei dati** (_data integrity_) né la **message authentication** (autenticazione dei messaggi) contro un avversario attivo.
 
----
+  
 
-## 5.1 Funzioni di Hash e Integrità dei Dati
+Il **Capitolo 5** introduce le **hash functions** (Sezioni 5.1–5.4) e i **message authentication codes (MAC)** (Sezione 5.5), concludendo con l'**authenticated encryption** e il **Galois Counter Mode (GCM)** nella Sezione 5.5.3.
+  
 
-Una funzione di hash crittografica può essere pensata informalmente come un'operazione che prende in ingresso una stringa di dati di lunghezza arbitraria (un file, un'email, una password, una transazione) e la "compatta" in un'impronta binaria di dimensione fissa e ridotta, chiamata **message digest** (o *hash value* / *impronta*).
+  
 
-Nella letteratura crittografica esistono due grandi categorie di funzioni di hash:
-* **Funzioni di hash con chiave (*Keyed hash functions*):** Richiedono una chiave segreta $K$ e vengono utilizzate direttamente per costruire i **MAC** (*Message Authentication Codes*).
-* **Funzioni di hash senza chiave (*Unkeyed hash functions*):** Non utilizzano alcuna chiave segreta (oppure si può pensare che la chiave sia fissata e pubblica). Quando si parla semplicemente di *"funzione di hash"* (come SHA-256 o SHA-3), ci si riferisce sempre a una funzione **senza chiave**.
+## 5.1 Hash Functions and Data Integrity (Funzioni di Hash e Integrità dei Dati)
 
----
+  
 
-### 5.1.1 Definizione Formale di Famiglia di Hash (con e senza chiave)
+  
 
-Stinson introduce una definizione matematica unificata (le *famiglie di hash*) che comprende sia il caso con chiave (MAC) sia il caso senza chiave:
+Una **cryptographic hash function** può essere utilizzata per fornire garanzia di **data integrity**. Prende in input un messaggio di lunghezza arbitraria e produce in output un valore di lunghezza fissa (e ridotta) chiamato **message digest** (ad esempio di lunghezza compresa tra 160 e 512 bit).
 
-> [!abstract] Definizione 5.1: Famiglia di Hash (Hash Family)
-> Una **famiglia di hash** è una 4-tupla $(\mathcal{X}, \mathcal{Y}, \mathcal{K}, \mathcal{H})$ che soddisfa le seguenti proprietà:
-> 1. $\mathcal{X}$ è un insieme di possibili **messaggi** (*messages*).
->    * $\mathcal{X}$ può essere un insieme finito (di cardinalità $N = |\mathcal{X}|$) oppure infinito (ad esempio $\mathcal{X} = \{0, 1\}^*$, l'insieme di tutte le stringhe binarie di lunghezza finita arbitraria).
-> 2. $\mathcal{Y}$ è un insieme **finito** di possibili **message digest** (o *authentication tags*), di cardinalità $M = |\mathcal{Y}|$.
-> 3. $\mathcal{K}$, lo **spazio delle chiavi** (*keyspace*), è un insieme finito di possibili chiavi.
-> 4. Per ogni chiave $K \in \mathcal{K}$, esiste una funzione di hash $h_K \in \mathcal{H}$. Ciascuna $h_K$ è una funzione:
->    $$h_K : \mathcal{X} \longrightarrow \mathcal{Y}$$
+  
 
-* **Condizione di Compressione:**
-  Se $\mathcal{X}$ è un insieme finito con $|\mathcal{X}| = N$ e $|\mathcal{Y}| = M$, si richiede sempre che $N \ge M$, e nelle applicazioni pratiche vale quasi sempre **$N \gg M$** (ad esempio $N \ge 2M$). Per questo motivo, una funzione di hash a dominio finito viene spesso chiamata **funzione di compressione** (*compression function*).
-* **Notazione:**
-  * Coppia $(N, M)$-hash family: una famiglia di hash in cui $|\mathcal{X}| = N$ e $|\mathcal{Y}| = M$.
-  * **Funzione di hash senza chiave (*Unkeyed Hash Function*):** Corrisponde al caso particolare in cui lo spazio delle chiavi contiene un solo elemento, cioè **$|\mathcal{K}| = 1$**. In tal caso esiste un'unica funzione pubblica che denotiamo semplicemente con:
-    $$h : \mathcal{X} \longrightarrow \mathcal{Y}$$
-    Tipicamente, in una funzione di hash senza chiave standard, il dominio è $\mathcal{X} = \{0, 1\}^*$ (o tutte le stringhe binarie fino a una lunghezza massima enorme, es. $2^{64}-1$ bit) e il codominio è $\mathcal{Y} = \{0, 1\}^m$ per un intero fisso $m$ (es. $m = 256$ o $m = 512$ bit), per cui $M = |\mathcal{Y}| = 2^m$.
+Le funzioni di hash si dividono in due tipologie:
 
----
+  
 
-### 5.1.2 Come si Garantisce l'Integrità dei Dati? (Con Chiave vs Senza Chiave)
+- **Keyed hash functions (Funzioni di hash con chiave):** Utilizzano una chiave segreta $K$; una _keyed hash function_ viene utilizzata come **message authentication code**, o **MAC**.
+    
+      
+    
+- **Unkeyed hash functions (Funzioni di hash senza chiave):** Non utilizzano alcuna chiave segreta. Quando nel seguito si usa il termine **hash function** senza ulteriori specificazioni, ci si riferisce sempre a una **unkeyed hash function**.
+    
+      
+    
 
-Supponiamo che Alice voglia inviare un messaggio $x \in \mathcal{X}$ a Bob assicurandosi che Oscar non possa alterarlo durante il transito. Vediamo la differenza cruciale tra l'uso di una funzione **con chiave (MAC)** e una **senza chiave**:
+  
 
-#### Caso 1: Uso di una Funzione con Chiave (MAC su canale insicuro)
-1. Alice e Bob condividono in anticipo una **chiave segreta $K \in \mathcal{K}$** (ignota a Oscar).
-2. Quando Alice vuole trasmettere il messaggio $x$, calcola il tag $y = h_K(x)$ e invia sul canale insicuro la coppia **$(x, y)$**.
-3. Bob riceve una coppia $(x', y')$ (eventualmente modificata da Oscar), calcola autonomamente $h_K(x')$ usando la chiave segreta $K$ e verifica se:
-   $$y' \stackrel{?}{=} h_K(x')$$
-   * Se l'uguaglianza è verificata, Bob accetta il messaggio come **valido e autentico** (`VALID`).
-   * Se $y' \neq h_K(x')$, Bob rileva la manomissione e **rifiuta** il messaggio (`INVALID`).
-* **Perché funziona?** Poiché Oscar **non conosce la chiave segreta $K$**, se modifica il messaggio $x$ in un nuovo messaggio $x' \neq x$, non è in grado di calcolare il nuovo tag valido $y' = h_K(x')$.
+  
 
-#### Caso 2: Perché una Funzione di Hash SENZA Chiave da sola NON protegge un canale insicuro!
-Cosa succederebbe se Alice e Bob cercassero di usare una funzione di hash **senza chiave** $h$ (pubblica) nello stesso modo, inviando $(x, y = h(x))$ su un canale insicuro senza alcuna chiave segreta?
-* **Fallimento totale contro un avversario attivo:** Oscar intercetta $(x, y)$, butta via $x$, scrive un messaggio falso a suo piacimento $x'$ (es. *"Bonifica 10.000€ a Oscar"*), **calcola lui stesso il nuovo digest $y' = h(x')$** (può farlo benissimo perché la funzione $h$ è pubblica e non ha chiave!) e invia $(x', y')$ a Bob. Bob controlla $y' \stackrel{?}{=} h(x')$, trova che sono uguali e accetta il messaggio falso!
+### 5.1.1 Definizione Formale di Hash Family
 
-#### E allora a cosa servono le Funzioni di Hash SENZA Chiave?
-Le funzioni di hash senza chiave ($h$) sono uno dei mattoni più importanti dell'intera crittografia moderna, ma vengono usate in contesti in cui **l'impronta $h(x)$ viene protetta in altro modo** (o legata a una chiave):
+  
+  
 
-1. **Firme Digitali (Paradigma *Hash-and-Sign*):**
-   Gli algoritmi di firma digitale a chiave pubblica (come RSA o ECDSA, Capitolo 8) sono lenti e possono firmare direttamente solo blocchi piccoli. Invece di firmare un documento $x$ lungo molti megabyte, Alice applica prima una funzione di hash veloce senza chiave per ottenere un'impronta corta $z = h(x)$ (es. 256 bit), e poi **applica la sua firma digitale asimmetrica solo a $z$** ($\sigma = \text{sig}_K(h(x))$). Qui l'integrità di $h(x)$ è garantita dalla firma digitale!
-2. **Verifica dell'Integrità di File e Software (Canale Protetto / Read-Only):**
-   Se scarichi un file immagine ISO da un server mirror non fidato, come fai a sapere che non contiene malware? Il sito ufficiale dello sviluppatore (protetto via HTTPS) pubblica la stringa $y = h(\text{file})$. Tu scarichi il file dal mirror, calcoli $h(\text{file scaricato})$ sul tuo PC e controlli che coincida con $y$. (Lo stesso vale per un antivirus che salva gli hash dei file di sistema su un disco protetto da scrittura).
-3. **Costruzione di MAC (es. HMAC) e Key Derivation Functions (KDF):**
-   Incombinazione con una chiave segreta $K$, una funzione di hash pubblica come SHA-256 viene usata per costruire MAC sicuri (come **HMAC**, Sezione 5.5.1) e per derivare chiavi di sessione (Capitolo 12).
+> [!abstract] Definition 5.1: Hash Family Una **hash family** è una 4-tupla $(\mathcal{X}, \mathcal{Y}, \mathcal{K}, \mathcal{H})$, dove sono soddisfatte le seguenti condizioni:
+> 
+>   
+> 
+> 1. $\mathcal{X}$ è un insieme di possibili **messages** (messaggi).
+>     
+>       
+>     
+> 2. $\mathcal{Y}$ è un insieme finito di possibili **message digests** (o **authentication tags**).
+>     
+>       
+>     
+> 3. $\mathcal{K}$, il **keyspace**, è un insieme finito di possibili **keys** (chiavi).
+>     
+>       
+>     
+> 4. Per ogni $K \in \mathcal{K}$, esiste una **hash function** $h_K \in \mathcal{H}$. Ciascuna $h_K : \mathcal{X} \to \mathcal{Y}$ è una funzione.
+>     
+>       
+>     
 
-> [!example] Esempio Pratico: Attacco Man-in-the-Middle su Hash senza Chiave vs Protezione con Firma/MAC
-> Supponiamo che Alice voglia inviare a Bob il messaggio $x = \texttt{"Paga 100 euro"}$ e usi la funzione di hash pubblica $h = \text{SHA-256}$:
-> * **Senza chiave né firma (Insicuro):** Alice invia $(x, h(x))$ sulla rete. Oscar intercetta il pacchetto, sostituisce $x$ con $x' = \texttt{"Paga 9999 euro"}$, calcola $y' = \text{SHA-256}(x')$ in un millisecondo e inoltra $(x', y')$ a Bob. Bob calcola $\text{SHA-256}(x')$, vede che coincide con $y'$ e cade nella trappola.
-> * **Con Firme Digitali (*Hash-and-Sign*):** Alice calcola $z = \text{SHA-256}(x)$ e lo firma con la sua chiave privata: $\sigma = \text{sig}_{K_{\text{priv}}}(z)$. Se Oscar cambia $x$ in $x'$, non può falsificare la firma di Alice sul nuovo hash $z' = \text{SHA-256}(x')$ (perché non ha la chiave privata di Alice). L'unico modo che avrebbe Oscar per ingannare Bob senza toccare la firma $\sigma$ sarebbe trovare un messaggio $x' \neq x$ che produca **esattamente lo stesso identico hash** di $x$, ovvero $\text{SHA-256}(x') = \text{SHA-256}(x)$! Questo ci porta direttamente ai tre problemi di sicurezza della Sezione 5.2.
+- **Compression Function e Notazione $(N, M)$-hash family:**
+    
+      
+    - $\mathcal{X}$ può essere un insieme finito oppure infinito; $\mathcal{Y}$ è sempre un insieme finito.
+        
+          
+        
+    - Se $\mathcal{X}$ è un insieme finito, allora una hash function è spesso chiamata una **compression function** (funzione di compressione), e assumiamo sempre che $\vert{}\mathcal{X}\vert{} \ge \vert{}\mathcal{Y}\vert{}$; in effetti, nella maggior parte dei casi pratici si richiede almeno $\vert{}\mathcal{X}\vert{} \ge 2\vert{}\mathcal{Y}\vert{}$.
+        
+          
+        
+    - Se $\vert{}\mathcal{X}\vert{} = N$ e $\vert{}\mathcal{Y}\vert{} = M$, la _hash family_ è detta una **$(N, M)$-hash family**.
+        
+          
+        
+    - Una **unkeyed hash function** è semplicemente una _hash family_ in cui esiste una sola chiave possibile, ovvero **$\vert{}\mathcal{K}\vert{} = 1$** (scriveremo in tal caso semplicemente $h : \mathcal{X} \to \mathcal{Y}$).
+        
+          
+        
 
----
+  
 
-## 5.2 Sicurezza delle Funzioni di Hash (Security of Hash Functions)
+  
 
-Consideriamo d'ora in avanti una funzione di hash **senza chiave** $h : \mathcal{X} \to \mathcal{Y}$.
-Poiché l'insieme dei possibili messaggi $\mathcal{X}$ è molto più grande dell'insieme dei possibili digest $\mathcal{Y}$ ($|\mathcal{X}| \gg |\mathcal{Y}|$, o addirittura $\mathcal{X}$ è infinito mentre $|\mathcal{Y}| = 2^m$ è finito), per il **Principio dei Cassetti (*Pigeonhole Principle*)** la funzione $h$ **NON può essere iniettiva**: esistono inevitabilmente moltissime coppie di messaggi diversi $x \neq x'$ che vengono mappati nello stesso identico digest $h(x) = h(x')$ (tali coppie si chiamano **collisioni**).
+### 5.1.2 Come Verificare la Data Integrity (MAC vs Unkeyed Hash Function)
 
-Tuttavia, affinché $h$ sia crittograficamente sicura, deve essere **computazionalmente infattibile** per qualsiasi avversario trovare queste collisioni o invertire la funzione!
+  
 
----
+  
 
-### 5.2.1 I Tre Problemi Fondamentali: Preimage, Second Preimage e Collision
+Supponiamo che Alice trasmetta un messaggio $x \in \mathcal{X}$ a Bob su un canale non sicuro e voglia permettere a Bob di verificare che $x$ non sia stato modificato:
 
-Stinson formalizza la sicurezza di una funzione di hash definendo **tre problemi computazionali** che un avversario non deve essere in grado di risolvere:
+  
 
-#### 1. Il Problema della Preimmagine (Preimage Problem)
+1. **Con una Keyed Hash Function (MAC):**
+    
+      
+    - Alice e Bob condividono una chiave segreta $K \in \mathcal{K}$.
+        
+          
+        
+    - Quando Alice trasmette $x$, calcola l'**authentication tag** (o message digest) $y = h_K(x)$ e invia la coppia $(x, y)$ sul canale.
+        
+          
+        
+    - Quando Bob riceve una coppia $(x, y)$, può verificare la validità del tag controllando se $y = h_K(x)$.
+        
+          
+        
+    - Se questa condizione è soddisfatta, Bob accetta $(x, y)$ come **valid** (valida); altrimenti la rifiuta come **invalid** (invalida).
+        
+          
+        
+    - Se un avversario (Oscar) sostituisce $x$ con $x'$ o modifica $y$ in $y'$ senza conoscere la chiave $K$, non sarà in grado di produrre una coppia valida $(x', y')$ tale che $y' = h_K(x')$.
+        
+          
+        
+2. **Con una Unkeyed Hash Function ($h : \mathcal{X} \to \mathcal{Y}$):**
+    
+      
+    - Se non c'è una chiave segreta, perché un avversario non può semplicemente sostituire $x$ con un nuovo messaggio $x'$ e calcolare lui stesso il corrispondente message digest $y' = h(x')$ (dato che $h$ è pubblica)?
+        
+          
+        
+    - Effettivamente, se sia $x$ che $y = h(x)$ venissero trasmessi su un canale non protetto senza chiave, chiunque potrebbe sostituire $(x, y)$ con $(x', h(x'))$.
+        
+          
+        
+    - Pertanto, una **unkeyed hash function** viene utilizzata in scenari in cui il _message digest_ $y = h(x)$ è protetto in altro modo:
+        
+          
+        - Ad esempio all'interno di un **signature scheme** (schema di firma digitale): Alice calcola il _message digest_ $y = h(x)$ e firma digitalmente soltanto $y$ con la sua chiave privata.
+            
+              
+            
+        - Oppure quando l'utente calcola $y = h(x)$ di un file e memorizza $y$ in un'area sicura per verificare in seguito che il file $x$ non sia stato alterato.
+            
+              
+            
+        - Oppure combinandola con una chiave segreta per costruire un MAC (come in **HMAC**, Sezione 5.5.1).
+            
+              
+            
+
+  
+
+  
+
+## 5.2 Security of Hash Functions (Sicurezza delle Funzioni di Hash)
+
+  
+
+  
+
+Consideriamo una **unkeyed hash function** $h : \mathcal{X} \to \mathcal{Y}$. Tipicamente il dominio è $\mathcal{X} = \{0, 1\}^*$ (stringhe binarie di lunghezza arbitraria) e il codominio è $\mathcal{Y} = \{0, 1\}^m$ per un certo intero positivo $m$ (quindi $\vert{}\mathcal{Y}\vert{} = M = 2^m$).
+
+  
+
+Poiché $\vert{}\mathcal{X}\vert{} > \vert{}\mathcal{Y}\vert{}$, la funzione $h$ non può essere iniettiva: devono necessariamente esistere coppie di input distinti $x \neq x'$ tali che $h(x) = h(x')$. Una tale coppia è chiamata una **collision** (collisione). Affinché una funzione di hash sia sicura per gli usi crittografici, chiediamo che i seguenti **tre problemi** siano difficili da risolvere (computazionalmente infattibili):
+
+  
+
+  
+
+  
+
+### 1. The Three Hash Function Problems
+
+  
+
+  
 
 > [!abstract] Problem 5.1: Preimage
-> * **Istanza (Input):** Una funzione di hash $h : \mathcal{X} \to \mathcal{Y}$ e un elemento $y \in \mathcal{Y}$ (un message digest fissato).
-> * **Obiettivo (Output):** Trovare un messaggio $x \in \mathcal{X}$ tale che:
->   $$h(x) = y$$
+> 
+>   
+> 
+> - **Instance (Istanza):** Una hash function $h : \mathcal{X} \to \mathcal{Y}$ e un elemento $y \in \mathcal{Y}$.
+>     
+>       
+>     
+> - **Find (Trovare):** Un elemento $x \in \mathcal{X}$ tale che $h(x) = y$.
+>     
+>       
+>     
 
-* **Definizione di Sicurezza associata:**
-  Dato un punto $y \in \mathcal{Y}$, l'insieme di tutti gli $x \in \mathcal{X}$ tali che $h(x) = y$ è detto *controimmagine* (o insieme delle preimmagini) di $y$, denotato con $h^{-1}(y)$.
-  Se il problema **Preimage** è computazionalmente infattibile da risolvere per un $y \in \mathcal{Y}$ scelto a caso, la funzione di hash $h$ si dice **one-way** (unidirezionale) oppure **preimage resistant** (resistente alla preimmagine).
-* *Scenario pratico:* Un attaccante ruba dal database di un server il digest $y = h(\text{password})$ e vuole risalire a una password $x$ che produca quell'hash $y$.
-
----
-
-#### 2. Il Problema della Seconda Preimmagine (Second Preimage Problem)
+- Dato un message digest $y$, un elemento $x$ tale che $h(x) = y$ è chiamato una **preimage** di $y$.
+    
+      
+    
+- Una funzione di hash per la quale il problema **Preimage** non può essere risolto efficientemente è spesso chiamata **one-way** (unidirezionale) oppure **preimage resistant**.
+    
+      
+    
 
 > [!abstract] Problem 5.2: Second Preimage
-> * **Istanza (Input):** Una funzione di hash $h : \mathcal{X} \to \mathcal{Y}$ e un messaggio fissato $x \in \mathcal{X}$.
-> * **Obiettivo (Output):** Trovare un **secondo messaggio** $x' \in \mathcal{X}$ tale che:
->   $$x' \neq x \qquad \text{e} \qquad h(x') = h(x)$$
+> 
+>   
+> 
+> - **Instance (Istanza):** Una hash function $h : \mathcal{X} \to \mathcal{Y}$ e un elemento $x \in \mathcal{X}$.
+>     
+>       
+>     
+> - **Find (Trovare):** Un elemento $x' \in \mathcal{X}$ tale che $x' \neq x$ e $h(x') = h(x)$.
+>     
+>       
+>     
 
-* **Definizione di Sicurezza associata:**
-  Se il problema **Second Preimage** è computazionalmente infattibile da risolvere (dato un messaggio $x \in \mathcal{X}$), la funzione $h$ si dice **second preimage resistant** (resistente alla seconda preimmagine, talvolta chiamata anche *weakly collision resistant*).
-* *Scenario pratico:* Alice ha firmato digitalmente un contratto onesto $x$ (firmando $h(x)$). Oscar conosce $x$ e vuole fabbricare un contratto fraudolento $x' \neq x$ che abbia lo stesso hash $h(x') = h(x)$, così da poter incollare la firma valida di Alice sotto il contratto falso $x'$.
-
----
-
-#### 3. Il Problema della Collisione (Collision Problem)
+- Una funzione di hash per la quale il problema **Second Preimage** non può essere risolto efficientemente è spesso chiamata **second preimage resistant**.
+    
+      
+    
 
 > [!abstract] Problem 5.3: Collision
-> * **Istanza (Input):** Una funzione di hash $h : \mathcal{X} \to \mathcal{Y}$.
-> * **Obiettivo (Output):** Trovare **una qualsiasi coppia** di messaggi distinti $x, x' \in \mathcal{X}$ tali che:
->   $$x' \neq x \qquad \text{e} \qquad h(x') = h(x)$$
+> 
+>   
+> 
+> - **Instance (Istanza):** Una hash function $h : \mathcal{X} \to \mathcal{Y}$.
+>     
+>       
+>     
+> - **Find (Trovare):** Due elementi $x, x' \in \mathcal{X}$ tali che $x' \neq x$ e $h(x') = h(x)$.
+>     
+>       
+>     
 
-* **Definizione di Sicurezza associata:**
-  Se il problema **Collision** è computazionalmente infattibile da risolvere, la funzione $h$ si dice **collision resistant** (resistente alle collisioni, o *strongly collision resistant*).
-* **Differenza cruciale tra Second Preimage e Collision:**
-  * In **Second Preimage**, il primo messaggio $x$ è **imposto dall'esterno** (Oscar non può sceglierlo né modificarlo, deve trovare un $x'$ che collida proprio con quell'$x$ fissato).
-  * In **Collision**, Oscar ha **libertà totale su entrambi i messaggi** $x$ e $x'$: gli basta trovare *due messaggi qualsiasi* che diano lo stesso hash!
-* *Scenario pratico dell'attacco di Collisione:* Oscar prepara lui stesso **due versioni** di un contratto: una versione onesta $x$ (*"Affitto a 500€/mese"*) e una versione truffaldina $x'$ (*"Affitto a 5000€/mese"*). Apporta piccole modifiche invisibili a entrambe (spazi bianchi, sinonimi, metadati) finché non trova una coppia $(x, x')$ tale che $h(x) = h(x')$. Poi sottopone il contratto onesto $x$ ad Alice; Alice lo legge, si fida e firma digitalmente $h(x)$. Un minuto dopo, Oscar butta via $x$ e presenta in tribunale $x'$ accompagnato dalla firma di Alice!
+- Una funzione di hash per la quale il problema **Collision** non può essere risolto efficientemente è spesso chiamata **collision resistant**.
+    
+      
+    
+- _(Nota applicativa sulle firme digitali):_ Se Alice firma un messaggio $x$ apponendo la sua firma digitale sul message digest $h(x)$, e Oscar riesce a risolvere **Second Preimage** trovando $x' \neq x$ con $h(x') = h(x)$, allora Oscar può spacciare la firma di Alice su $h(x)$ come una firma valida sul messaggio falso $x'$ (**forgery**). Inoltre, se Oscar riesce a risolvere **Collision** trovando in anticipo due messaggi $x \neq x'$ con $h(x) = h(x')$, può convincere Alice a firmare il messaggio $x$ (scelto da Oscar) e poi trasferire quella firma sul messaggio $x'$.
+    
+      
+    
 
----
+  
 
-### 5.2.2 Il Modello dell'Oracolo Casuale (The Random Oracle Model - ROM)
+  
 
-Per studiare matematicamente quante operazioni servono per risolvere i tre problemi (Preimage, Second Preimage e Collision) senza dipendere dai dettagli algebrici di una specifica funzione come SHA-256, **Bellare e Rogaway (1993)** hanno introdotto il **Random Oracle Model (Modello dell'Oracolo Casuale)**.
+## 5.2.1 The Random Oracle Model (Il Modello dell'Oracolo Casuale)
 
-L'idea è modellare una funzione di hash "perfetta/ideale" $h : \mathcal{X} \to \mathcal{Y}$ (con $|\mathcal{Y}| = M$) come una **funzione totalmente casuale** estratta uniformemente dall'insieme $\mathcal{F}^{\mathcal{X}, \mathcal{Y}}$ di tutte le $M^{|\mathcal{X}|}$ funzioni possibili da $\mathcal{X}$ a $\mathcal{Y}$:
+  
 
-1. **Come funziona l'Oracolo Casuale:**
-   Nessuno possiede una "formula" per calcolare $h$. L'unico modo per conoscere il valore $h(x)$ (sia per gli utenti onesti sia per l'avversario Oscar) è **interrogare un Oracolo** (una scatola nera) inviandogli una *query* $x \in \mathcal{X}$:
-   * **Se $x$ non è mai stato chiesto prima:** L'oracolo genera istantaneamente un elemento $y \in \mathcal{Y}$ scelto **con probabilità uniforme $\frac{1}{M}$** (in modo indipendente da tutte le risposte precedenti), restituisce $y = h(x)$ e salva la coppia $(x, y)$ nel suo registro interno.
-   * **Se $x$ è già stato chiesto in precedenza:** Per garantire la coerenza matematica di una funzione, l'oracolo cerca $(x, y)$ nel suo registro e restituisce esattamente lo stesso valore $y$ dato la prima volta.
+  
 
-2. **Teorema di Indipendenza nel Random Oracle Model:**
-   Se un algoritmo non ha mai interrogato l'oracolo su un insieme di input distinti $x_1, x_2, \dots, x_k \in \mathcal{X}$, allora dal suo punto di vista i valori $h(x_1), h(x_2), \dots, h(x_k)$ sono **variabili aleatorie indipendenti e uniformemente distribuite** su $\mathcal{Y}$:
-   $$\Pr[h(x_i) = y] = \frac{1}{M} \qquad \forall x_i \in \mathcal{X}, \; \forall y \in \mathcal{Y}$$
+Per analizzare la difficoltà intrinseca dei problemi **Preimage**, **Second Preimage** e **Collision** per una funzione di hash "ideale", la Sezione 5.2.1 introduce il **random oracle model** (dovuto a Bellare e Rogaway):
 
-> [!important] Costo Computazionale nel Random Oracle Model
-> Nel Random Oracle Model, poiché l'unico modo per sapere qualcosa su $h(x)$ è interrogare l'oracolo, la **complessità temporale** di un attacco si misura semplicemente contando **il numero di query $Q$ all'oracolo** necessarie per risolvere il problema con una certa probabilità di successo $\varepsilon$.
-> Un algoritmo randomizzato che interroga l'oracolo al massimo $Q$ volte e ha successo con probabilità almeno $\varepsilon$ viene chiamato un **$(\varepsilon, Q)$-algorithm**.
+  
 
----
+- Denotiamo con **$\mathcal{F}^{\mathcal{X}, \mathcal{Y}}$** l'insieme di tutte le funzioni da $\mathcal{X}$ a $\mathcal{Y}$. Se $\vert{}\mathcal{X}\vert{} = N$ e $\vert{}\mathcal{Y}\vert{} = M$, allora $\vert{}\mathcal{F}^{\mathcal{X}, \mathcal{Y}}\vert{} = M^N$.
+    
+      
+    
+- Nel **random oracle model**, si assume che una hash function $h \in \mathcal{F}^{\mathcal{X}, \mathcal{Y}}$ sia scelta **uniformemente a caso** (_chosen uniformly at random_), e che ci sia permesso accedere a $h$ **unicamente tramite un oracle** (oracolo):
+    
+      
+    - Non ci viene data una formula o un algoritmo per calcolare i valori della funzione $h$.
+        
+          
+        
+    - Possiamo invece specificare un qualsiasi input $x \in \mathcal{X}$ e chiedere all'oracolo di fornirci il corrispondente output $y = h(x)$ (questa operazione è chiamata una **query** all'oracolo).
+        
+          
+        
 
-### 5.2.3 Analisi degli Algoritmi nel Random Oracle Model (e il Paradosso del Compleanno)
+> [!important] Theorem 5.1: Independence Theorem Supponiamo che una hash function $h \in \mathcal{F}^{\mathcal{X}, \mathcal{Y}}$ sia scelta uniformemente a caso, e sia $\mathcal{X}_0 \subseteq \mathcal{X}$. Supponiamo che i valori $h(x)$ siano stati determinati (interrogando l'oracolo per $h$) se e solo se $x \in \mathcal{X}_0$. Allora:
+> 
+>   
+> 
+> $$\Pr[h(x) = y] = \frac{1}{M}$$
+> 
+> per tutti gli $x \in \mathcal{X} \setminus \mathcal{X}_0$ e tutti gli $y \in \mathcal{Y}$. Inoltre, le probabilità $\Pr[h(x) = y]$ sono **indipendenti** per tutti gli $x \in \mathcal{X} \setminus \mathcal{X}_0$.
+> 
+>   
 
-Calcoliamo ora la probabilità di successo $\varepsilon$ di un avversario che effettua **$Q$ query distinte** all'oracolo per risolvere i tre problemi quando $|\mathcal{Y}| = M$ (ad esempio $M = 2^m$ per un hash a $m$ bit).
+- **Definizione di $(\varepsilon, Q)$-algorithm:** Nel _random oracle model_, misuriamo la complessità di un algoritmo contando il numero di **oracle queries** $Q$ che esso effettua. Un algoritmo randomizzato (**randomized algorithm**) che effettua al massimo $Q$ query all'oracolo e risolve un dato problema con probabilità di successo (**success probability**) almeno $\varepsilon$ viene chiamato un **$(\varepsilon, Q)$-algorithm**.
+    
+      
+    
 
-#### A. Complessità di `Preimage` e `Second Preimage` nel ROM
+  
 
-Nel modello Random Oracle, la strategia ottimale per attaccare **Preimage** (dato $y \in \mathcal{Y}$) o **Second Preimage** (dato $x \in \mathcal{X}$) è identica: scegliere $Q$ input distinti a caso e sperare di colpire il bersaglio!
+  
 
-> [!abstract] Algorithm 5.1: `Find-Preimage`$(h, y, Q)$  *(e `Find-Second-Preimage`$(h, x, Q)$)*
-> 1. Scegliere $Q$ elementi distinti $x_1, x_2, \dots, x_Q \in \mathcal{X}$ *(nel caso di `Second-Preimage`, si sceglie $x_i \neq x$ e si calcola prima il bersaglio $y = h(x)$)*.
-> 2. **for** $i \leftarrow 1$ **to** $Q$ **do**
->    $\quad$ **if** $h(x_i) = y$ **then**
->    $\quad \quad$ **return** ($x_i$) *(Successo!)*
-> 3. **return** (*Failure*)
+### Analisi di `Find-Preimage`, `Find-Second-Preimage` e `Find-Collision` nel ROM
 
-* **Calcolo esatto della Probabilità di Successo $\varepsilon$:**
-  * Per ogni singola query $x_i$, la probabilità che $h(x_i) = y$ è $\frac{1}{M}$, quindi la probabilità di **fallire** sulla singola query $x_i$ è:
-    $$\Pr[h(x_i) \neq y] = 1 - \frac{1}{M}$$
-  * Poiché le $Q$ query sono effettuate su input distinti $x_1, \dots, x_Q$, nel Random Oracle Model gli eventi sono **statisticamente indipendenti**. La probabilità di fallire su **tutte e $Q$** le query è quindi il prodotto:
-    $$\Pr[\text{Fallimento su tutte le } Q \text{ query}] = \left(1 - \frac{1}{M}\right)^Q$$
-  * Di conseguenza, la probabilità di successo $\varepsilon$ (trovare almeno una preimmagine entro $Q$ tentativi) è:
+  
+
+  
+
+  
+
+  
+
+#### 1. Algoritmo per `Preimage` (Algorithm 5.1)
+
+  
+
+  
+
+> [!abstract] Algorithm 5.1: `Find-Preimage`$(h, y, Q)$
+> 
+>   
+> 
+> 1. Scegliere qualsiasi sottoinsieme $\mathcal{X}_0 \subseteq \mathcal{X}$ di cardinalità $\vert{}\mathcal{X}_0\vert{} = Q$.
+>     
+>       
+>     
+> 2. **for each** $x \in \mathcal{X}_0$ **do** $\quad$ **if** $h(x) = y$ **then** $\quad \quad$ **return** ($x$)
+>     
+>       
+>     
+> 3. **return** (_failure_)
+>     
+>       
+>     
+
+- **Teorema sulla probabilità di successo di `Find-Preimage`:** Per l'_Independence Theorem_ (Theorem 5.1), per ogni $x \in \mathcal{X}_0$ la probabilità che $h(x) = y$ è $1/M$, e questi eventi sono indipendenti per i $Q$ elementi distinti di $\mathcal{X}_0$. Pertanto la probabilità che nessun $x \in \mathcal{X}_0$ soddisfi $h(x) = y$ è $(1 - 1/M)^Q$. La probabilità di successo di `Find-Preimage` è quindi:
+    
+      
+    
     $$\varepsilon = 1 - \left(1 - \frac{1}{M}\right)^Q$$
-  * **Approssimazione per $M$ grande (Sviluppo di Taylor / Binomio):**
-    Quando $Q \ll M$, sviluppando $(1 - 1/M)^Q \approx 1 - \frac{Q}{M}$ (oppure usando $1 - \frac{1}{M} \approx e^{-1/M}$), otteniamo:
-    $$\varepsilon \approx \frac{Q}{M} \qquad \Big(\text{ovvero } Q \approx \varepsilon M\Big)$$
-    Per avere una probabilità di successo $\varepsilon = \frac{1}{2}$ (o dell'ordine di una costante), l'attaccante deve effettuare un numero di query dell'ordine di **$Q = \Theta(M) = \Theta(2^m)$**!
-    *(Nota: per `Find-Second-Preimage`, se contiamo anche la query iniziale per calcolare $y = h(x)$, con $Q$ query totali si testano $Q-1$ candidati, quindi $\varepsilon = 1 - (1 - 1/M)^{Q-1}$).*
+    
+    Usando lo sviluppo binomiale al primo ordine (valido quando $Q$ è piccolo rispetto a $M$), si ottiene l'approssimazione $\varepsilon \approx \frac{Q}{M}$. Per avere una probabilità di successo costante (es. $\varepsilon = 1/2$), servono $Q = \Theta(M)$ query.
+    
+      
+    
 
----
+  
 
-#### B. Complessità di `Collision` nel ROM: Il Birthday Attack (Attacco del Compleanno)
+  
 
-Vediamo ora cosa cambia radicalmente quando l'attaccante vuole risolvere il problema **Collision** (trovare due input distinti qualsiasi $x_i \neq x_j$ tali che $h(x_i) = h(x_j)$):
+#### 2. Algoritmo per `Second Preimage` (Algorithm 5.2)
 
-> [!abstract] Algorithm 5.2: `Find-Collision`$(h, Q)$ *(Birthday Attack)*
-> 1. Scegliere $Q$ elementi distinti qualsiasi $x_1, x_2, \dots, x_Q \in \mathcal{X}$.
-> 2. **for** $i \leftarrow 1$ **to** $Q$ **do**
->    $\quad y_i \leftarrow h(x_i)$
-> 3. Controllare se esistono due indici $i \neq j$ ($1 \le i < j \le Q$) tali che $y_i = y_j$:
->    * **Se esistono:** **return** $(x_i, x_j)$ *(Collisione trovata!)*
->    * **Altrimenti:** **return** (*Failure*)
+  
 
-* **Teorema e Dimostrazione della Probabilità di Collisione:**
-  Calcoliamo prima la probabilità complementare, ovvero la probabilità $p_{\text{no-coll}}$ che tutti i $Q$ valori $y_1, y_2, \dots, y_Q$ siano **tutti distinti tra loro** (nessuna collisione):
-  1. La 1ª query $y_1 = h(x_1)$ non può collidere con nulla: probabilità $1 = \frac{M}{M}$.
-  2. Affinché la 2ª query $y_2 = h(x_2)$ non collida con $y_1$, deve cadere in uno degli altri $M - 1$ valori di $\mathcal{Y}$: probabilità $\frac{M - 1}{M} = 1 - \frac{1}{M}$.
-  3. Affinché la 3ª query $y_3 = h(x_3)$ non collida né con $y_1$ né con $y_2$ (che sono distinti), deve cadere nei restanti $M - 2$ valori: probabilità $1 - \frac{2}{M}$.
-  4. In generale, dati $y_1, \dots, y_{i-1}$ tutti distinti, la $i$-esima query $y_i = h(x_i)$ evita i precedenti $i - 1$ valori con probabilità $1 - \frac{i - 1}{M}$.
+  
 
-  Moltiplicando le probabilità condizionate per $i = 1, \dots, Q$, la probabilità di **non trovare alcuna collisione** dopo $Q$ query è:
-  $$\Pr[\text{nessuna collisione}] = \left(1 - \frac{1}{M}\right)\left(1 - \frac{2}{M}\right) \cdots \left(1 - \frac{Q - 1}{M}\right) = \prod_{i=1}^{Q-1} \left(1 - \frac{i}{M}\right)$$
-
-  * **Approssimazione analitica tramite $1 - t \approx e^{-t}$:**
-    Dall'analisi matematica sappiamo che per ogni $t \in \mathbb{R}$ vale la disuguaglianza $1 - t \le e^{-t}$, e per $t = \frac{i}{M}$ piccolo vale l'ottima approssimazione $1 - \frac{i}{M} \approx e^{-i/M}$. Sostituendo nel prodotto:
-    $$\prod_{i=1}^{Q-1} \left(1 - \frac{i}{M}\right) \approx \prod_{i=1}^{Q-1} e^{-i/M} = \exp\left( - \frac{1}{M} \sum_{i=1}^{Q-1} i \right)$$
-    Ricordando la somma dei primi $Q - 1$ interi (formula di Gauss: $\sum_{i=1}^{Q-1} i = \frac{Q(Q - 1)}{2}$), otteniamo:
-    $$\Pr[\text{nessuna collisione}] \approx e^{-\frac{Q(Q - 1)}{2M}}$$
-    Pertanto, la probabilità di successo $\varepsilon$ di trovare **almeno una collisione** con $Q$ query è:
-    $$\varepsilon = 1 - \prod_{i=1}^{Q-1} \left(1 - \frac{i}{M}\right) \approx 1 - e^{-\frac{Q(Q - 1)}{2M}}$$
-
-  * **Esplicitiamo il numero di query $Q$ in funzione di $\varepsilon$ e $M$:**
-    Invertiamo l'equazione rispetto a $Q$:
-    $$e^{-\frac{Q(Q - 1)}{2M}} \approx 1 - \varepsilon \quad \Longleftrightarrow \quad \frac{Q^2 - Q}{2M} \approx -\ln(1 - \varepsilon) = \ln\left(\frac{1}{1 - \varepsilon}\right)$$
-    Poiché per $Q$ grande vale $Q^2 - Q \approx Q^2$, otteniamo la celebre **Formula del Birthday Attack**:
-    $$Q^2 \approx 2M \ln\left(\frac{1}{1 - \varepsilon}\right) \quad \Longrightarrow \quad \mathbf{Q \approx \sqrt{2M \ln\left(\frac{1}{1 - \varepsilon}\right)}}$$
-
-  * **Caso standard $\varepsilon = \frac{1}{2}$ (Probabilità di successo del 50%):**
-    Ponendo $\varepsilon = 0.5$, abbiamo $\ln\left(\frac{1}{1 - 0.5}\right) = \ln 2 \approx 0.69315$, da cui:
-    $$Q \approx \sqrt{2 \ln 2 \cdot M} \approx \mathbf{1.1774 \sqrt{M}}$$
-
----
-
-> [!example] Esempio Classico: Il Paradosso del Compleanno ($M = 365$) e Impatto sui Bit dell'Hash
-> 1. **Il Paradosso dei Compleanni ($M = 365$ giorni dell'anno):**
->    Quante persone ($Q$) devono trovarsi in una stanza affinché la probabilità che almeno due di esse compiano gli anni lo stesso giorno sia almeno $\varepsilon = 1/2$ ($50\%$)?
->    Applicando la formula con $M = 365$ e $\varepsilon = 1/2$:
->    $$Q \approx 1.1774 \times \sqrt{365} \approx 1.1774 \times 19.105 \approx \mathbf{22.49}$$
->    Bastano quindi **$Q = 23$ persone** (dove il calcolo esatto dà $\varepsilon \approx 0.5073$, cioè $50.73\%$), un numero enormemente più piccolo di $365 / 2 = 182.5$, perché con $Q$ persone non stiamo facendo $Q$ confronti con una data fissa, bensì **tutte le $\binom{Q}{2} = \frac{Q(Q-1)}{2}$ coppie possibili** tra i presenti (con $23$ persone ci sono già $\frac{23 \times 22}{2} = 253$ coppie di persone confrontate!).
+> [!abstract] Algorithm 5.2: `Find-Second-Preimage`$(h, x, Q)$
 > 
-> 2. **Impatto devastante sulla lunghezza in bit ($m$) delle Funzioni di Hash ($M = 2^m$):**
->    Se una funzione di hash produce un *message digest* di **$m$ bit**, il codominio ha cardinalità $M = 2^m$.
->    * Per invertire l'hash (**Preimage** o **Second Preimage**), servono $Q \approx 2^m$ query.
->    * Ma per trovare una **Collisione** con il *Birthday Attack*, servono solo:
->      $$Q \approx \sqrt{M} = \sqrt{2^m} = \mathbf{2^{m/2} \text{ query!}}$$
->    * **Esempi concreti dal libro:**
->      * Se un hash avesse un digest di soli **$m = 40$ bit** ($M = 2^{40}$), una collisione si troverebbe con probabilità $1/2$ in appena $\approx 2^{20}$ (circa **un milione**) di calcoli di hash, eseguibili in un millisecondo su un normale PC!
->      * Lo storico standard **SHA-1** ha un digest di **$m = 160$ bit**: un attacco del compleanno generico richiede circa $2^{80}$ hash (oggi considerato al limite o insufficiente, oltre ad avere vulnerabilità strutturali scoperte nel 2017).
->      * **Regola d'oro di progettazione:** Per garantire un livello di sicurezza computazionale pari a **$k$ bit** (es. $2^{128}$ operazioni, lo stesso livello di sicurezza di AES-128), il *message digest* di una funzione di hash deve essere lungo **almeno $m = 2k$ bit** (cioè almeno **$256$ bit**, motivo per cui gli standard attuali **SHA-2** e **SHA-3** usano lunghezze da **$224, 256, 384$ o $512$ bit**!).
-
----
-
-### 5.2.4 Confronto e Riduzioni tra i Tre Criteri di Sicurezza
-
-Come sono legati tra loro i tre problemi **Collision**, **Second Preimage** e **Preimage** per una generica funzione di hash $h : \mathcal{X} \to \mathcal{Y}$? Quale proprietà è la più forte (la più difficile da garantire) e quale implica le altre?
-
-Dimostriamo le due **riduzioni matematiche** fondamentali presentate da Stinson nella Sezione 5.2.3.
-
----
-
-#### Riduzione 1: `Collision Resistance` $\Longrightarrow$ `Second Preimage Resistance`
-
-Dimostriamo che se una funzione $h$ è **Collision Resistant**, allora è automaticamente **Second Preimage Resistant**.
-*(Per contrapposizione, questo equivale a dimostrare che se un avversario possiedesse una "scatola nera" `Solve-Second-Preimage` capace di risolvere il problema Second Preimage, potrebbe usarla immediatamente per risolvere il problema Collision!).*
-
-> [!abstract] Algorithm 5.3: `Collision-To-Second-Preimage`$(h)$
-> **Assunzione:** Supponiamo di avere accesso a un algoritmo `Solve-Second-Preimage`$(x)$ che, dato $x \in \mathcal{X}$, restituisce $x' \neq x$ tale che $h(x') = h(x)$.
-> **Obiettivo:** Trovare una collisione $(x, x')$ per $h$.
->
-> 1. Scegliere un elemento $x \in \mathcal{X}$ in modo uniforme a caso.
-> 2. Invocare $x' \leftarrow \text{Solve-Second-Preimage}(x)$.
-> 3. **if** $(x' \neq x)$ **and** $(h(x') = h(x))$ **then**
->    $\quad$ **return** $(x, x')$ *(Collisione trovata!)*
-> 4. **else** **return** (*Failure*)
-
-* **Teorema 5.3:** Se `Solve-Second-Preimage` è un $(\varepsilon, Q)$-algorithm per il problema **Second Preimage**, allora `Collision-To-Second-Preimage` è un $(\varepsilon, Q)$-algorithm (o $(\varepsilon, Q+1)$ se verifichiamo $h$) per il problema **Collision**.
-* **Conclusione 1:** Trovare una collisione è **più facile** (o al più ugualmente difficile) che trovare una seconda preimmagine. Pertanto, **la resistenza alle collisioni è un requisito più forte della resistenza alla seconda preimmagine**:
-  $$\text{Collision Resistant} \Longrightarrow \text{Second Preimage Resistant}$$
-
----
-
-#### Riduzione 2: `Second Preimage` (o `Collision`) $\Longrightarrow$ `Preimage Resistance` (Teorema 5.4)
-
-A prima vista potrebbe sembrare ovvio che se sai invertire $h$ (cioè hai un oracolo `Solve-Preimage`$(y)$ che dato $y$ ti restituisce un $x'$ tale che $h(x') = y$), allora puoi anche trovare una seconda preimmagine o una collisione: prendi un $x$ a caso, calcoli $y = h(x)$, chiedi $x' \leftarrow \text{Solve-Preimage}(y)$ e speri che $x' \neq x$.
-
-**Ma attenzione alla trappola matematica!**
-Chi ci garantisce che l'algoritmo `Solve-Preimage`$(y)$ non ci restituisca **esattamente lo stesso $x$ da cui siamo partiti** ($x' = x$), rendendo inutile il nostro tentativo perché per una collisione serve obbligatoriamente $x' \neq x$?!
-
-Il **Teorema 5.4** di Stinson dimostra che, finché il dominio $\mathcal{X}$ è sufficientemente più grande di $\mathcal{Y}$ (ad esempio $|\mathcal{X}| \ge 2|\mathcal{Y}|$), **anche se `Solve-Preimage` è completamente deterministico**, la riduzione funziona con alta probabilità!
-
-> [!abstract] Algorithm 5.4: `Collision-To-Preimage`$(h)$ *(valido anche per `Second-Preimage-To-Preimage`)*
-> **Assunzione:** Supponiamo di avere un algoritmo `Solve-Preimage`$(y)$ che, dato $y \in \mathcal{Y}$, restituisce un elemento $x' \in \mathcal{X}$ tale che $h(x') = y$.
->
-> 1. Scegliere un messaggio iniziale $x \in \mathcal{X}$ **uniformemente a caso**.
-> 2. Calcolare $y \leftarrow h(x)$ *(1 query a $h$)*.
-> 3. Invocare $x' \leftarrow \text{Solve-Preimage}(y)$.
-> 4. **if** $x' \neq x$ **then**
->    $\quad$ **return** $(x, x')$ *(Successo: $x' \neq x$ e $h(x') = y = h(x)$!)*
-> 5. **else** **return** (*Failure*)
-
-> [!important] Teorema 5.4 (Stinson): Riduzione da Collision/Second-Preimage a Preimage
-> Sia $h : \mathcal{X} \to \mathcal{Y}$ una funzione di hash con $|\mathcal{X}| = N$ e $|\mathcal{Y}| = M$, tale che $N \ge 2M$. Supponiamo che `Solve-Preimage` sia un $(1, Q)$-algorithm che risolve sempre il problema **Preimage** per $h$. Allora l'algoritmo `Collision-To-Preimage` è un $(\varepsilon, Q+1)$-algorithm per il problema **Collision** (e per **Second Preimage** su input casuale) con probabilità di successo:
-> $$\varepsilon \ge 1 - \frac{M}{N} \ge \frac{1}{2}$$
-
-* **Dimostrazione Completa del Teorema 5.4:**
-  1. Per ogni $y \in \mathcal{Y}$, definiamo la classe di equivalenza (fibra/controimmagine) $h^{-1}(y) = \{x \in \mathcal{X} : h(x) = y\}$ e poniamo $c_y = |h^{-1}(y)|$.
-     Poiché gli insiemi $h^{-1}(y)$ (al variare di $y \in \text{Im}(h)$) formano una partizione di $\mathcal{X}$, la somma delle loro cardinalità è esattamente $N$:
-     $$\sum_{y \in \text{Im}(h)} c_y = N$$
-  2. Quando scegliamo $x \in \mathcal{X}$ con probabilità uniforme $\frac{1}{N}$ al Passo 1 e calcoliamo $y = h(x)$, la probabilità che l'immagine sia un particolare $y \in \text{Im}(h)$ è:
-     $$\Pr[h(x) = y] = \frac{|h^{-1}(y)|}{|\mathcal{X}|} = \frac{c_y}{N}$$
-  3. Inoltre, **condizionatamente al fatto che $h(x) = y$**, l'elemento $x$ che abbiamo estratto al Passo 1 è distribuito **uniformemente** tra tutti i $c_y$ elementi dell'insieme $h^{-1}(y)$!
-     L'algoritmo `Solve-Preimage`$(y)$ riceve in input **soltanto $y$** (non sa quale $x \in h^{-1}(y)$ avevamo estratto noi al Passo 1!) e restituisce un certo elemento $x' \in h^{-1}(y)$.
-     Pertanto, fissato $y$, tra i $c_y$ elementi possibili per $x \in h^{-1}(y)$, ce n'è **uno solo** "sfortunato" che coincide con $x'$ ($x = x'$), mentre tutti gli altri **$c_y - 1$ elementi** soddisfano $x \neq x'$! Quindi:
-     $$\Pr[x' \neq x \mid h(x) = y] = \frac{c_y - 1}{c_y}$$
-  4. Applichiamo la legge della probabilità totale sommando su tutti gli $y \in \text{Im}(h)$ (notando che $|\text{Im}(h)| \le |\mathcal{Y}| = M$):
-     $$\begin{aligned}
-     \Pr[\text{Successo}] = \Pr[x' \neq x] &= \sum_{y \in \text{Im}(h)} \Pr[h(x) = y] \cdot \Pr[x' \neq x \mid h(x) = y] \\
-     &= \sum_{y \in \text{Im}(h)} \frac{c_y}{N} \cdot \frac{c_y - 1}{c_y} \\
-     &= \frac{1}{N} \sum_{y \in \text{Im}(h)} (c_y - 1) \\
-     &= \frac{1}{N} \left( \sum_{y \in \text{Im}(h)} c_y - \sum_{y \in \text{Im}(h)} 1 \right) \\
-     &= \frac{N - |\text{Im}(h)|}{N} \ge \frac{N - M}{N} = 1 - \frac{M}{N}
-     \end{aligned}$$
-  5. Poiché per ipotesi $N \ge 2M$ (cioè $\frac{M}{N} \le \frac{1}{2}$), concludiamo che:
-     $$\varepsilon = \Pr[x' \neq x] \ge 1 - \frac{1}{2} = \mathbf{\frac{1}{2}}$$
-     *(E nelle funzioni di hash reali, dove $N \gg M$, si ha $\frac{M}{N} \approx 0$, quindi la probabilità di successo $\varepsilon = 1 - \frac{M}{N}$ è praticamente uguale a **$1$**!).* $\blacksquare$
-
-> [!example] Esempio Numerico del Teorema 5.4 (Perché l'ipotesi $N \ge 2M$ è indispensabile!)
-> * **Caso 1 ($N = M$, nessuna compressione):** Sia $\mathcal{X} = \mathcal{Y} = \{0, 1\}^{128}$ e sia $h(x) = x$ la funzione identità (o una permutazione).
->   - Qui ogni fibra ha dimensione $c_y = 1$ (non esistono proprio due input diversi con la stessa uscita!).
->   - Quindi $h$ è banalmente **Collision Resistant** e **Second Preimage Resistant** (è impossibile trovare $x \neq x'$ con $h(x)=h(x')$ perché non esistono!), ma **NON è affatto Preimage Resistant** (chiunque inverte $h(x) = y$ istantaneamente ponendo $x = y$!).
->   - Infatti, nella formula del Teorema 5.4, con $N = M$ si ottiene $\Pr[x' \neq x] = \frac{N - M}{N} = 0$.
-> * **Caso 2 ($N = 8, M = 2$, compressione da 3 bit a 1 bit):** Sia $\mathcal{X} = \{0, 1\}^3$ ($N = 8$) e $\mathcal{Y} = \{0, 1\}$ ($M = 2$).
->   Supponiamo che $h$ mandi $6$ elementi in $y=0$ ($c_0 = 6$) e $2$ elementi in $y=1$ ($c_1 = 2$).
->   Anche se l'oracolo `Solve-Preimage` restituisce sempre un elemento fisso per $0$ e uno fisso per $1$, scegliendo $x \in \{0,1\}^3$ a caso la probabilità di ottenere $x' \neq x$ è esattamente:
->   $$\Pr[x' \neq x] = \frac{6}{8} \cdot \frac{5}{6} + \frac{2}{8} \cdot \frac{1}{2} = \frac{5 + 1}{8} = \frac{6}{8} = \frac{N - M}{N} = \mathbf{\frac{3}{4} = 75\%} \ge \frac{1}{2}$$
-
----
-
-#### Tabella Riassuntiva della Gerarchia di Sicurezza (per $N \gg M = 2^m$)
-
-$$\boxed{\text{Collision Resistant}} \implies \boxed{\text{Second Preimage Resistant}} \implies \boxed{\text{Preimage Resistant (One-Way)}}$$
-
-| Proprietà di Sicurezza | Cosa è dato a Oscar | Cosa deve trovare Oscar | Complessità nel ROM ($M = 2^m$) | Forza della Proprietà |
-| :--- | :---: | :---: | :---: | :---: |
-| **1. Preimage Resistance** | Un digest $y \in \mathcal{Y}$ | $x$ tale che $h(x) = y$ | $Q \approx 2^m$ | **Più debole** (Base) |
-| **2. Second Preimage Resistance** | Un messaggio $x \in \mathcal{X}$ | $x' \neq x$ tale che $h(x') = h(x)$ | $Q \approx 2^m$ | **Intermedia** |
-| **3. Collision Resistance** | Solo la funzione $h$ | Qualsiasi coppia $x \neq x'$ con $h(x') = h(x)$ | **$Q \approx 2^{m/2}$** *(Birthday Attack!)* | **Più forte** (Implica le altre due) |
-
----
-
-## 5.5.3 Crittografia Autenticata e Galois/Counter Mode (GCM)
-
-Nella Sezione 5.5 abbiamo visto che i **Message Authentication Codes (MAC)** garantiscono l'**integrità e l'autenticità** dei messaggi grazie a una chiave segreta condivisa, mentre nel Capitolo 4 abbiamo visto che i **cifrari a blocchi** (in modalità come CBC o CTR) garantiscono la **confidenzialità**.
-
-Nella pratica (ad esempio nelle connessioni internet HTTPS/TLS, IPsec, SSH, Wi-Fi WPA2/WPA3), Alice e Bob hanno quasi sempre bisogno di **entrambi gli obiettivi contemporaneamente**:
-1. **Confidenzialità:** Oscar non deve poter leggere il messaggio $x$.
-2. **Integrità / Autenticazione:** Oscar non deve poter modificare il testo cifrato $y$ in transito né iniettare pacchetti falsi (e come abbiamo imparato dal *Padding Oracle Attack* nella Sezione 4.7.1, Bob **non deve mai tentare di decifrare** un testo cifrato prima di aver verificato che sia autentico e non manomesso!).
-
-Un sistema crittografico che fornisce simultaneamente confidenzialità e autenticazione prende il nome di **Authenticated Encryption (Crittografia Autenticata, AE)** o, quando permette di autenticare anche intestazioni in chiaro, **AEAD (*Authenticated Encryption with Associated Data*)**.
-
----
-
-### 1. I Tre Approcci per Combinare Cifratura e MAC
-
-Supponiamo che Alice e Bob dispongano di un algoritmo di cifratura simmetrica $e_{K_1}$ e di un algoritmo MAC $\text{MAC}_{K_2}$ (usando due chiavi indipendenti $K_1, K_2$). Esistono tre modi classici per combinarli sul messaggio in chiaro $x$:
-
-1. **Encrypt-and-MAC (*Cifra e autentica separatamente*):**
-   Alice cifra $y = e_{K_1}(x)$ e calcola il MAC **sul testo in chiaro** $\tau = \text{MAC}_{K_2}(x)$, inviando $(y, \tau)$.
-   * *Difetto:* Se il MAC è deterministico, due messaggi uguali avranno sempre lo stesso tag $\tau$, rivelando a Oscar le ripetizioni dei messaggi!
-2. **MAC-then-Encrypt (*Autentica e poi cifra tutto*):**
-   Alice calcola prima il tag sul testo in chiaro $\tau = \text{MAC}_{K_2}(x)$ e poi cifra insieme messaggio e tag: $y = e_{K_1}(x \parallel \tau)$. *(Questo approccio è usato ad esempio nella modalità **CCM - Counter with CBC-MAC** descritta nella prima parte della Sezione 5.5.3).*
-   * *Difetto potenziale:* Per verificare il tag $\tau$, Bob è costretto a **decifrare prima $y$**, esponendo potenzialmente il sistema ad attacchi a canale laterale o *Padding Oracle* se la decifratura fallisce in modi distinguibili.
-3. **Encrypt-then-MAC (*Cifra e poi autentica il testo cifrato* — L'approccio ideale!):**
-   Alice cifra prima il messaggio $y = e_{K_1}(x)$ e poi **calcola il MAC direttamente sul testo cifrato** $\tau = \text{MAC}_{K_2}(y)$, inviando $(y, \tau)$.
-   * **Vantaggio decisivo:** Quando Bob riceve $(y', \tau')$, **verifica subito il MAC sul testo cifrato** controllando $\tau' \stackrel{?}{=} \text{MAC}_{K_2}(y')$ *prima ancora di toccare la funzione di decifratura*! Se Oscar ha alterato anche un solo bit di $y$, la verifica del MAC fallisce istantaneamente e Bob butta via il pacchetto senza mai decifrarlo (sventando sul nascere qualsiasi *Chosen-Ciphertext Attack* o *Padding Oracle Attack*!).
-
----
-
-### 2. Galois/Counter Mode (GCM): Architettura e Matematica
-
-Il **Galois/Counter Mode (GCM)**, standardizzato dal NIST nella *Special Publication 800-38D*, è oggi la modalità di **Crittografia Autenticata (AEAD)** più utilizzata al mondo (è il cuore di **TLS 1.3**).
-
-GCM segue la filosofia **Encrypt-then-MAC** unendo due componenti estremamente veloci e **completamente parallelizzabili**:
-1. **Per la Cifratura:** **AES in modalità Counter (CTR)** con chiave $K$ da 128 bit (o 192/256 bit).
-2. **Per l'Autenticazione (MAC):** Una funzione di hash universale algebrica (chiamata **GHASH**) basata su **moltiplicazioni per una costante $H$ nel campo finito di Galois $\mathbb{F}_{2^{128}}$**!
-
----
-
-#### A. Cosa sono gli "Authenticated Data" (`Auth data`) in GCM?
-Oltre ai blocchi di testo in chiaro $x_1, x_2, \dots$ (che devono essere sia cifrati che autenticati), GCM accetta in ingresso anche dei blocchi opzionali chiamati **Authenticated Data** (indicati nello schema del libro come **`Auth data 1`**, o *Associated Data* $A$):
-* **Cosa sono nella pratica?** Sono dati di intestazione di un pacchetto di rete (es. indirizzo IP mittente/destinatario, numero di porta TCP, numero di sequenza del pacchetto).
-* **Come vengono trattati?** Non devono essere cifrati (perché i router lungo la rete devono poter leggere l'indirizzo IP per instradare il pacchetto!), ma **vengono incorporati nel calcolo dell'Authentication Tag** affinché Oscar non possa modificarli senza far fallire la verifica del tag!
-
----
-
-#### B. L'Aritmetica nel Campo Finito $\mathbb{F}_{2^{128}}$
-In GCM tutti i blocchi (contatori, blocchi di testo in chiaro/cifrato, `Auth data`, costante $H$ e `Auth tag`) hanno lunghezza fissa di **128 bit**.
-Ogni blocco di 128 bit $B = (b_{127}, b_{126}, \dots, b_1, b_0)_2$ viene interpretato come un elemento del **campo finito di Galois $\mathbb{F}_{2^{128}} = \mathbb{Z}_2[\alpha] / (p(\alpha))$**, costruito modulo il polinomio irriducibile di grado 128 scelto dallo standard GCM:
-
-$$p(\alpha) = \alpha^{128} + \alpha^7 + \alpha^2 + \alpha + 1$$
-
-* **Addizione ($\oplus$) in $\mathbb{F}_{2^{128}}$:** È il semplice **XOR bit a bit** tra due blocchi da 128 bit.
-* **Moltiplicazione ($\cdot$ oppure $\text{mult}_H$) in $\mathbb{F}_{2^{128}}$:** È la moltiplicazione tra due polinomi in $\mathbb{Z}_2[\alpha]$ ridotta modulo $\alpha^{128} + \alpha^7 + \alpha^2 + \alpha + 1$ (dove $\alpha^{128} \equiv \alpha^7 + \alpha^2 + \alpha + 1$).
-
----
-
-### 3. Funzionamento Passo-Passo di GCM (Figura 5.3 del Libro)
-
-Seguiamo nel dettaglio tutti i passaggi illustrati nella **Figura 5.3** di Stinson per cifrare e autenticare un messaggio composto da dati autenticati (`Auth data 1`) e blocchi di plaintext (`Plaintext 1`, `Plaintext 2`, $\dots$):
-
-#### Passo 1: Inizializzazione dei Contatori (`Counter 0`, `Counter 1`, `Counter 2`, ...) e Calcolo di $H$
-1. **Initialization Vector ($IV$) e `Counter 0`:**
-   * Si sceglie un **Initialization Vector ($IV$)** non segreto, tipicamente di lunghezza **96 bit** ($12$ byte). L'$IV$ viene trasmesso in chiaro insieme al ciphertext e **deve essere cambiato ad ogni nuova cifratura** (è un *nonce*).
-   * A partire dall'$IV$ di 96 bit si costruisce il valore iniziale del contatore a 128 bit, chiamato **`Counter 0`** (tipicamente concatenando ai 96 bit dell'$IV$ 32 bit finali inizializzati a `00...01`, ovvero $\text{Counter } 0 = IV \parallel 0^{31}1$).
-   * I contatori successivi **`Counter 1`**, **`Counter 2`**, $\dots$ si ottengono incrementando di $1$ il contatore ad ogni passo tramite la funzione **`incr`**.
-2. **Determinazione della sottochiave di moltiplicazione $H \in \mathbb{F}_{2^{128}}$:**
-   * Il calcolo del tag di autenticazione richiede di effettuare moltiplicazioni nel campo $\mathbb{F}_{2^{128}}$ per un valore costante segreto **$H \in \mathbb{F}_{2^{128}}$** derivato dalla chiave AES $K$.
-   * *(Nota: nel testo di Stinson a pag. 169 si afferma in modo semplificato che il valore di $H$ viene determinato cifrando `Counter 0`; nella specifica ufficiale NIST SP 800-38D, $H$ viene calcolato cifrando con AES il blocco di 128 zeri, $H = e_K(0^{128})$, mentre $e_K(\text{Counter 0})$ viene riservato esclusivamente per l'ultimo XOR di mascheramento finale del tag).*
-
----
-
-#### Passo 2: Cifratura dei Blocchi di Plaintext in Modalità CTR (Parte Superiore della Figura 5.3)
-I blocchi di testo in chiaro $x_1$ (`Plaintext 1`), $x_2$ (`Plaintext 2`), $\dots, x_n$ vengono cifrati esattamente come nella modalità Counter (CTR) usando i contatori a partire da `Counter 1`:
-
-$$\begin{aligned}
-y_1 &= x_1 \oplus e_K(\text{Counter } 1) \qquad (\text{Ciphertext } 1) \\
-y_2 &= x_2 \oplus e_K(\text{Counter } 2) \qquad (\text{Ciphertext } 2) \\
-&\;\;\vdots \\
-y_n &= x_n \oplus e_K(\text{Counter } n) \qquad (\text{Ciphertext } n)
-\end{aligned}$$
-
----
-
-#### Passo 3: Calcolo dell'Authentication Tag tramite Moltiplicazioni in $\mathbb{F}_{2^{128}}$ (Parte Inferiore della Figura 5.3)
-Una volta ottenuti i blocchi di testo cifrato $y_1, y_2, \dots, y_n$, GCM calcola il tag di autenticazione (**`Auth tag`**) concatenando una sequenza di **XOR ($\oplus$)** e **moltiplicazioni per $H$ ($\text{mult}_H$)** in $\mathbb{F}_{2^{128}}$ (secondo lo schema di Horner per la valutazione di un polinomio in $H$):
-
-1. **Inizio dai Dati Autenticati (`Auth data 1` = $A_1$):**
-   Si prende il blocco di dati autenticati in chiaro $A_1$ e lo si moltiplica per $H$ nel campo $\mathbb{F}_{2^{128}}$:
-   $$g_1 = A_1 \cdot H$$
-2. **Incorporazione di `Ciphertext 1` ($y_1$):**
-   Si fa lo XOR con il primo blocco cifrato $y_1$ e si moltiplica il risultato per $H$ in $\mathbb{F}_{2^{128}}$:
-   $$g_2 = (g_1 \oplus y_1) \cdot H = A_1 H^2 \oplus y_1 H$$
-3. **Incorporazione di `Ciphertext 2` ($y_2$):**
-   Si fa lo XOR con il secondo blocco cifrato $y_2$ e si moltiplica ancora per $H$ in $\mathbb{F}_{2^{128}}$:
-   $$g_3 = (g_2 \oplus y_2) \cdot H = A_1 H^3 \oplus y_1 H^2 \oplus y_2 H$$
-   *(Questo ciclo "XOR con il blocco cifrato $\to$ moltiplica per $H$" si ripete fino a processare tutti gli $n$ blocchi di ciphertext).*
-4. **Incorporazione del Blocco delle Lunghezze (`len(A) || len(C)`):**
-   Si effettua un ulteriore XOR con un blocco di 128 bit che codifica la **lunghezza in bit degli Authenticated Data** ($\text{len}(A)$, su 64 bit) concatenata alla **lunghezza in bit del Ciphertext** ($\text{len}(C)$, su 64 bit), seguito da **un'ultima moltiplicazione per $H$**:
-   $$g_4 = \Big(g_3 \oplus (\text{len}(A) \parallel \text{len}(C))\Big) \cdot H = A_1 H^4 \oplus y_1 H^3 \oplus y_2 H^2 \oplus (\text{len}(A) \parallel \text{len}(C)) H$$
-   * *Perché si inserisce il blocco `len(A) || len(C)`?* Perché se non registrassimo le lunghezze di $A$ e di $C$, un attaccante potrebbe spostare l'ultimo blocco di $A$ facendolo passare per il primo blocco di $C$ (o viceversa) senza alterare minimamente il polinomio in $H$!
-5. **XOR Finale con la Cifratura di `Counter 0`:**
-   Infine, il risultato $g_4$ viene sommato in XOR con la cifratura AES del contatore iniziale **`Counter 0`**, producendo l'**`Auth tag`** finale $T$:
-   $$\mathbf{\text{Auth tag } T = g_4 \oplus e_K(\text{Counter } 0)}$$
-   * *Perché serve l'ultimo XOR con $e_K(\text{Counter 0})$?* Perché se il tag fosse semplicemente il polinomio $g_4$ senza la maschera finale $e_K(\text{Counter 0})$, un attaccante che osserva $(A_1, y_1, y_2, g_4)$ potrebbe risolvere un'equazione polinomiale di 4° grado in $\mathbb{F}_{2^{128}}$ per trovare la chiave di hash segreta $H$! Mascherando $g_4$ con la chiave pseudorandom unica $e_K(\text{Counter 0})$ (che cambia a ogni messaggio perché cambia l'$IV$), il valore di $H$ rimane completamente nascosto.
-
----
-
-#### Schema Visivo del Flusso Dati di GCM (Figura 5.3)
-
-```
- [Counter 0] ──────────► [incr] ─────────────► [Counter 1] ──────────► [incr] ─────────────► [Counter 2]
-      │                                             │                                             │
-      ▼                                             ▼                                             ▼
- [ AES e_K ]                                   [ AES e_K ]                                   [ AES e_K ]
-      │                                             │                                             │
-      │                                     Plaintext 1 (x_1)                             Plaintext 2 (x_2)
-      │                                             │                                             │
-      │                                             ▼                                             ▼
-      │                                            (⊕)                                           (⊕)
-      │                                             │                                             │
-      │                                             ▼                                             ▼
-      │      Auth data 1 (A_1)               Ciphertext 1 (y_1)                            Ciphertext 2 (y_2)
-      │              │                              │                                             │
-      │              ▼                              ▼                                             ▼
-      │          [ mult_H ] ─────────────────────► (⊕) ──► [ mult_H ] ─────────────────────────► (⊕) ──► [ mult_H ]
-      │                                                                                                      │
-      │                                                                                      len(A)||len(C) ─┤
-      │                                                                                                      ▼
-      │                                                                                                     (⊕)
-      │                                                                                                      │
-      │                                                                                                      ▼
-      │                                                                                                  [ mult_H ]
-      │                                                                                                      │
-      └────────────────────────────────────────────────────────────────────────────────────────────────────►(⊕)
-                                                                                                             │
-                                                                                                             ▼
-                                                                                                        [ Auth tag ]
-```
-
----
-
-#### Passo 4: Decifratura e Verifica in GCM
-Quando Bob riceve il pacchetto completo $(IV, A_1, y_1, y_2, \text{Auth tag } T)$:
-1. **Verifica dell'Autenticità PRIMA della Decifratura:**
-   Partendo da $IV$, $A_1$ e dai blocchi cifrati ricevuti $y_1, y_2$, Bob ricalcola esattamente la catena inferiore ($\text{mult}_H$ e $\oplus$) e lo XOR con $e_K(\text{Counter 0})$, ottenendo il tag atteso $T'$.
-   * Se **$T' \neq T$**: Bob sa con certezza che il ciphertext, gli `Auth data` o l'$IV$ sono stati manomessi in transito; **rifiuta immediatamente il pacchetto (`REJECT`)** senza restituire alcun testo decifrato.
-   * Se **$T' = T$**: Il pacchetto è autentico e integro! Bob procede (o rilascia il risultato calcolato in parallelo) decifrando i blocchi in modalità CTR:
-     $$x_1 = y_1 \oplus e_K(\text{Counter } 1), \qquad x_2 = y_2 \oplus e_K(\text{Counter } 2)$$
-
----
-
-> [!example] Esempio Numerico Passo-Passo del Calcolo in GCM (su un campo finito ridotto $\mathbb{F}_{2^4}$)
-> Per toccare con mano l'aritmetica esatta di GCM senza dover scrivere stringhe da 128 bit, eseguiamo tutti i passaggi della Figura 5.3 su blocchi da **$4$ bit** nel campo finito $\mathbb{F}_{2^4} = \mathbb{Z}_2[\alpha]/(\alpha^4 + \alpha + 1)$ (dove vale la regola di riduzione $\alpha^4 \equiv \alpha + 1$, cioè $\texttt{10000}_2 \equiv \texttt{0011}_2 = \texttt{3}_{16}$).
+>   
 > 
-> **Parametri del nostro esempio:**
-> * Supponiamo che per il messaggio corrente i blocchi cifrati dai contatori siano:
->   * $e_K(\text{Counter } 0) = \texttt{1010}_2 = \texttt{A}_{16}$
->   * $e_K(\text{Counter } 1) = \texttt{0101}_2 = \texttt{5}_{16}$
->   * $e_K(\text{Counter } 2) = \texttt{1100}_2 = \texttt{C}_{16}$
-> * Sottochiave costante di moltiplicazione in $\mathbb{F}_{2^4}$: **$H = \texttt{0010}_2 = \texttt{2}_{16}$** (che corrisponde al monomio $\alpha$).
-> * Dati da trasmettere:
->   * `Auth data 1` (in chiaro): $A_1 = \texttt{0011}_2 = \texttt{3}_{16}$ ($\alpha + 1$)
->   * `Plaintext 1`: $x_1 = \texttt{1111}_2 = \texttt{F}_{16}$
->   * `Plaintext 2`: $x_2 = \texttt{0001}_2 = \texttt{1}_{16}$
->   * Blocco lunghezze: $L = \text{len}(A) \parallel \text{len}(C) = \texttt{0110}_2 = \texttt{6}_{16}$ ($\alpha^2 + \alpha$)
+> 1. Calcolare $y = h(x)$ _(1ª query all'oracolo)_.
+>     
+>       
+>     
+> 2. Scegliere qualsiasi sottoinsieme $\mathcal{X}_0 \subseteq \mathcal{X} \setminus \{x\}$ di cardinalità $\vert{}\mathcal{X}_0\vert{} = Q - 1$.
+>     
+>       
+>     
+> 3. **for each** $x_0 \in \mathcal{X}_0$ **do** $\quad$ **if** $h(x_0) = y$ **then** $\quad \quad$ **return** ($x_0$)
+>     
+>       
+>     
+> 4. **return** (_failure_)
+>     
+>       
+>     
+
+- **Probabilità di successo di `Find-Second-Preimage`:** Poiché l'algoritmo usa $1$ query per calcolare $y = h(x)$ e poi interroga l'oracolo su $Q - 1$ nuovi elementi distinti di $\mathcal{X} \setminus \{x\}$, la probabilità di successo con al massimo $Q$ query totali è esattamente:
+    
+      
+    
+    $$\varepsilon = 1 - \left(1 - \frac{1}{M}\right)^{Q - 1}$$
+    
+    Anche qui, per avere probabilità di successo costante, servono $Q = \Theta(M)$ query.
+    
+      
+    
+
+  
+
+  
+
+#### 3. Algoritmo per `Collision` (Algorithm 5.3) e Birthday Attack
+
+  
+
+  
+
+> [!abstract] Algorithm 5.3: `Find-Collision`$(h, Q)$
 > 
-> ---
+>   
 > 
-> **1. Cifratura CTR dei due blocchi di Plaintext:**
-> * $y_1 = x_1 \oplus e_K(\text{Counter } 1) = \texttt{1111} \oplus \texttt{0101} = \mathbf{\texttt{1010}_2 = \texttt{A}_{16}}$ ($\alpha^3 + \alpha$)
-> * $y_2 = x_2 \oplus e_K(\text{Counter } 2) = \texttt{0001} \oplus \texttt{1100} = \mathbf{\texttt{1101}_2 = \texttt{D}_{16}}$ ($\alpha^3 + \alpha^2 + 1$)
+> 1. Scegliere qualsiasi sottoinsieme $\mathcal{X}_0 \subseteq \mathcal{X}$ di cardinalità $|\mathcal{X}_0| = Q$.
+>     
+>       
+>     
+> 2. **for each** $x \in \mathcal{X}_0$ **do** $\quad y_x \leftarrow h(x)$
+>     
+>       
+>     
+> 3. **if** $y_x = y_{x'}$ per qualche coppia $x \neq x'$ **then** $\quad$ **return** $(x, x')$
+>     
+>       
+>     
+> 4. **else** **return** (_failure_)
+>     
+>       
+>     
+
+- **Theorem 5.2 (Probabilità di successo di `Find-Collision` e Birthday Paradox):**
+    
+    Denotiamo gli elementi di $\mathcal{X}_0$ con $x_1, \dots, x_Q$. Sia $E_i$ l'evento che $y_{x_i} \notin \{y_{x_1}, \dots, y_{x_{i-1}}\}$.
+    
+      
+    - $\Pr[E_1] = 1$.
+        
+          
+        
+    - Condizionatamente a $E_1 \land \dots \land E_{i-1}$ (cioè al fatto che i primi $i-1$ valori siano tutti distinti), per il Theorem 5.1 si ha $\Pr[E_i \mid E_1 \land \dots \land E_{i-1}] = \frac{M - (i - 1)}{M} = 1 - \frac{i - 1}{M}$.
+        
+          
+        
+    - Pertanto, la probabilità di non trovare alcuna collisione è $\prod_{i=1}^{Q-1} \left(1 - \frac{i}{M}\right)$, e la probabilità di successo $\varepsilon$ di `Find-Collision` è:
+        
+          
+        
+        $$\varepsilon = 1 - \prod_{i=1}^{Q-1} \left(1 - \frac{i}{M}\right)$$
+        
+    - Usando l'approssimazione $1 - t \approx e^{-t}$ per piccoli valori di $t$ e la somma $\sum_{i=1}^{Q-1} i = \frac{Q(Q-1)}{2}$, si ottiene:
+        
+          
+        
+        $$1 - \varepsilon \approx \prod_{i=1}^{Q-1} e^{-i/M} = e^{-\frac{Q(Q-1)}{2M}} \quad \Longrightarrow \quad \varepsilon \approx 1 - e^{-\frac{Q(Q-1)}{2M}}$$
+        
+    - Risolvendo rispetto a $Q$ (ed effettuando l'approssimazione $Q^2 - Q \approx Q^2$), troviamo il numero di query $Q$ necessarie per ottenere una probabilità di successo $\varepsilon$:
+        
+          
+        
+        $$Q \approx \sqrt{2M \ln\left(\frac{1}{1 - \varepsilon}\right)}$$
+        
+    - Prendendo $\varepsilon = \frac{1}{2}$, questa formula fornisce:
+        
+          
+        
+        $$Q \approx \sqrt{2 \ln 2 \cdot M} \approx 1.17 \sqrt{M}$$
+        
+- **Il Birthday Paradox e il Birthday Attack:**
+    
+      
+    - Se $M = 365$ (giorni dell'anno) e $\varepsilon = 1/2$, la formula dà $Q \approx 1.17 \sqrt{365} \approx 22.3$ (per $Q = 23$ persone, la probabilità esatta di avere almeno due persone con lo stesso compleanno è $\varepsilon \approx 0.507$). Questo fenomeno è noto come **birthday paradox**.
+        
+          
+        
+    - Nel contesto delle funzioni di hash, l'Algorithm 5.3 è chiamato **birthday attack**. Se una funzione di hash ha un _message digest_ di $m$ bit ($M = 2^m$), il _birthday attack_ trova una collisione con probabilità $1/2$ utilizzando appena $\approx 2^{m/2}$ query ($Q = \Theta(\sqrt{M})$), motivo per cui il numero di bit $m$ dell'output di una hash function deve essere almeno il doppio rispetto alla lunghezza della chiave di un block cipher per garantire lo stesso livello di sicurezza contro attacchi di ricerca esaustiva.
+        
+          
+        
+
+  
+
+  
+
+## 5.2.2 Comparison of Security Criteria (Confronto tra i Criteri di Sicurezza)
+
+  
+
+  
+
+Nella Sezione 5.2.2 Stinson confronta la difficoltà relativa di risolvere **Preimage**, **Second Preimage** e **Collision** per una generica funzione di hash (senza assumere il _random oracle model_), dimostrando due riduzioni tramite gli **Algorithm 5.4** e **Algorithm 5.5**.
+
+  
+
+  
+
+  
+
+### 1. Riduzione da `Collision` a `Second Preimage` (Algorithm 5.4 & Theorem 5.3)
+
+  
+
+  
+
+Supponiamo di disporre di un algoritmo (visto come un oracolo o scatola nera) chiamato **`Find-Second-Preimage`** che risolve il problema **Second Preimage** per $h$. Allora possiamo risolvere il problema **Collision** come segue:
+
+  
+
+> [!abstract] Algorithm 5.4: `Collision-To-Second-Preimage`$(h)$ **External** `Find-Second-Preimage`
 > 
-> ---
+>   
 > 
-> **2. Calcolo a catena dell'`Auth tag` in $\mathbb{F}_{2^4}$ (Catena inferiore della Figura 5.3):**
-> * **Passo 2a (`Auth data 1` $\cdot H$):**
->   Moltiplichiamo $A_1 = \alpha + 1$ ($\texttt{0011}$) per $H = \alpha$ ($\texttt{0010}$):
->   $$g_1 = (\alpha + 1) \cdot \alpha = \alpha^2 + \alpha = \mathbf{\texttt{0110}_2}$$
-> * **Passo 2b (XOR con $y_1$ e moltiplicazione per $H$):**
->   Facciamo lo XOR con $y_1 = \texttt{1010}_2$:
->   $$g_1 \oplus y_1 = \texttt{0110} \oplus \texttt{1010} = \texttt{1100}_2 \quad (\alpha^3 + \alpha^2)$$
->   Moltiplichiamo per $H = \alpha$ riducendo modulo $\alpha^4 = \alpha + 1$:
->   $$g_2 = (\alpha^3 + \alpha^2) \cdot \alpha = \alpha^4 + \alpha^3 = (\alpha + 1) + \alpha^3 = \alpha^3 + \alpha + 1 = \mathbf{\texttt{1011}_2}$$
-> * **Passo 2c (XOR con $y_2$ e moltiplicazione per $H$):**
->   Facciamo lo XOR con $y_2 = \texttt{1101}_2$:
->   $$g_2 \oplus y_2 = \texttt{1011} \oplus \texttt{1101} = \texttt{0110}_2 \quad (\alpha^2 + \alpha)$$
->   Moltiplichiamo per $H = \alpha$:
->   $$g_3 = (\alpha^2 + \alpha) \cdot \alpha = \alpha^3 + \alpha^2 = \mathbf{\texttt{1100}_2}$$
-> * **Passo 2d (XOR con il blocco lunghezze $L = \texttt{0110}_2$ e ultima moltiplicazione per $H$):**
->   Facciamo lo XOR con $L = \texttt{0110}_2$:
->   $$g_3 \oplus L = \texttt{1100} \oplus \texttt{0110} = \texttt{1010}_2 \quad (\alpha^3 + \alpha)$$
->   Moltiplichiamo per $H = \alpha$ (usando $\alpha^4 = \alpha + 1$):
->   $$g_4 = (\alpha^3 + \alpha) \cdot \alpha = \alpha^4 + \alpha^2 = \alpha^2 + \alpha + 1 = \mathbf{\texttt{0111}_2 = \texttt{7}_{16}}$$
-> * **Passo 2e (XOR finale con $e_K(\text{Counter } 0) = \texttt{1010}_2$):**
->   $$\text{Auth tag } T = g_4 \oplus e_K(\text{Counter } 0) = \texttt{0111} \oplus \texttt{1010} = \mathbf{\texttt{1101}_2 = \texttt{D}_{16}}$$
+> 1. Scegliere $x \in \mathcal{X}$ uniformemente a caso.
+>     
+>       
+>     
+> 2. **if** $\text{Find-Second-Preimage}(h, x)$ restituisce $x'$ **then** $\quad$ **return** $(x, x')$
+>     
+>       
+>     
+> 3. **else** $\quad$ **return** (_failure_)
+>     
+>       
+>     
+
+> [!important] Theorem 5.3 Supponiamo che $h : \mathcal{X} \to \mathcal{Y}$ sia una hash function e supponiamo che esista un $(\varepsilon, Q)$-algorithm `Find-Second-Preimage` che risolve il problema **Second Preimage** per $h$. Allora `Collision-To-Second-Preimage` è un $(\varepsilon, Q)$-algorithm che risolve il problema **Collision** per $h$.
 > 
-> **3. Cosa succede se Oscar manomette il pacchetto in transito?**
-> Alice invia $(A_1 = \texttt{3}, y_1 = \texttt{A}, y_2 = \texttt{D}, T = \texttt{D})$.
-> Se Oscar inverte anche solo l'ultimo bit di `Auth data 1` (cambiando $A_1$ da $\texttt{0011}$ a $\texttt{0010}$ senza nemmeno toccare i testi cifrati!), quella differenza $\Delta A_1 = 1$ viene moltiplicata per $H^4 = \alpha^4 = \alpha + 1 = \texttt{0011}_2$, facendo sì che Bob in ricezione calcoli un tag atteso $T' = \texttt{1101} \oplus \texttt{0011} = \texttt{1110}_2 \neq \texttt{1101}_2$ e scopra immediatamente la manomissione!
+>   
+
+  
+
+  
+
+### 2. Riduzione da `Collision` a `Preimage` (Algorithm 5.5 & Theorem 5.4)
+
+  
+
+  
+
+Supponiamo ora di disporre di un algoritmo **`Find-Preimage`** che risolve il problema **Preimage** per una funzione di hash $h : \mathcal{X} \to \mathcal{Y}$ con $|\mathcal{X}|$ finito e $|\mathcal{X}| \ge 2|\mathcal{Y}|$:
+
+  
+
+> [!abstract] Algorithm 5.5: `Collision-To-Preimage`$(h)$ **External** `Find-Preimage`
+> 
+>   
+> 
+> 1. Scegliere $x \in \mathcal{X}$ uniformemente a caso.
+>     
+>       
+>     
+> 2. Calcolare $y = h(x)$.
+>     
+>       
+>     
+> 3. **if** $\text{Find-Preimage}(h, y)$ restituisce $x'$ **and** $x' \neq x$ **then** $\quad$ **return** $(x, x')$
+>     
+>       
+>     
+> 4. **else** $\quad$ **return** (_failure_)
+>     
+>       
+>     
+
+> [!important] Theorem 5.4 Supponiamo che $h : \mathcal{X} \to \mathcal{Y}$ sia una hash function in cui $|\mathcal{X}|$ e $|\mathcal{Y}|$ sono finiti e $|\mathcal{X}| \ge 2|\mathcal{Y}|$. Supponiamo che esista un $(1, Q)$-algorithm `Find-Preimage` che risolve il problema **Preimage** per $h$. Allora `Collision-To-Preimage` è un $(1/2, Q+1)$-algorithm che risolve il problema **Collision** per $h$.
+> 
+>   
+
+- **Dimostrazione del Theorem 5.4 (come svolta nel libro):**
+    
+      
+    1. Poniamo $|\mathcal{X}| = N$ e $|\mathcal{Y}| = M$, con $N \ge 2M$. Per ogni $y \in \mathcal{Y}$, definiamo $h^{-1}(y) = \{x \in \mathcal{X} : h(x) = y\}$ e poniamo $c_y = |h^{-1}(y)|$.
+        
+          
+        
+    2. Sia $\mathcal{Y}_0 = \{y \in \mathcal{Y} : c_y > 0\}$ l'insieme degli elementi di $\mathcal{Y}$ che hanno almeno una preimmagine (ovvero l'immagine di $h$). Chiaramente $|\mathcal{Y}_0| \le M$ e $\sum_{y \in \mathcal{Y}_0} c_y = N$.
+        
+          
+        
+    3. Quando $x \in \mathcal{X}$ viene scelto uniformemente a caso al passo 1 e si calcola $y = h(x)$, l'elemento $y$ appartiene a $\mathcal{Y}_0$, e poiché per ipotesi `Find-Preimage` è un $(1, Q)$-algorithm (ha probabilità di successo $1$ su ogni $y \in \mathcal{Y}_0$), `Find-Preimage`$(h, y)$ restituirà certamente un qualche elemento $x' \in h^{-1}(y)$.
+        
+          
+        
+    4. L'Algorithm 5.5 ha successo se e solo se $x' \neq x$. Anche se `Find-Preimage` è un algoritmo deterministico che per un dato $y$ restituisce sempre lo stesso identico elemento $x' \in h^{-1}(y)$, condizionatamente all'evento $h(x) = y$, l'elemento $x$ scelto al passo 1 può essere con uguale probabilità uno qualsiasi dei $c_y$ elementi in $h^{-1}(y)$. Pertanto:
+        
+          
+        
+        $$\Pr[x \neq x' \mid h(x) = y] = \frac{c_y - 1}{c_y}$$
+        
+    5. Poiché $\Pr[h(x) = y] = \frac{c_y}{N}$, calcoliamo la probabilità complessiva di successo sommando su tutti gli $y \in \mathcal{Y}_0$:
+        
+          
+        
+        $$\begin{aligned} \Pr[\text{success}] &= \sum_{y \in \mathcal{Y}_0} \Pr[h(x) = y] \cdot \Pr[x \neq x' \mid h(x) = y] \\ &= \sum_{y \in \mathcal{Y}_0} \frac{c_y}{N} \left(\frac{c_y - 1}{c_y}\right) \\ &= \frac{1}{N} \sum_{y \in \mathcal{Y}_0} (c_y - 1) \\ &= \frac{N - |\mathcal{Y}_0|}{N} \ge \frac{N - M}{N} = 1 - \frac{M}{N} \ge \frac{1}{2} \end{aligned}$$
+        
+        poiché $N \ge 2M$. Il numero totale di valutazioni di $h$ è $Q + 1$ (le $Q$ query di `Find-Preimage` più $1$ query per calcolare $y = h(x)$ al passo 2). $\blacksquare$
+        
+          
+        
+
+  
+
+  
+
+## 5.5.3 Authenticated Encryption (CCM e GCM)
+
+  
+
+  
+
+In molte applicazioni si desidera garantire contemporaneamente la **confidentiality** (tramite encryption) e la **data integrity / authentication** (tramite un MAC). Un sistema che raggiunge entrambi gli obiettivi è chiamato **authenticated encryption**.
+
+  
+
+Stinson distingue due approcci generali per combinare cifratura e autenticazione:
+
+  
+
+1. **MAC-then-encrypt:** Si calcola prima un authentication tag (MAC) sul plaintext, e successivamente si cifrano insieme il plaintext e il tag. Un esempio di questo approccio è la modalità **CCM** (**Counter with Cipher Block Chaining-Message Authentication Code**), che combina la cifratura in **counter mode (CTR)** con l'autenticazione tramite **CBC-MAC**.
+    
+      
+    
+2. **Encrypt-then-MAC:** Si cifra prima il plaintext ottenendo il ciphertext, e successivamente si calcola un authentication tag (MAC) **sul ciphertext**. Un esempio fondamentale di questo approccio è la modalità **GCM** (**Galois Counter Mode**).
+    
+      
+    
+
+  
+
+  
+
+### Galois Counter Mode (GCM)
+
+  
+
+  
+
+Il **Galois Counter Mode (GCM)** utilizza un metodo di tipo **encrypt-then-MAC**: il plaintext viene prima cifrato usando **AES in counter mode**, e poi viene calcolato un **MAC** sul ciphertext risultante. Inoltre, GCM consente di autenticare anche ulteriori **authenticated data** (dati autenticati che non vengono cifrati, ma che vengono inclusi nel calcolo dell'**authentication tag**).
+
+  
+
+Il calcolo del MAC in GCM si basa su moltiplicazioni per un elemento fisso $H$ all'interno del campo finito **$\mathbb{F}_{2^{128}}$**, definito tramite il polinomio irriducibile:
+
+  
+
+$$p(\alpha) = \alpha^{128} + \alpha^7 + \alpha^2 + \alpha + 1 \in \mathbb{Z}_2[\alpha]$$
+
+Ecco la descrizione esatta dei passaggi di GCM (illustrati nella **Figure 5.3** del libro per un singolo blocco di _authenticated data_ `Auth data 1` e due blocchi di plaintext `Plaintext 1` e `Plaintext 2`):
+
+  
+
+1. **Inizializzazione di `Counter 0` e incremento dei contatori (`incr`):**
+    
+      
+    - Si sceglie un **96-bit initialization vector (IV)**, il quale viene concatenato con **32 bit uguali a `0`** per formare un contatore iniziale di 128 bit chiamato **`Counter 0`**.
+        
+          
+        
+    - Il contatore viene poi incrementato di $1$ ad ogni passo (tramite la funzione **`incr`**, tutte le addizioni sono ridotte modulo $2^{32}$ sui 32 bit meno significativi, o come contatore binario) producendo **`Counter 1`**, **`Counter 2`**, ecc.
+        
+          
+        
+    - L'$IV$ deve essere cambiato ogni volta che viene eseguita una nuova cifratura.
+        
+          
+        
+2. **Cifratura dei blocchi di Plaintext in Counter Mode:**
+    
+      
+    - I blocchi di plaintext da 128 bit (`Plaintext 1`, `Plaintext 2`, $\dots$) vengono cifrati in **counter mode** usando **AES** (con la chiave segreta $K$) applicato a `Counter 1`, `Counter 2`, $\dots$:
+        
+          
+        
+        $$\begin{aligned} \text{Ciphertext } 1 &= \text{Plaintext } 1 \oplus e_K(\text{Counter } 1) \\ \text{Ciphertext } 2 &= \text{Plaintext } 2 \oplus e_K(\text{Counter } 2) \end{aligned}$$
+        
+3. **Determinazione dell'elemento $H \in \mathbb{F}_{2^{128}}$:**
+    
+      
+    - Il calcolo dell'**authentication tag** (`Auth tag`) richiede di effettuare moltiplicazioni nel campo finito $\mathbb{F}_{2^{128}} = \mathbb{Z}_2[\alpha]/(\alpha^{128} + \alpha^7 + \alpha^2 + \alpha + 1)$ per un particolare elemento fisso $H \in \mathbb{F}_{2^{128}}$ (operazione indicata nella Figure 5.3 con **`mult_H`**).
+        
+          
+        
+    - Come indicato nel libro, il valore di $H$ viene determinato cifrando `Counter 0` con AES.
+        
+          
+        
+4. **Catena di XOR ($\oplus$) e moltiplicazioni per $H$ (`mult_H`) per calcolare `Auth tag`:**
+    
+      
+    - L'**authentication tag** (di lunghezza 128 bit) viene costruito processando in sequenza il blocco di dati autenticati (`Auth data 1`), i blocchi di testo cifrato (`Ciphertext 1`, `Ciphertext 2`) e il blocco delle lunghezze (`len(A) || len(C)`), alternando l'operazione di **exclusive-or ($\oplus$)** e la moltiplicazione per $H$ (**`mult_H`**) in $\mathbb{F}_{2^{128}}$:
+        
+          
+        1. Si moltiplica `Auth data 1` per $H$ tramite `mult_H`;
+            
+              
+            
+        2. Si fa l'_exclusive-or_ ($\oplus$) del risultato con `Ciphertext 1` e si applica `mult_H`;
+            
+              
+            
+        3. Si fa l'_exclusive-or_ ($\oplus$) del risultato con `Ciphertext 2` e si applica `mult_H`;
+            
+              
+            
+        4. Si fa l'_exclusive-or_ ($\oplus$) del risultato con la stringa di 128 bit **`len(A) || len(C)`** (che rappresenta la concatenazione della lunghezza in bit degli _authenticated data_ $A$, su 64 bit, e della lunghezza in bit del _ciphertext_ $C$, su 64 bit) e si applica ancora `mult_H`;
+            
+              
+            
+        5. Infine, si effettua un ultimo **exclusive-or ($\oplus$)** con il blocco di 128 bit ottenuto cifrando **`Counter 0`** con AES ($e_K(\text{Counter } 0)$), ottenendo in output l'**`Auth tag`** finale.
+            
+              
+            
+5. **Decifratura e Verifica in GCM:**
+    
+      
+    - Chi riceve il messaggio ricalcola l'**authentication tag** a partire da $IV$, dagli _authenticated data_ e dai blocchi di _ciphertext_ ricevuti (eseguendo esattamente la stessa catena di operazioni `mult_H` e $\oplus$), e verifica che coincida con l'`Auth tag` ricevuto prima di accettare i blocchi di plaintext decifrati tramite il _counter mode_.
+        
+          
+        
+
+Se vuoi che ti generi direttamente un file `.md` scaricabile con tutto questo contenuto aggiornato, dimmelo pure!

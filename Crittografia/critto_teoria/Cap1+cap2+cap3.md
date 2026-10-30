@@ -576,77 +576,130 @@ Il Capitolo 2 introduce la definizione formale di crittosistema, gli strumenti e
 >       
 >     
 
-### 7. Stream Ciphers: Autokey Cipher e LFSR
+### 7. Stream Ciphers: Synchronous Stream Ciphers, Autokey Cipher e LFSR
 
-- **Autokey Cipher (Cryptosystem 2.7 - Cifrario a flusso non-sincrono):** $\mathcal{P} = \mathcal{C} = \mathcal{K} = \mathcal{L} = \mathbb{Z}_{26}$. La chiave iniziale è $z_1 = K \in \mathbb{Z}_{26}$, e per $i \ge 2$ si pone $z_i = x_{i-1}$:
-    
-      
-    
-    $$e_{z_i}(x_i) = (x_i + z_i) \bmod 26 \qquad d_{z_i}(y_i) = (y_i - z_i) \bmod 26$$
-    
+#### A. Definizione di Synchronous Stream Cipher (Cifrario a Flusso Sincrono)
 
-> [!example] Example 2.8 (Generazione del Keystream con un LFSR a 4 stadi)
+L'idea di base consiste nel generare un **keystream** $\mathbf{z} = z_1 z_2 \dots$ e utilizzarlo per cifrare una stringa di testo in chiaro $\mathbf{x} = x_1 x_2 \dots$ secondo la regola:
+
+$$y_1 y_2 \dots = e_{z_1}(x_1) e_{z_2}(x_2) \dots$$
+
+> [!abstract] Definition 2.6: Synchronous Stream Cipher Un **synchronous stream cipher** è una tupla $(\mathcal{P}, \mathcal{C}, \mathcal{K}, \mathcal{L}, \mathcal{E}, \mathcal{D})$, insieme a una funzione $g$, tale che siano soddisfatte le seguenti condizioni:
 > 
-> Consideriamo un LFSR a $m = 4$ stadi definito dalla relazione di ricorrenza lineare su $\mathbb{Z}_2$:
-> 
->   
-> 
-> $$z_{i+4} = (z_i + z_{i+1}) \bmod 2$$
-> 
-> Se il vettore di inizializzazione (chiave) è $(z_1, z_2, z_3, z_4) = (1, 0, 0, 0)$, calcoliamo i bit successivi:
-> 
->   
-> 
-> - $z_5 = (z_1 + z_2) \bmod 2 = (1 + 0) \bmod 2 = 1$
+> 1. $\mathcal{P}$ è un insieme finito di possibili **plaintexts** (testi in chiaro).
 >     
->       
+> 2. $\mathcal{C}$ è un insieme finito di possibili **ciphertexts** (testi cifrati).
 >     
-> - $z_6 = (z_2 + z_3) \bmod 2 = (0 + 0) \bmod 2 = 0$
+> 3. $\mathcal{K}$, il **keyspace** (spazio delle chiavi), è un insieme finito di possibili chiavi.
 >     
->       
+> 4. $\mathcal{L}$ è un insieme finito chiamato **keystream alphabet** (alfabeto del keystream).
 >     
-> - $z_7 = (z_3 + z_4) \bmod 2 = (0 + 0) \bmod 2 = 0$
+> 5. $g$ è il **keystream generator** (generatore del keystream). $g$ prende in input una chiave $K$ e genera una stringa infinita $z_1 z_2 \dots$ chiamata **keystream**, dove $z_i \in \mathcal{L}$ per ogni $i \ge 1$.
 >     
->       
+> 6. Per ogni $z \in \mathcal{L}$, esiste una **encryption rule** (regola di cifratura) $e_z \in \mathcal{E}$ e una corrispondente **decryption rule** (regola di decifratura) $d_z \in \mathcal{D}$. $e_z : \mathcal{P} \to \mathcal{C}$ e $d_z : \mathcal{C} \to \mathcal{P}$ sono funzioni tali che $d_z(e_z(x)) = x$ per ogni elemento di testo in chiaro $x \in \mathcal{P}$.
 >     
-> - $z_8 = (z_4 + z_5) \bmod 2 = (0 + 1) \bmod 2 = 1$
->     
->     Continuando, il keystream prodotto è `100010011010111...`, che ha periodo massimo $2^4 - 1 = 15$ (prima di ripetere `1000` il registro attraversa tutti i 15 vettori non nulli di lunghezza 4).
->     
->       
->     
+
+- **Differenza tra Stream Cipher Sincrono, Periodico e Non-sincrono:**
+    
+    - In un **synchronous stream cipher**, il keystream viene generato unicamente a partire dalla chiave $K$ ed è completamente indipendente dalla stringa di testo in chiaro.
+        
+    - Un cifrario a flusso si dice **periodic stream cipher** con **period** $d$ se il keystream ripete se stesso dopo $d$ caratteri, cioè se $z_{i+d} = z_i$ per ogni $i \ge 1$ (ad esempio, il _Vigenère Cipher_ con keyword di lunghezza $m$ può essere visto come un _periodic stream cipher_ con periodo $m$).
+        
+    - Un **non-synchronous stream cipher** è uno stream cipher in cui ciascun elemento del keystream $z_i$ dipende dai precedenti elementi del plaintext o del ciphertext ($x_1, \dots, x_{i-1}$ oppure $y_1, \dots, y_{i-1}$) oltre che dalla chiave $K$. Un esempio semplice è l'**Autokey Cipher** (_Cryptosystem 2.7_): $\mathcal{P} = \mathcal{C} = \mathcal{K} = \mathcal{L} = \mathbb{Z}_{26}$, con $z_1 = K$ e $z_i = x_{i-1}$ per ogni $i \ge 2$, dove $e_z(x) = (x + z) \bmod 26$ e $d_z(y) = (y - z) \bmod 26$.
+        
 
 > [!example] Example 2.9 (Cifratura e Decifratura con l'Autokey Cipher) Supponiamo che la chiave sia $K = 8$ e il plaintext sia `rendezvous`.
 > 
->   
-> 
-> 1. Convertiamo `rendezvous` in interi in $\mathbb{Z}_{26}$: `17 4 13 3 4 25 21 14 20 18`
+> 1. Convertiamo `rendezvous` in una sequenza di interi in $\mathbb{Z}_{26}$: `17 4 13 3 4 25 21 14 20 18`.
 >     
->       
+> 2. Il keystream ($z_1 = 8$, seguito dagli elementi del plaintext) è: `8 17 4 13 3 4 25 21 14 20`.
 >     
-> 2. Costruiamo il keystream ($z_1 = 8$, seguito dai caratteri del plaintext spostati di un posto): `8 17 4 13 3 4 25 21 14 20`
+> 3. Sommando gli elementi corrispondenti e riducendo modulo 26 otteniamo: `25 21 17 16 7 3 20 9 8 12` $\longrightarrow$ in forma alfabetica: `ZVRQHDUJIM`.
 >     
->       
+> 4. **Decifratura:** Partendo da `25 21 17 16 7 3 20 9 8 12` e $K=8$:
 >     
-> 3. Sommiamo gli elementi corrispondenti riducendo modulo 26: `25 21 17 16 7 3 20 9 8 12` $\longrightarrow$ in lettere: `ZVRQHDUJIM`.
->     
->       
->     
-> 4. **Decifratura a catena:** Partendo dalla stringa numerica `25 21 17 16 7 3 20 9 8 12` e $K=8$:
->     
->       
 >     - $x_1 = d_8(25) = (25 - 8) \bmod 26 = 17$ (`r`)
->         
->           
 >         
 >     - $x_2 = d_{17}(21) = (21 - 17) \bmod 26 = 4$ (`e`)
 >         
->           
->         
 >     - $x_3 = d_4(17) = (17 - 4) \bmod 26 = 13$ (`n`), e così via.
 >         
->           
->         
+
+#### B. Generazione di un Keystream Sincrono su Alfabeti Binari ($\mathbb{Z}_2$) e LFSR
+
+Gli stream ciphers sono spesso descritti in termini di **binary alphabets** (alfabeti binari), ovvero $\mathcal{P} = \mathcal{C} = \mathcal{L} = \mathbb{Z}_2$. In questo caso, le operazioni di cifratura e decifratura sono semplicemente l'addizione modulo 2:
+
+$$e_z(x) = (x + z) \bmod 2 \qquad \text{e} \qquad d_z(y) = (y + z) \bmod 2$$
+
+Se associamo `0` al valore booleano "false" e `1` a "true", l'addizione modulo 2 corrisponde all'operazione di **exclusive-or** (XOR, indicata con $\oplus$). Pertanto, la cifratura e la decifratura possono essere implementate in modo molto efficiente in hardware.
+
+Vediamo come generare un keystream sincrono lavorando su alfabeti binari a partire da una chiave ridotta:
+
+1. **Linear Recurrence (Ricorrenza Lineare) di grado $m$:** Supponiamo di partire da una **$m$-tupla binaria** $(k_1, \dots, k_m) \in (\mathbb{Z}_2)^m$ e poniamo i primi $m$ termini del keystream uguali a:
+    
+    $$z_i = k_i, \quad 1 \le i \le m$$
+    
+    Generiamo i termini successivi del keystream usando una **linear recurrence** (ricorrenza lineare) di **degree** (grado) $m$:
+    
+    $$z_{i+m} = \sum_{j=0}^{m-1} c_j z_{i+j} \bmod 2 \quad \forall i \ge 1$$
+    
+    dove $c_0, \dots, c_{m-1} \in \mathbb{Z}_2$ sono costanti specificate (**specified constants**).
+    
+    - **Perché si chiama così (_Remark_ del libro):** Questa ricorrenza si dice avere **degree $m$** (grado $m$) poiché ciascun termine dipende dai precedenti $m$ termini. Si chiama **linear recurrence** perché $z_{i+m}$ è una funzione lineare dei termini precedenti. Si noti che possiamo assumere $c_0 = 1$ senza perdita di generalità (_without loss of generality_), poiché altrimenti la ricorrenza sarebbe di grado al più $m - 1$.
+        
+2. **La Chiave $K$, l'Initialization Vector e il Periodo del Keystream:**
+    
+    - In questo schema, la chiave $K$ può essere vista come costituita dai $2m$ valori $(k_1, \dots, k_m, c_0, \dots, c_{m-1})$ (oppure, se la relazione di ricorrenza è pubblica/nota e fissata in hardware, la chiave segreta consiste nella sola $m$-tupla iniziale $(k_1, \dots, k_m)$).
+        
+    - Il vettore iniziale $(k_1, \dots, k_m)$ è chiamato **initialization vector**.
+        
+    - Se $(k_1, \dots, k_m) = (0, \dots, 0)$, allora il keystream consiste interamente di `0`: questo va ovviamente evitato, poiché in tal caso il ciphertext risulterebbe identico al plaintext.
+        
+    - Tuttavia, se le costanti $c_0, \dots, c_{m-1}$ sono scelte in modo opportuno, allora qualsiasi altro **initialization vector** $(k_1, \dots, k_m) \neq (0, \dots, 0)$ darà origine a un **periodic keystream** avente **period** $2^m - 1$. In questo modo, una chiave "corta" può generare un keystream con un periodo lunghissimo (proprietà molto desiderabile, dato che un keystream con periodo corto è vulnerabile come nel caso del Vigenère Cipher). Qualsiasi altro _non-zero initialization vector_ produrrà semplicemente una **cyclic permutation** (permutazione ciclica) dello stesso keystream.
+        
+3. **Implementazione Hardware tramite Linear Feedback Shift Register (LFSR):** Un altro aspetto molto vantaggioso di questo metodo è che il keystream può essere prodotto in modo estremamente efficiente in hardware usando un **linear feedback shift register**, o **LFSR**:
+    
+    - Si utilizza uno **shift register** (registro a scorrimento) dotato di $m$ **stages** (stadi).
+        
+    - Il vettore $(k_1, \dots, k_m)$ viene utilizzato per inizializzare lo shift register.
+        
+    - Ad ogni **time unit** (unità di tempo), vengono eseguite concorrentemente le seguenti tre operazioni:
+        
+        1. $k_1$ viene prelevato (**tapped**) come successivo bit del keystream;
+            
+        2. $k_2, \dots, k_m$ vengono ciascuno fatti scorrere di uno stadio verso sinistra (**shifted one stage to the left**);
+            
+        3. il "nuovo" valore di $k_m$ viene calcolato come:
+            
+            $$\sum_{j=0}^{m-1} c_j k_{j+1} \bmod 2$$
+            
+            (questo è il **"linear feedback"**, ovvero la retroazione lineare).
+            
+    - In qualsiasi istante di tempo, lo shift register contiene $m$ elementi consecutivi del keystream, diciamo $z_i, \dots, z_{i+m-1}$. Dopo una _time unit_, lo shift register contiene $z_{i+1}, \dots, z_{i+m}$.
+        
+    - Si osservi che il **linear feedback** viene realizzato prelevando (_tapping_) determinati stadi del registro (esattamente quelli specificati dalle costanti $c_j$ che hanno valore `1`) e calcolando una somma modulo 2 (che equivale a un _exclusive-or_).
+        
+
+> [!example] Example 2.8 (Generazione del Keystream con un LFSR a 4 stages) Supponiamo che $m = 4$ e che il keystream sia generato usando la _linear recurrence_:
+> 
+> $$z_{i+4} = (z_i + z_{i+1}) \bmod 2, \quad i \ge 1$$
+> 
+> (Qui le costanti sono $c_0 = 1, c_1 = 1, c_2 = 0, c_3 = 0$; nell'LFSR della Figura 2.2 del libro vengono quindi prelevati gli stadi $k_1$ e $k_2$ per calcolare tramite somma modulo 2 il nuovo valore di $k_4$). Se il keystream viene inizializzato con qualsiasi vettore diverso da $(0, 0, 0, 0)$, otteniamo un keystream di **period** $2^4 - 1 = 15$. Ad esempio, partendo con $(z_1, z_2, z_3, z_4) = (1, 0, 0, 0)$, i bit successivi sono:
+> 
+> - $z_5 = (z_1 + z_2) \bmod 2 = (1 + 0) \bmod 2 = 1$ (lo shift register passa da `1000` a `0001`)
+>     
+> - $z_6 = (z_2 + z_3) \bmod 2 = (0 + 0) \bmod 2 = 0$ (lo shift register contiene `0010`)
+>     
+> - $z_7 = (z_3 + z_4) \bmod 2 = (0 + 0) \bmod 2 = 0$ (lo shift register contiene `0100`)
+>     
+> - $z_8 = (z_4 + z_5) \bmod 2 = (0 + 1) \bmod 2 = 1$ (lo shift register contiene `1001`)
+>     
+> 
+> Continuando, il keystream prodotto è:
+> 
+> $$1 \ 0 \ 0 \ 0 \ 1 \ 0 \ 0 \ 1 \ 1 \ 0 \ 1 \ 0 \ 1 \ 1 \ 1 \ \dots$$
+> 
+> Qualsiasi altro _non-zero initialization vector_ darà origine a una _cyclic permutation_ (permutazione ciclica) di questo stesso keystream.
 
 ## 2.3 Crittoanalisi dei Cifrari Classici (con gli Esempi del Libro)
 
