@@ -286,7 +286,7 @@ Analizziamo formalmente una singola S-box $\pi_S : \{0, 1\}^\ell \to \{0, 1\}^\e
 
 ### 4.4.3 Tracce Differenziali (Differential Trails) su Più Round
 
-Per estendere l'analisi da una singola S-box all'intero cifrario (es. sui primi $N_r - 1$ round), **concateniamo i rapporti di propagazione di modo che le differenze di input e output delle S-box attive** (perchè sono le uniche che hanno un'influenza probabilistica) round dopo round in modo che **l'uscita permutata del round $r$**, cioè $w'^r = \pi_P(v'^r)$, **coincida esattamente con l'ingresso $u'^{r+1}$ del round $r+1$**. Questa **sequenza concatenata di differenziali** si chiama **traccia differenziale** (_differential trail_ o _characteristic_).
+Per estendere l'analisi da una singola S-box all'intero cifrario (es. sui primi $N_r - 1$ round), **concateniamo i rapporti di propagazione dei round di modo che le differenze di input e output delle S-box attive** (perchè sono le uniche che hanno un'influenza probabilistica) , **coincidano**. Questa **sequenza concatenata di differenziali** si chiama **traccia differenziale** (_differential trail_ o _characteristic_).
 
   
 
