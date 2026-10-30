@@ -1434,22 +1434,7 @@ Per trovare il byte $x_{1,B-k+1}$:
 > - **Come ci si difende dal Padding Oracle Attack?** Non permettendo mai al server di decifrare testi cifrati manipolati da un attaccante! Si utilizza la **Crittografia Autenticata (Authenticated Encryption / Encrypt-then-MAC, Sezione 5.5.3)**: si applica un MAC (es. HMAC) sul testo cifrato $(IV, y_1, \dots, y_t)$. Se Oscar modifica anche un solo bit di $w$, la verifica del MAC fallisce **prima ancora** di eseguire la decifratura CBC, e il server non rivela alcuna informazione sul padding.
 >Ecco la sezione **4.8 Stream Ciphers** (dall'introduzione fino a tutto il paragrafo **4.8.1**, escludendo 4.8.2 e 4.8.3), strutturata e formattata nello stesso identico stile del tuo file `Cap4.md` così da poterla incollare direttamente in coda ai tuoi appunti.
 
-
-Ecco la riscrittura completa della sezione **4.8 Stream Ciphers** e della sottosezione **4.8.1 Correlation Attack on a Combination Generator**, redatta seguendo **esclusivamente** la terminologia, le definizioni, i simboli ($L_1, L_2, L_3, L$, ecc.) e gli esempi (incluso l'**Example 4.5** con la **Table 4.6**) presenti nel libro di Stinson (_Cryptography: Theory and Practice_).
-
-  
-
-Sono stati rimossi tutti i termini esterni non usati in questa sezione dal libro (come _seed_, _Geffe generator_, _multiplexer_, _correlation-immune_, _ciclo di clock_, _polinomio primitivo_, ecc.).
-
-  
-
-  
-
-  
-
 ## 4.8 Stream Ciphers
-
-  
 
   
 
