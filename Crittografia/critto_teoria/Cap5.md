@@ -5,10 +5,6 @@
 
 Nei capitoli precedenti abbiamo studiato i crittosistemi a chiave segreta (block ciphers e stream ciphers), il cui obiettivo è garantire la confidenzialità (_secrecy_). Tuttavia, la sola cifratura non protegge l'**integrità dei dati** (_data integrity_) né la **message authentication** (autenticazione dei messaggi) contro un avversario attivo.
 
-  
-
-Il **Capitolo 5** introduce le **hash functions** (Sezioni 5.1–5.4) e i **message authentication codes (MAC)** (Sezione 5.5), concludendo con l'**authenticated encryption** e il **Galois Counter Mode (GCM)** nella Sezione 5.5.3.
-  
 
   
 
@@ -18,7 +14,7 @@ Il **Capitolo 5** introduce le **hash functions** (Sezioni 5.1–5.4) e i **mess
 
   
 
-Una **cryptographic hash function** può essere utilizzata per fornire garanzia di **data integrity**. Prende in input un messaggio di lunghezza arbitraria e produce in output un valore di lunghezza fissa (e ridotta) chiamato **message digest** (ad esempio di lunghezza compresa tra 160 e 512 bit).
+Una **cryptographic hash function** può essere utilizzata per fornire garanzia di **data integrity**. Prende in input un messaggio di lunghezza arbitraria e produce in output un valore di lunghezza fissa (e ridotta) chiamato **message digest**.
 
   
 
@@ -26,7 +22,7 @@ Le funzioni di hash si dividono in due tipologie:
 
   
 
-- **Keyed hash functions (Funzioni di hash con chiave):** Utilizzano una chiave segreta $K$; una _keyed hash function_ viene utilizzata come **message authentication code**, o **MAC**.
+- **Keyed hash functions (Funzioni di hash con chiave):** Utilizzano una chiave segreta $K$; una _keyed hash function_ viene utilizzata come **message authentication code** (**MAC**).
     
       
     
@@ -249,7 +245,7 @@ Poiché $\vert{}\mathcal{X}\vert{} > \vert{}\mathcal{Y}\vert{}$, la funzione $h$
 
   
 
-Per analizzare la difficoltà intrinseca dei problemi **Preimage**, **Second Preimage** e **Collision** per una funzione di hash "ideale", la Sezione 5.2.1 introduce il **random oracle model** (dovuto a Bellare e Rogaway):
+Per analizzare la difficoltà dei problemi **Preimage**, **Second Preimage** e **Collision** per una funzione di hash "ideale", introduciamo il **random oracle model**:
 
   
 
@@ -257,7 +253,7 @@ Per analizzare la difficoltà intrinseca dei problemi **Preimage**, **Second Pre
     
       
     
-- Nel **random oracle model**, si assume che una hash function $h \in \mathcal{F}^{\mathcal{X}, \mathcal{Y}}$ sia scelta **uniformemente a caso** (_chosen uniformly at random_), e che ci sia permesso accedere a $h$ **unicamente tramite un oracle** (oracolo):
+- Nel **random oracle model**, si assume che una hash function $h \in \mathcal{F}^{\mathcal{X}, \mathcal{Y}}$ sia scelta **uniformemente a caso**, e che ci sia permesso accedere a $h$ **unicamente tramite un oracle** (oracolo):
     
       
     - Non ci viene data una formula o un algoritmo per calcolare i valori della funzione $h$.
@@ -284,19 +280,11 @@ Per analizzare la difficoltà intrinseca dei problemi **Preimage**, **Second Pre
       
     
 
-  
-
-  
 
 ### Analisi di `Find-Preimage`, `Find-Second-Preimage` e `Find-Collision` nel ROM
 
-  
 
-  
 
-  
-
-  
 
 #### 1. Algoritmo per `Preimage` (Algorithm 5.1)
 
@@ -456,8 +444,6 @@ Per analizzare la difficoltà intrinseca dei problemi **Preimage**, **Second Pre
 
   
 
-  
-
 ## 5.2.2 Comparison of Security Criteria (Confronto tra i Criteri di Sicurezza)
 
   
@@ -572,10 +558,96 @@ Supponiamo ora di disporre di un algoritmo **`Find-Preimage`** che risolve il pr
         poiché $N \ge 2M$. Il numero totale di valutazioni di $h$ è $Q + 1$ (le $Q$ query di `Find-Preimage` più $1$ query per calcolare $y = h(x)$ al passo 2). $\blacksquare$
         
           
-        
+## 5.5 Message Authentication Codes (Codici di Autenticazione dei Messaggi)
 
-  
+Rivolgiamo ora la nostra attenzione ai **message authentication codes (MAC)**, che sono **keyed hash functions** che soddisfano determinate proprietà di sicurezza. Come vedremo, le proprietà di sicurezza richieste da un MAC sono piuttosto diverse da quelle richieste da una (**unkeyed**) **hash function**.
 
+Un modo comune di costruire un MAC consiste nell'incorporare una **secret key** in una **unkeyed hash function**, includendola come parte del messaggio da sottoporre a hash. Tuttavia, ciò deve essere fatto con attenzione per impedire che vengano eseguiti determinati attacchi. Illustriamo le possibili insidie con un paio di semplici esempi.
+
+---
+
+### 5.5.0 Costruzione da una Iterated Hash Function ($IV = K$) e il Length Extension Attack
+
+#### 1. Caso senza Preprocessing Step né Output Transformation
+
+Come primo tentativo, supponiamo di costruire una *keyed hash function* $h_K$ a partire da una **unkeyed iterated hash function**, diciamo $h$, definendo $IV = K$ e mantenendo segreto il suo valore:
+
+- Per semplicità, supponiamo anche che $h$ non abbia un **preprocessing step** o una **output transformation**.
+- Una tale *hash function* richiede che ogni *input message* $x$ abbia una lunghezza che sia un multiplo di $t$, dove:
+  $$\text{compress} : \{0, 1\}^{m+t} \to \{0, 1\}^m$$
+  è la **compression function** usata per costruire $h$. Inoltre, la chiave $K$ è una **m-bit key**.
+
+Mostriamo come un avversario possa costruire un **valid tag** per un certo messaggio, senza conoscere la *secret key* $K$, dati un qualsiasi messaggio $x$ e il suo corrispondente **tag**, $h_K(x)$:
+
+- Sia $x'$ una qualsiasi *bitstring* di lunghezza $t$, e consideriamo il messaggio $x \parallel x'$.
+- Il *tag* per questo messaggio, $h_K(x \parallel x')$, viene calcolato come:
+  $$h_K(x \parallel x') = \text{compress}(h_K(x) \parallel x')$$
+- Poiché $h_K(x)$ e $x'$ sono entrambi noti, per un avversario è immediato calcolare $h_K(x \parallel x')$, anche se $K$ è segreta. Questo è chiamato **length extension attack**.
+
+#### 2. Caso con Messaggi Sottoposti a Padding ($\text{pad}$)
+
+Anche se i messaggi vengono sottoposti a *padding* (*padded*), è possibile eseguire una modifica dell'attacco precedente:
+
+1. Supponiamo ad esempio che nel **preprocessing step** si abbia:
+   $$y = x \parallel \text{pad}(x)$$
+   Si noti che $|y| = rt$ per un qualche intero $r$.
+2. Sia $w$ una qualsiasi *bitstring* di lunghezza $t$, e definiamo il messaggio:
+   $$x' = x \parallel \text{pad}(x) \parallel w$$
+3. Nel **preprocessing step** applicato a $x'$, calcoleremmo:
+   $$y' = x' \parallel \text{pad}(x') = x \parallel \text{pad}(x) \parallel w \parallel \text{pad}(x')$$
+   dove $|y'| = r't$ per un qualche intero $r' > r$.
+4. Consideriamo il calcolo di $h_K(x')$ (questo equivale a calcolare $h(x')$ quando $IV = K$). Nel **processing step**, è chiaro che $z_r = h_K(x)$. È pertanto possibile per un avversario calcolare quanto segue:
+   $$\begin{aligned}
+   z_{r+1} &\leftarrow \text{compress}(h_K(x) \parallel y_{r+1}) \\
+   z_{r+2} &\leftarrow \text{compress}(z_{r+1} \parallel y_{r+2}) \\
+   &\;\;\vdots \\
+   z_{r'} &\leftarrow \text{compress}(z_{r'-1} \parallel y_{r'})
+   \end{aligned}$$
+   e quindi:
+   $$h_K(x') = z_{r'}$$
+
+Pertanto l'avversario può calcolare $h_K(x')$ anche se non conosce la *secret key* $K$ (e si noti che l'attacco non fa alcuna assunzione sulla lunghezza del *pad*).
+
+---
+
+### Modelli di Attacco e Definizioni di Sicurezza per un MAC
+
+Tenendo a mente gli esempi precedenti, formuliamo le definizioni di cosa significhi per un algoritmo MAC essere sicuro. L'obiettivo di un avversario (Oscar) è cercare di produrre una **message-tag pair** $(x, y)$ che sia **valid** sotto una chiave $K$ fissata ma ignota.
+
+L'avversario potrebbe disporre di alcuni esempi precedenti di *message-tag pairs* valide per la chiave $K$, diciamo:
+$$(x_1, y_1), (x_2, y_2), \dots, (x_Q, y_Q)$$
+
+Si distinguono due scenari a seconda di come vengono ottenute queste $Q$ coppie:
+
+1. **Known message attack:** Queste $Q$ *message-tag pairs* sono coppie che Oscar osserva mentre vengono inviate da Alice a Bob (o da Bob ad Alice). Questo scenario è chiamato **known message attack**, a indicare che i messaggi $x_1, \dots, x_Q$ sono noti a Oscar, ma sono stati Alice o Bob a decidere quali messaggi trasmettere.
+2. **Chosen message attack:** Uno scenario alternativo si ha quando a Oscar è permesso scegliere personalmente i messaggi $x_1, \dots, x_Q$. A Oscar è quindi consentito chiedere ad Alice o Bob (o, equivalentemente, a un **signing oracle**) i corrispondenti *tags* $y_1, \dots, y_Q$. Questa variante è chiamata **chosen message attack**.
+
+> [!abstract] Definizione di Forgery e di $(\varepsilon, Q)$-forger
+> In entrambi gli scenari (*known message attack* o *chosen message attack*), l'avversario ottiene una lista di *message-tag pairs* (tutte valide sotto la medesima chiave ignota $K$):
+> $$(x_1, y_1), (x_2, y_2), \dots, (x_Q, y_Q)$$
+> Successivamente, quando l'avversario produce in output la *message-tag pair* $(x, y)$:
+> - Si richiede che $x$ sia un messaggio **"nuovo"**, ovvero:
+>   $$x \notin \{x_1, \dots, x_Q\}$$
+> - Se, in aggiunta, $(x, y)$ è una **valid pair**, allora la coppia è detta una **forgery**.
+> - Se la probabilità che l'avversario produca in output una *forgery* è almeno $\varepsilon$, allora l'avversario è detto un **$(\varepsilon, Q)$-forger** per il dato MAC.
+
+- **Specifiche per un $(\varepsilon, Q)$-forger:**
+  - Per un $(\varepsilon, Q)$-forger, dobbiamo specificare se si tratta di un **known message attack** o di un **chosen message attack**:
+    - Nel caso di un **chosen message attack**, l'avversario può scegliere le sue **queries** (ovvero i messaggi) con l'obiettivo di massimizzare la probabilità di un attacco di successo.
+    - Nel caso di un **known message attack**, i messaggi sono fuori dal controllo dell'avversario. Quando diciamo di avere un $(\varepsilon, Q)$-forger in questo contesto, significa che l'avversario deve avere successo con probabilità almeno $\varepsilon$ indipendentemente da quali messaggi osserva.
+  - Infine, la probabilità $\varepsilon$ di una **successful forgery** può essere presa come una **average-case probability** su tutte le possibili chiavi, oppure come la **worst-case probability**. Per essere concreti, nelle sezioni seguenti prenderemo generalmente $\varepsilon$ come una **worst-case probability**: ciò significa che l'avversario può produrre una *forgery* con probabilità almeno $\varepsilon$, indipendentemente dalla *secret key* utilizzata.
+  - Usando questa terminologia, i *length extension attacks* descritti sopra sono dei **known-message $(1, 1)$-forgers**.
+
+---
+
+### Key Guessing Attack e Tag Guessing Attack
+
+Chiudiamo questa sezione menzionando due attacchi ovvi sui MAC:
+
+1. **Key guessing attack:** L'avversario sceglie $K \in \mathcal{K}$ uniformemente a caso e produce in output il *tag* $h_K(x)$ per un messaggio arbitrario $x$. Questo attacco avrà successo con probabilità:
+   $$\frac{1}{|\mathcal{K}|}$$
+2. **Tag guessing attack:** L'avversario sceglie il *tag* $y \in \mathcal{Y}$ uniformemente a caso e produce in output $y$ come *tag* per un messaggio arbitrario $x$. Questo attacco avrà successo con probabilità:
+   $$\frac{1}{|\mathcal{Y}|}$$
   
 
 ## 5.5.3 Authenticated Encryption (CCM e GCM)
@@ -584,7 +656,7 @@ Supponiamo ora di disporre di un algoritmo **`Find-Preimage`** che risolve il pr
 
   
 
-In molte applicazioni si desidera garantire contemporaneamente la **confidentiality** (tramite encryption) e la **data integrity / authentication** (tramite un MAC). Un sistema che raggiunge entrambi gli obiettivi è chiamato **authenticated encryption**.
+In molte applicazioni si desidera garantire contemporaneamente la **confidentiality** (tramite encryption) e la **data integrity** (tramite un MAC). Un sistema che raggiunge entrambi gli obiettivi è chiamato **authenticated encryption**.
 
   
 
@@ -690,8 +762,3 @@ Ecco la descrizione esatta dei passaggi di GCM (illustrati nella **Figure 5.3** 
     
       
     - Chi riceve il messaggio ricalcola l'**authentication tag** a partire da $IV$, dagli _authenticated data_ e dai blocchi di _ciphertext_ ricevuti (eseguendo esattamente la stessa catena di operazioni `mult_H` e $\oplus$), e verifica che coincida con l'`Auth tag` ricevuto prima di accettare i blocchi di plaintext decifrati tramite il _counter mode_.
-        
-          
-        
-
-Se vuoi che ti generi direttamente un file `.md` scaricabile con tutto questo contenuto aggiornato, dimmelo pure!
