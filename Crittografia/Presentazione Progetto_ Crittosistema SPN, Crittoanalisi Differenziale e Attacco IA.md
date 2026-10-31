@@ -609,11 +609,10 @@ def punto_b_traccia(ddt):
             
             # S-BOX ATTIVA
             else:
-                # Trova la transizione più probabile nella DDT per l'input corrente
-                massimo = max(ddt[nibble_in])
+                massimo = max(ddt[nibble_in]) #prend eil valore Nd massimo sulla riga
                 possibili_uscite = [i for i, val in enumerate(ddt[nibble_in]) if val == massimo]
-                # Prende l'output associato alla probabilità massima
-                nibble_out = possibili_uscite[-1]
+                #prende gli indici di colonna possibili perchè si potrebbe avere lo stesso valore massimo su più colonne
+                nibble_out = possibili_uscite[-1] #ne prende uno tra questi indici, l'ultimo
                 
                 # Numero di hit estratti dalla DDT
                 casi = ddt[nibble_in][nibble_out]
@@ -670,7 +669,7 @@ def punto_c_attacco(probabilita_traccia, x_prime, u4_atteso):
     print("Generazione interna di " + str(numero_coppie) + " tuple (x, x*, y, y*) con input differenziale 0x" + format(x_prime, "04X") + "...")
     
     coppie = []
-    # Generazione dei campioni (Oracolo di cifratura simulato)
+    # Generazione dei campioni
     for i in range(numero_coppie):
         x = random.randrange(0x10000)
         x_star = x ^ x_prime 
