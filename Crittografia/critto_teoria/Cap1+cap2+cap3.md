@@ -1,135 +1,228 @@
 
 
-# Capitolo 1: Introduzione alla Crittografia
+# Capitolo 1: Introduction to Cryptography (Introduzione alla Crittografia)
 
-Il Capitolo 1 fornisce una panoramica ad alto livello degli obiettivi fondamentali della crittografia moderna (confidenzialità, integrità dei dati, autenticazione e non ripudio) e degli strumenti matematici e protocollari usati per raggiungerli.
+Il Capitolo 1 introduce gli obiettivi fondamentali della crittografia — **confidentiality** (o **secrecy**, segretezza), **data integrity** (integrità dei dati), **authentication** (autenticazione) e **nonrepudiation** (non ripudio) — insieme agli strumenti crittografici di base (**cryptosystems**, **message authentication codes**, **signature schemes**, **certificates**, **hash functions**), ai **cryptographic protocols** e alle definizioni formali dei modelli di attacco e dei livelli di sicurezza.
 
-  
+---
 
-## 1.1 Crittosistemi e Strumenti Crittografici di Base
+## 1.1 Cryptosystems and Basic Cryptographic Tools (Crittosistemi e Strumenti di Base)
 
-### 1.1.1 Crittosistemi a Chiave Segreta (Simmetrica)
+L'obiettivo primario considerato storicamente dalla crittografia è la **confidentiality** (o **secrecy**, confidenzialità/segretezza): fare in modo che le informazioni trasmesse rimangano segrete a chiunque tranne che ai soggetti autorizzati a leggerle.
 
-- **Come funzionano:** Due parti (Alice e Bob) scelgono e condividono in anticipo una chiave segreta $K$ attraverso un canale sicuro (ad esempio incontrandosi di persona).
-    
-      
-    
-- **Cifratura e Decifratura:** Quando Alice vuole inviare un messaggio in chiaro (_plaintext_) $x$ a Bob su un canale insicuro osservato dall'avversario Oscar, applica la regola di cifratura $y = e_K(x)$ ottenendo il testo cifrato (_ciphertext_) $y$. Bob riceve $y$ e recupera $x$ tramite la funzione di decifratura $x = d_K(y)$.
-    
-      
-    
-- **Caratteristica critica:** Nei sistemi a chiave segreta (o _simmetrica_), la regola di decifratura $d_K$ è uguale a $e_K$ oppure è facilmente derivabile da essa. Di conseguenza, l'esposizione di una qualsiasi delle due rende l'intero sistema insicuro.
-    
-      
-    
+- **Lo Scenario Base di Comunicazione:**
+  - **Alice** (il mittente) desidera trasmettere un messaggio non cifrato, chiamato **plaintext** (testo in chiaro, denotato con $x$), a **Bob** (il destinatario).
+  - La trasmissione avviene attraverso un **insecure channel** (canale insicuro), il quale può essere osservato o manipolato da un avversario (**adversary** o **opponent**), tradizionalmente chiamato **Oscar**.
 
-### 1.1.2 Crittosistemi a Chiave Pubblica (Asimmetrica)
+---
 
-- **Il problema dello scambio chiavi:** La crittografia a chiave pubblica (come l'RSA, inventato da Rivest, Shamir e Adleman) elimina la necessità che Alice e Bob debbano concordare preventivamente una chiave segreta condivisa.
-    
-      
-    
-- **Doppia chiave:** Bob genera una coppia di chiavi: una **chiave pubblica** (usata da chiunque per cifrare i messaggi destinati a lui tramite $e_K$) e una **chiave privata** (tenuta segreta da Bob e usata per decifrare tramite $d_K$).
-    
-      
-    
-- **Il problema dell'autenticità:** Sebbene non serva un canale segreto per scambiare la chiave pubblica, è necessario garantirne l'autenticità (evitare che Oscar sostituisca la chiave pubblica di Bob con la propria), problema risolto tipicamente tramite i **certificati**.
-    
-      
-    
+### 1.1.1 Secret-key Cryptosystems (Crittosistemi a Chiave Segreta)
 
-### 1.1.3 Cifrari a Blocchi (Block Ciphers) e Cifrari a Flusso (Stream Ciphers)
+Nel modello classico, chiamato **secret-key cryptography** (crittografia a chiave segreta, o **symmetric-key cryptography**, crittografia a chiave simmetrica), esiste un'unica chiave segreta (**secret key**) $K$, che è nota sia ad Alice che a Bob:
 
-I cifrari simmetrici si dividono in due grandi famiglie architetturali:
+1. **Condivisione preliminare della chiave:** Prima che avvenga qualsiasi trasmissione di messaggi cifrati, Alice e Bob devono concordare segretamente la chiave $K$ e scambiarsela attraverso un **secure channel** (canale sicuro, ad esempio incontrandosi di persona o tramite un corriere fidato).
+2. **Encryption (Cifratura) e Decryption (Decifratura):** La chiave segreta $K$ viene impiegata sia per cifrare i *plaintexts* sia per decifrare i *ciphertexts*. In particolare, $K$ determina una **encryption function** (o **encryption rule**, regola di cifratura) $e_K$ e una **decryption function** (o **decryption rule**, regola di decifratura) $d_K$:
+   - Alice cifra il *plaintext* $x$ calcolando il **ciphertext** (testo cifrato):
+     $$y = e_K(x)$$
+     e trasmette $y$ a Bob sul canale insicuro.
+   - Bob riceve $y$ e recupera il *plaintext* originale applicando la funzione di decifratura:
+     $$x = d_K(y)$$
+3. **Invertibilità e Iniettività:** Le funzioni di cifratura e decifratura sono l'una l'inversa dell'altra ($d_K(e_K(x)) = x$ per ogni *plaintext* $x$), il che richiede che $e_K$ sia una funzione **injective** (iniettiva: due *plaintexts* distinti devono produrre *ciphertexts* distinti).
+4. **Esposizione della chiave:** In un *secret-key cryptosystem*, la regola $d_K$ coincide con $e_K$ oppure è facilmente derivabile da essa; pertanto, la compromissione (*exposure*) di una qualsiasi delle due rende l'intero sistema insicuro.
 
-  
+---
 
-- **Block Ciphers (Cifrari a blocchi):** Dividono il testo in chiaro in blocchi di lunghezza fissa (es. 128 bit) e cifrano ciascun blocco separatamente usando sempre la stessa chiave $K$.
-    
-      
-    
-- **Stream Ciphers (Cifrari a flusso):** Generano una sequenza continua di elementi detta _keystream_ ($z_1, z_2, \dots$) a partire dalla chiave $K$ e cifrano il testo in chiaro un carattere (o un bit) alla volta man mano che fluisce.
-    
-      
-    
+### 1.1.2 Public-key Cryptosystems (Crittosistemi a Chiave Pubblica)
 
-### 1.1.4 Crittografia Ibrida (Hybrid Cryptography)
+Uno dei principali limiti dei *secret-key cryptosystems* è la necessità di disporre di un *secure channel* preliminare per condividere la chiave segreta $K$ tra Alice e Bob. Per superare questo ostacolo, Diffie e Hellman (nel 1976) introdussero il concetto di **public-key cryptosystem** (crittosistema a chiave pubblica), realizzato poi concretamente nel 1977 da Rivest, Shamir e Adleman con il crittosistema **RSA**:
 
-- I sistemi a chiave pubblica sono matematicamente pesanti e molto più lenti dei cifrari a chiave segreta.
-    
-      
-    
-- Nella pratica si usa la **crittografia ibrida**: si utilizza un protocollo a chiave pubblica all'inizio della comunicazione esclusivamente per scambiarsi una _chiave di sessione_ temporanea, dopodiché si passa a un cifrario simmetrico veloce (a blocchi o a flusso) per cifrare il traffico dati vero e proprio.
-    
-      
-    
+- **Separazione tra Public Key e Private Key:**
+  In un *public-key cryptosystem*, la regola di cifratura $e_K$ e la regola di decifratura $d_K$ sono distinte, ed è **computationally infeasible** (computazionalmente infattibile) determinare $d_K$ conoscendo unicamente $e_K$:
+  - La regola di cifratura $e_K$ costituisce la **public key** (chiave pubblica) di Bob: Bob può pubblicarla apertamente affinché chiunque possa utilizzarla.
+  - La regola di decifratura $d_K$ costituisce la **private key** (chiave privata) di Bob: Bob la mantiene segreta per sé.
+- **Funzionamento:**
+  Quando Alice (o chiunque altro) vuole inviare un messaggio riservato $x$ a Bob, non ha bisogno di condividere preventivamente alcuna chiave segreta con lui: preleva la *public key* $e_K$ di Bob, calcola il *ciphertext* $y = e_K(x)$ e glielo invia sul canale insicuro. Soltanto Bob, essendo l'unico in possesso della *private key* $d_K$, è in grado di decifrare $y$ calcolando $x = d_K(y)$.
 
-## 1.2 Integrità del Messaggio e Autenticazione
+---
 
-Cifrare un messaggio garantisce la _confidenzialità_ (Oscar non può leggerlo), ma non impedisce a un attaccante attivo di modificare i bit in transito o di fingersi Alice. Servono quindi strumenti per l'**integrità** e l'**autenticazione**.
+### 1.1.3 Block and Stream Ciphers (Cifrari a Blocchi e Cifrari a Flusso)
 
-  
+I crittosistemi vengono solitamente classificati in **block ciphers** (cifrari a blocchi) oppure **stream ciphers** (cifrari a flusso):
 
-- **1.2.1 Message Authentication Codes (MAC):** Strumento simmetrico in cui Alice e Bob condividono una chiave segreta $K$. Alice calcola un tag di autenticazione funzione del messaggio e della chiave e lo invia insieme al messaggio; Bob ricalcola il tag con la stessa chiave per verificare che il messaggio provenga da Alice e non sia stato alterato.
-    
-      
-    
-- **1.2.2 Signature Schemes (Schemi di Firma Digitale):** Strumento asimmetrico per l'integrità e l'autenticazione. Alice firma il messaggio usando la propria _chiave privata_, producendo una firma digitale che chiunque può verificare applicando la _chiave pubblica_ di Alice.
-    
-      
-    
-- **1.2.3 Nonrepudiation (Non ripudio):** Proprietà fondamentale delle firme digitali. Con un MAC, poiché sia Alice che Bob possiedono la stessa chiave segreta, Bob potrebbe generare da solo un messaggio valido e accusare Alice di averlo mandato (un giudice terzo non potrebbe stabilire chi dei due ha ragione). Con una firma digitale, invece, solo Alice possiede la chiave privata: Alice non può negare (_ripudiare_) di aver firmato un documento valido.
-    
-      
-    
-- **1.2.4 Certificates (Certificati Digitali):** Per evitare che Oscar pubblichi la propria chiave pubblica spacciandola per quella di Bob, un'autorità fidata detta **Certification Authority (CA)** firma digitalmente un documento (il _certificato_) che lega in modo indissolubile l'identità di Bob alla sua chiave pubblica.
-    
-      
-    
-- **1.2.5 Hash Functions (Funzioni di Hash):** Funzioni matematiche pubbliche (senza chiave) che prendono un input di lunghezza arbitraria e restituiscono un'impronta digitale (_digest_) di lunghezza fissa e ridotta. Sono progettate per essere non invertibili (_one-way_) e prive di collisioni trovabili (impossibile trovare due messaggi diversi con lo stesso hash), e vengono usate costantemente all'interno di MAC e firme digitali.
-    
-      
-    
+1. **Block Ciphers (Cifrari a blocchi):**
+   - Il *plaintext* viene suddiviso in porzioni di dimensione fissa chiamate **blocks** (blocchi).
+   - Un *block* è specificato come una **bitstring** (una stringa di `0` e `1`) di una certa lunghezza prefissata (ad esempio $64$ o $128$ bit).
+   - Un *block cipher* cifra (o decifra) un blocco alla volta ($\mathbf{y} = y_1 y_2 \dots = e_K(x_1) e_K(x_2) \dots$) utilizzando la medesima chiave $K$.
+2. **Stream Ciphers (Cifrari a flusso):**
+   - Uno *stream cipher* utilizza dapprima la chiave $K$ per costruire un **keystream** $\mathbf{z} = z_1 z_2 \dots$, che è una *bitstring* avente esattamente la stessa lunghezza del *plaintext* (dove il *plaintext* $\mathbf{x} = x_1 x_2 \dots$ è una *bitstring* di lunghezza arbitraria).
+   - L'operazione di **encryption** costruisce il *ciphertext* come l'**exclusive-or** ($\oplus$, addizione modulo 2 bit a bit) tra il *plaintext* e il *keystream*:
+     $$y_i = x_i \oplus z_i$$
+   - L'operazione di **decryption** si realizza calcolando nuovamente l'**exclusive-or** tra il *ciphertext* e il medesimo *keystream*:
+     $$x_i = y_i \oplus z_i$$
+- **Confronto strutturale:** I **public-key cryptosystems** sono invariabilmente dei **block ciphers**, mentre i **secret-key cryptosystems** possono essere sia **block ciphers** sia **stream ciphers**.
 
-## 1.3 Modelli di Attacco e Livelli di Sicurezza
+---
 
-> [!important] Principio di Kerckhoffs Nel valutare la sicurezza di un crittosistema si assume sempre che l'avversario (Oscar) conosca perfettamente l'algoritmo di cifratura e decifratura. La sicurezza deve dipendere **esclusivamente** dalla segretezza della chiave $K$.
-> 
->   
+### 1.1.4 Hybrid Cryptography (Crittografia Ibrida)
 
-### Classificazione degli Attacchi (in ordine crescente di potenza dell'avversario)
+Sebbene i *public-key cryptosystems* risolvano brillantemente il problema della distribuzione delle chiavi su canali insicuri, presentano uno svantaggio pratico: sono molto più lenti rispetto ai *secret-key cryptosystems* (come AES).
 
-1. **Ciphertext-only attack (Solo testo cifrato):** Oscar possiede unicamente una o più stringhe di testo cifrato $\mathbf{y}$ intercettate sul canale.
-    
-      
-    
-2. **Known-plaintext attack (Testo in chiaro noto):** Oscar possiede una o più coppie di testo in chiaro e relativo testo cifrato $(\mathbf{x}, \mathbf{y})$ cifrate con la stessa chiave.
-    
-      
-    
-3. **Chosen-plaintext attack (Testo in chiaro scelto):** Oscar ha accesso temporaneo alla macchina di cifratura: può scegliere dei testi in chiaro $\mathbf{x}$ a suo piacimento e ottenere i corrispondenti testi cifrati $\mathbf{y}$.
-    
-      
-    
-4. **Chosen-ciphertext attack (Testo cifrato scelto):** Oscar può scegliere dei testi cifrati $\mathbf{y}$ e ottenere i corrispondenti testi in chiaro decifrati $\mathbf{x}$.
-    
-      
-    
+Nella pratica si adotta quindi la **hybrid cryptography** (crittografia ibrida), che unisce i vantaggi di entrambi i modelli in due fasi:
+1. **Scambio della chiave tramite Public-key Cryptography:** All'inizio della sessione di comunicazione, viene utilizzato un *public-key cryptosystem* esclusivamente per cifrare e trasmettere una chiave segreta temporanea (spesso chiamata **session key**, chiave di sessione) $K$ da Alice a Bob.
+2. **Cifratura dei dati tramite Secret-key Cryptography:** Una volta che sia Alice sia Bob sono in possesso della *session key* $K$, utilizzano un veloce *secret-key cryptosystem* (un *block cipher* o uno *stream cipher*) con chiave $K$ per cifrare i messaggi lunghi veri e propri.
 
-### Livelli di Sicurezza
+---
 
-- **Sicurezza contro la Ricerca Esaustiva (Brute Force):** Un attacco di ricerca esaustiva prova tutte le possibili regole di decifratura $d_K$ finché non appare un testo in chiaro sensato. Una condizione **necessaria ma non sufficiente** affinché un crittosistema sia sicuro è che lo spazio delle chiavi $\mathcal{K}$ sia così vasto da rendere computazionalmente infattibile provarle tutte.
-    
-      
-    
-- **Unconditional Security (Sicurezza Incondizionata):** Il crittosistema è matematicamente inviolabile anche se Oscar dispone di potenza di calcolo **infinita**, perché il testo cifrato non contiene informazioni sufficienti a determinare univocamente il testo in chiaro (es. _One-Time Pad_).
-    
-      
-    
-- **Computational Security (Sicurezza Computazionale):** Il sistema è violabile in linea di principio, ma richiede una quantità di operazioni talmente elevata da risultare irrealizzabile con le risorse computazionali disponibili in un tempo ragionevole.
-    
-      
-    
+## 1.2 Message Integrity (Integrità dei Messaggi e Autenticazione)
+
+La sola cifratura protegge la **confidentiality** contro un **passive adversary** (avversario passivo) che si limita a intercettare e osservare i messaggi trasmessi tra Alice e Bob. Tuttavia, in molti scenari reali dobbiamo difenderci da un **active adversary** (avversario attivo), il quale può modificare il contenuto dei messaggi in transito, inserirne di falsi o sostituire l'identità del mittente.
+
+Entrano così in gioco ulteriori obiettivi fondamentali:
+- **Data integrity (Integrità dei dati):** Garantire che il messaggio ricevuto da Bob non sia stato alterato durante la trasmissione rispetto a quello inviato da Alice.
+- **Message authentication (Autenticazione del messaggio):** Garantire a Bob che il messaggio ricevuto abbia effettivamente avuto origine da Alice (e non da Oscar).
+
+---
+
+### 1.2.1 Message Authentication Codes (MAC)
+
+Un **message authentication code (MAC)** è lo strumento a chiave segreta utilizzato per garantire *data integrity* e *message authentication*:
+
+- Alice e Bob condividono una **secret key** $K$, la quale seleziona una funzione di autenticazione $h_K$.
+- Quando Alice vuole trasmettere un messaggio $x$ a Bob, calcola un valore di controllo chiamato **authentication tag** (o semplicemente **tag**):
+  $$y = h_K(x)$$
+  e trasmette la coppia $(x, y)$ sul canale insicuro.
+- Quando Bob riceve la coppia $(x, y)$, utilizza la chiave segreta condivisa $K$ per ricalcolare autonomamente il tag $h_K(x)$ a partire dal messaggio ricevuto $x$, e verifica se coincide con il tag ricevuto $y$ ($y = h_K(x)$):
+  - Se la condizione è soddisfatta, Bob accetta il messaggio come **valid** (valido), avendo la garanzia che $x$ proviene da Alice e non è stato manomesso;
+  - Altrimenti, Bob lo rifiuta come **invalid** (invalido).
+- Un MAC è sicuro se per Oscar (che non conosce $K$) è computazionalmente infattibile produrre una **forgery** (falsificazione), ovvero riuscire a calcolare un tag valido $y' = h_K(x')$ per un nuovo messaggio $x'$ non inviato da Alice.
+
+---
+
+### 1.2.2 Signature Schemes (Schemi di Firma Digitale)
+
+Un **signature scheme** (schema di firma digitale) è l'analogo a chiave pubblica di un MAC e permette di verificare l'integrità e l'origine di un messaggio senza che mittente e destinatario condividano una chiave segreta:
+
+- Alice possiede una **private key** (nota esclusivamente a lei), che definisce un algoritmo privato di firma $\text{sig}_{\text{Alice}}$, e una corrispondente **public key** (nota a tutti), che definisce un algoritmo pubblico di verifica $\text{ver}_{\text{Alice}}$.
+- Per firmare un messaggio $x$, Alice utilizza la propria *private key* per calcolare la **signature** (firma digitale):
+  $$y = \text{sig}_{\text{Alice}}(x)$$
+  e trasmette la coppia $(x, y)$.
+- Quando Bob (o chiunque altro) riceve $(x, y)$, applica l'algoritmo pubblico di verifica di Alice:
+  $$\text{ver}_{\text{Alice}}(x, y) \in \{\text{true}, \text{false}\}$$
+  Se l'algoritmo restituisce **`true`**, Bob è certo che la firma $y$ sul messaggio $x$ sia autentica e sia stata generata da Alice.
+- *(Nota: Se Alice desidera sia firmare sia cifrare un messaggio $x$ per Bob, il metodo raccomandato dal libro è il **sign-then-encrypt**: Alice calcola prima la sua firma $y = \text{sig}_{\text{Alice}}(x)$ e poi cifra la coppia $(x, y)$ con la chiave pubblica di Bob, inviando $z = e_{\text{Bob}}(x, y)$)*.
+
+---
+
+### 1.2.3 Nonrepudiation (Non Ripudio)
+
+Oltre al fatto che le firme digitali sono verificabili pubblicamente da chiunque, vi è una differenza concettuale decisiva tra un **MAC** e un **signature scheme**: la proprietà di **nonrepudiation** (non ripudio).
+
+- **Perché un MAC NON fornisce nonrepudiation:**
+  In un MAC, sia Alice sia Bob conoscono la medesima chiave segreta condivisa $K$. Pertanto, Bob è perfettamente in grado di calcolare da solo una coppia valida $(x, h_K(x))$ per qualsiasi messaggio $x$. Se sorge una disputa legale davanti a una terza parte imparziale (un giudice, **judge**):
+  1. Bob non può dimostrare al giudice che è stata Alice a inviargli $(x, y)$, perché Bob stesso avrebbe potuto fabbricare quella coppia;
+  2. Viceversa, se Alice ha davvero inviato $(x, y)$, può in seguito negare disonestamente (**repudiate**, ripudiare) di averlo mai mandato, sostenendo che sia stato Bob a crearlo.
+- **Perché un Signature Scheme fornisce nonrepudiation:**
+  In uno schema di firma digitale, **soltanto Alice** conosce la propria *private key* ($\text{sig}_{\text{Alice}}$), mentre Bob (e il giudice) conoscono unicamente la *public key* di verifica ($\text{ver}_{\text{Alice}}$). Bob non può creare una firma valida a nome di Alice; di conseguenza, se Bob mostra al giudice una coppia $(x, y)$ tale che $\text{ver}_{\text{Alice}}(x, y) = \text{true}$, il giudice ha la prova matematica che solo Alice può aver firmato $x$, e Alice non può negare (*repudiate*) di averlo firmato.
+
+---
+
+### 1.2.4 Certificates (Certificati Digitali)
+
+Tutti i sistemi a chiave pubblica (sia per l'*encryption* sia per i *signature schemes*) si basano su un presupposto critico: quando Alice usa la chiave pubblica di Bob, come fa ad essere certa che quella chiave pubblica appartenga davvero a Bob e non a Oscar (che potrebbe essersi spacciato per Bob pubblicando la propria chiave pubblica)?
+
+La soluzione standard consiste nell'utilizzo dei **certificates** (certificati digitali), emessi da una terza parte fidata chiamata **Certification Authority (CA)** (o **Trusted Authority, TA**):
+1. La **CA** possiede una propria coppia di chiavi (privata e pubblica) per uno schema di firma digitale, e la *public key* della CA è nota e autenticata presso tutti gli utenti del sistema.
+2. Dopo aver verificato l'identità di Bob, la CA crea un documento digitale contenente la stringa identificativa di Bob ($\text{ID}(\text{Bob})$) insieme alla chiave pubblica di Bob, e vi appone la **firma digitale della CA** (usando la *private key* della CA).
+3. L'insieme dei dati di Bob e della firma della CA costituisce il **certificate** di Bob.
+4. Chiunque (inclusa Alice) può verificare la firma della CA sul certificato di Bob utilizzando la *public key* della CA, ottenendo così la garanzia crittografica che la chiave pubblica contenuta nel certificato appartiene effettivamente a Bob.
+
+---
+
+### 1.2.5 Hash Functions (Funzioni di Hash)
+
+Una **cryptographic hash function** (o **unkeyed hash function**, funzione di hash senza chiave) $h$ è una funzione pubblica che prende in input un messaggio $x$ di lunghezza arbitraria e produce in output una stringa binaria corta e di lunghezza fissa $y = h(x)$ (tipicamente da $160$ a $512$ bit), chiamata **message digest** (o **fingerprint**, impronta digitale del messaggio).
+
+Affinché una funzione di hash sia crittograficamente sicura, deve soddisfare tre proprietà fondamentali:
+1. **One-way (o Preimage resistant):** Dato un *message digest* $y$, deve essere computazionalmente infattibile risalire a un input $x$ tale che $h(x) = y$.
+2. **Second preimage resistant:** Dato un messaggio $x$, deve essere computazionalmente infattibile trovare un secondo messaggio $x' \neq x$ tale che $h(x') = h(x)$.
+3. **Collision resistant:** Deve essere computazionalmente infattibile trovare una qualsiasi coppia di messaggi distinti $x \neq x'$ che producano lo stesso *message digest*, ovvero tali che $h(x) = h(x')$ (una coppia del genere è chiamata **collision**, collisione).
+
+- **Applicazioni principali:**
+  - **All'interno dei Signature Schemes (Hash-then-sign):** Poiché gli schemi di firma digitale sono lenti e operano su blocchi di dimensione fissa, invece di firmare direttamente un messaggio lungo $x$, Alice calcola prima il breve *message digest* $z = h(x)$ e firma digitalmente soltanto $z$, calcolando $y = \text{sig}_{\text{Alice}}(h(x))$.
+  - **Integrità di file e costruzione di MAC:** Le *hash functions* vengono usate per verificare l'integrità dei dati e, combinate opportunamente con una chiave segreta $K$, per costruire algoritmi MAC veloci e sicuri (come **HMAC**).
+
+---
+
+## 1.3 Cryptographic Protocols (Protocolli Crittografici)
+
+Oltre agli strumenti crittografici di base (*primitives*), la crittografia si occupa della progettazione e dell'analisi dei **cryptographic protocols** (protocolli crittografici).
+
+- Un **cryptographic protocol** è un algoritmo interattivo che coinvolge due o più parti (ad esempio Alice, Bob ed eventualmente una **Trusted Authority, TA**), le quali eseguono una sequenza di calcoli e si scambiano messaggi al fine di raggiungere uno specifico obiettivo di sicurezza in presenza di un avversario.
+- Esempi fondamentali di protocolli crittografici trattati nel libro includono:
+  - **Key distribution / Key agreement protocols:** Protocolli che permettono ad Alice e Bob di stabilire una nuova *session key* segreta condivisa comunicando su un canale aperto (come il protocollo di scambio chiavi di **Diffie-Hellman**).
+  - **Identification / Entity authentication protocols:** Protocolli in cui Alice dimostra in tempo reale a Bob la propria identità (ad esempio dimostrando di possedere una chiave segreta o privata senza rivelarla).
+  - **Secret sharing schemes:** Protocolli per distribuire un segreto tra più partecipanti in modo che solo determinati sottoinsiemi autorizzati possano ricostruirlo.
+
+---
+
+## 1.4 Security (Modelli di Attacco e Livelli di Sicurezza)
+
+Il processo con cui l'avversario (Oscar) tenta di determinare la chiave segreta $K$ (o di risalire al *plaintext* $\mathbf{x}$), data una stringa di *ciphertext* $\mathbf{y}$, è chiamato **cryptanalysis** (crittoanalisi). Si osservi che se Oscar riesce a determinare la chiave $K$, può decifrare qualsiasi *ciphertext* $\mathbf{y}$ esattamente come farebbe Bob usando $d_K$; pertanto, determinare $K$ è almeno tanto difficile quanto determinare il *plaintext* $\mathbf{x}$ dato $\mathbf{y}$.
+
+> [!important] Kerckhoffs' Principle (Principio di Kerckhoffs)
+> Nel valutare la sicurezza di un crittosistema, si assume sempre che l'avversario (Oscar) conosca perfettamente l'intera struttura del crittosistema utilizzato (ovvero gli insiemi $\mathcal{P}, \mathcal{C}, \mathcal{K}$ e le famiglie di regole $\mathcal{E}, \mathcal{D}$).
+> La sicurezza del crittosistema deve risiedere **esclusivamente nella segretezza della chiave $K$** (e mai nella presunta segretezza dell'algoritmo).
+
+---
+
+### 1.4.1 Attack Models (Modelli di Attacco)
+
+Per valutare la sicurezza di un crittosistema in modo rigoroso, dobbiamo specificare a quali informazioni e capacità ha accesso l'avversario. Stinson elenca **quattro modelli di attacco** standard, ordinati dal più debole (più difficile per Oscar) al più potente (più favorevole a Oscar):
+
+1. **Ciphertext-only attack (Attacco a solo testo cifrato):**
+   L'avversario possiede unicamente una stringa di *ciphertext* $\mathbf{y}$ intercettata sul canale.
+2. **Known-plaintext attack (Attacco a testo in chiaro noto):**
+   L'avversario possiede una stringa di *plaintext* $\mathbf{x}$ e la corrispondente stringa di *ciphertext* $\mathbf{y}$ (cifrata con la chiave ignota $K$ che Oscar vuole scoprire).
+3. **Chosen-plaintext attack (Attacco a testo in chiaro scelto):**
+   L'avversario ha ottenuto accesso temporaneo all'apparato di cifratura (*encryption machinery*). Può quindi scegliere a proprio piacimento una stringa di *plaintext* $\mathbf{x}$ e costruire (ottenere dall'oracolo di cifratura) la corrispondente stringa di *ciphertext* $\mathbf{y}$.
+   *(Nota: In un **public-key cryptosystem**, poiché la regola di cifratura $e_K$ è pubblica, l'avversario può sempre cifrare qualsiasi plaintext desideri; pertanto un sistema a chiave pubblica deve essere intrinsecamente sicuro almeno contro i chosen-plaintext attacks!)*.
+4. **Chosen-ciphertext attack (Attacco a testo cifrato scelto):**
+   L'avversario ha ottenuto accesso temporaneo all'apparato di decifratura (*decryption machinery*). Può quindi scegliere una stringa di *ciphertext* $\mathbf{y}$ e ottenere la corrispondente stringa di *plaintext* $\mathbf{x}$ (con l'obiettivo di dedurre la chiave $K$ o decifrare un diverso *ciphertext* bersaglio $\mathbf{y}^* \neq \mathbf{y}$).
+
+---
+
+### 1.4.2 Levels of Security (Livelli di Sicurezza)
+
+Oltre a specificare il modello di attacco, Stinson distingue **tre concetti (livelli) fondamentali di sicurezza** in base alle risorse computazionali concesse all'avversario:
+
+#### 1. Il Requisito Preliminare: Resistenza alla Exhaustive Key Search
+- In un attacco di **exhaustive key search** (ricerca esaustiva della chiave, o *brute-force*), l'avversario prova sistematicamente ogni possibile regola di decifratura $d_K$ (per tutte le chiavi $K \in \mathcal{K}$) finché non ottiene una stringa di *plaintext* "dotata di senso" (*meaningful*).
+- Affinché un crittosistema sia sicuro nella pratica, è **condizione necessaria ma NON sufficiente** che lo spazio delle chiavi $\mathcal{K}$ sia così grande da rendere computazionalmente infattibile una *exhaustive key search* (come mostra l'esempio del *Substitution Cipher* nel Capitolo 2, che possiede $26! \approx 4 \times 10^{26}$ chiavi ma viene violato istantaneamente tramite l'analisi delle frequenze).
+
+#### 2. Unconditional Security (Sicurezza Incondizionata)
+- Un crittosistema è **unconditionally secure** (incondizionatamente sicuro) se non può essere violato **nemmeno se l'avversario dispone di risorse computazionali infinite** (*infinite computational resources*).
+- Ciò accade quando il *ciphertext* intercettato non contiene matematicamente informazioni sufficienti per determinare univocamente il *plaintext* (neppure provando tutte le chiavi possibili rimangono molteplici **spurious keys**, chiavi spurie plausibili).
+- Il modello matematico formale della sicurezza incondizionata è la **perfect secrecy** (segretezza perfetta di Shannon, studiata nel Capitolo 3), il cui esempio canonico è il **One-time Pad**, il quale richiede tuttavia una chiave casuale lunga quanto l'intero messaggio.
+- Nessun *public-key cryptosystem* può mai fornire *unconditional security* (poiché un avversario con potenza di calcolo infinita può cifrare tutti i possibili $x \in \mathcal{P}$ usando la chiave pubblica $e_K$ fino a trovare l'unico $x$ tale che $e_K(x) = y$).
+
+#### 3. Computational Security (Sicurezza Computazionale)
+- Poiché la sicurezza incondizionata richiede chiavi scomodamente lunghe, quasi tutti i crittosistemi usati nella pratica si basano sulla **computational security** (sicurezza computazionale).
+- Un sistema è **computationally secure** se il miglior algoritmo noto per violarlo richiede una quantità di risorse computazionali (tempo di calcolo o memoria) talmente elevata da risultare **computationally infeasible** (computazionalmente infattibile) per qualsiasi avversario reale (ad esempio $2^{128}$ operazioni).
+
+#### 4. Provable Security e Riduzioni (Sicurezza Dimostrabile)
+- Un approccio rigoroso all'interno della *computational security* è la **provable security** (sicurezza dimostrabile): consiste nel fornire una dimostrazione matematica (**reduction**, riduzione) del fatto che violare un dato crittosistema è **almeno tanto difficile quanto risolvere un noto problema matematico ritenuto intrattabile** (come la fattorizzazione di grandi interi per RSA o il calcolo dei logaritmi discreti per ElGamal).
+- In questo modo, finché il problema matematico sottostante rimane computazionalmente infattibile, il crittosistema è garantito essere sicuro sotto le ipotesi del modello considerato.
+
+---
+
+### Tabella di Sintesi dei Concetti del Capitolo 1
+
+| **Obiettivo Crittografico**         | **Strumento Secret-key (Simmetrico)**                  | **Strumento Public-key (Asimmetrico)**                                  | **Senza Chiave (Unkeyed)**                      |
+| :---------------------------------- | :----------------------------------------------------- | :---------------------------------------------------------------------- | :---------------------------------------------- |
+| **Confidentiality (Secrecy)**       | Secret-key Cryptosystem (Block Cipher / Stream Cipher) | Public-key Cryptosystem (es. RSA, ElGamal)                              | —                                               |
+| **Data Integrity & Authentication** | Message Authentication Code (**MAC**)                  | **Signature Scheme** (Firma Digitale)                                   | **Hash Function** (Message Digest, se protetto) |
+| **Nonrepudiation**                  | ❌ Non garantito (chiave $K$ condivisa tra Alice e Bob) | ✅ Garantito da **Signature Scheme** (chiave privata nota solo ad Alice) | —                                               |
+| **Autenticazione Chiavi Pubbliche** | —                                                      | **Certificate** firmato da una **CA**                                   | —                                               |
 
 # Capitolo 2: Crittografia Classica e Crittoanalisi
 
