@@ -265,7 +265,7 @@ def punto_c_attacco(probabilita_traccia, x_prime, u4_atteso):
             
         filtrate += 1
 
-        # Estrae i due nibble attivi in uscita per la decifratura parziale
+        # Estrae primi i due nibble attivi in uscita per la decifratura parziale
         y1 = (y >> 12) & 0xF
         y1_star = (y_star >> 12) & 0xF
         y2 = (y >> 8) & 0xF
