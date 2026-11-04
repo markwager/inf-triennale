@@ -133,10 +133,10 @@ def get_key() -> list[int]:
     from random import randint
 
     while True:
-        chiave_str = input(KEY_PROMPT)
+        chiave_str = input(KEY_PROMPT).strip("\n ")
         if chiave_str == '':
             chiave_str = load_last_key()
-        if chiave_str == 'rnd\n' or chiave_str == '':
+        if chiave_str == 'rnd' or chiave_str == '':
             chiave_str = "{:0>20X}".format(randint(0, 0xFFFFFFFFFFFFFFFFFFFF))
         try:
             chiavi = key_from_hex(chiave_str)
@@ -252,8 +252,8 @@ def punto_b_traccia(ddt):
 def punto_c_attacco(probabilita_traccia, x_prime, u4_atteso):
     """
     PUNTO C/D: Esegue n tentativi dell'attacco differenziale raccogliendo parametri, 
-    stampa solo la classifica per ogni iterazione e termina con un riepilogo comparativo
-    e un'analisi qualitativa (senza convergenza e senza affollamento).
+    stampa solo la classifica per ogni iterazione e termina con un riepilogo comparativo,
+    concludendo con una stima delle coppie filtrate necessarie per la riuscita certa.
     """
     print("\n--- PUNTO C/D: ATTACCO DIFFERENZIALE E ANALISI PROBABILISTICA ---")
     
@@ -434,6 +434,26 @@ def punto_c_attacco(probabilita_traccia, x_prime, u4_atteso):
             print(f"      > Nessun Gap: La chiave vera e' confusa con il miglior falso positivo.")
         else:
             print(f"      > Gap negativo: Una chiave falsa ha superato la chiave vera di {abs(gap)} hit(s).")
+
+    # =========================================================================
+    # 3. CONSIDERAZIONE FINALE SUL NUMERO OTTIMALE DI COPPIE FILTRATE
+    # =========================================================================
+    tot_filtrate = sum(r['filtrate'] for r in riepilogo_tentativi)
+    tot_generate = sum(r['generate'] for r in riepilogo_tentativi)
+    tasso_filtro_medio = tot_filtrate / tot_generate if tot_generate > 0 else 0
+    
+    # Stinson suggerisce tipicamente c=6 per dominare il rumore statistico.
+    c_sicurezza = 6.0
+    t_consigliato = c_sicurezza / probabilita_traccia
+    filtrate_consigliate = int(t_consigliato * tasso_filtro_medio)
+
+    print(f"\n 3. CONSIDERAZIONE SUL NUMERO DI COPPIE NECESSARIE:")
+    print(f"    La teoria della crittoanalisi differenziale indica che servono circa c=6")
+    print(f"    'right pairs' per garantire un margine di vittoria netto sulla chiave vera[cite: 1].")
+    print(f"    Per ottenere 6 right pairs, servirebbe generare T_teorico = 6 / R_p = {int(t_consigliato)} tuple casuali.")
+    print(f"    Sulla base del tasso di filtraggio empirico medio osservato ({tasso_filtro_medio*100:.2f}%),")
+    print(f"    il quantitativo stimato di COPPIE GIA' FILTRATE da richiedere in input")
+    print(f"    per avere un attacco stabilmente 'Riuscito' e' di circa: {filtrate_consigliate} coppie (o superiore).")
             
 # ==============================================================================
 # MENU INTERATTIVO PRINCIPALE
