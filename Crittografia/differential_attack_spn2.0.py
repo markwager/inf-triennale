@@ -121,32 +121,43 @@ Oppure premi invio per utilizzare l'ultima chiave\n> """
 
 def load_last_key() -> str:
     try:
-        with open('last_key.txt', 'r', encoding='utf-8') as f: input_key = f.read()
+        with open('last_key.txt', 'r', encoding='utf-8') as f: 
+            input_key = f.read().strip()
     except FileNotFoundError:
         input_key = ''
     return input_key
 
 def save_key(key: str) -> None:
-    with open('last_key.txt', 'w', encoding='utf-8') as f: f.write(key)
+    with open('last_key.txt', 'w', encoding='utf-8') as f: 
+        f.write(key)
 
 def get_key() -> list[int]:
     from random import randint
-
+    
+    show_key = False  # CORREZIONE: Inizializzazione necessaria per evitare UnboundLocalError
+    
     while True:
-        chiave_str = input(KEY_PROMPT)
+        chiave_str = input(KEY_PROMPT).strip()
+        
         if chiave_str == '':
             show_key = True
             chiave_str = load_last_key()
-        if chiave_str == 'rnd\n' or chiave_str == '':
+            
+        # CORREZIONE: Controllo corretto per 'rnd' senza \n
+        if chiave_str.lower() == 'rnd' or chiave_str == '':
             chiave_str = "{:0>20X}".format(randint(0, 0xFFFFFFFFFFFFFFFFFFFF))
+            show_key = True
+            
         try:
             chiavi = key_from_hex(chiave_str)
             save_key(chiave_str)
             break
         except ValueError as e:
-            print("Errore: " + str(e) + " Riprova.")
+            print("Errore: " + str(e) + " Riprova.\n")
+            
     if show_key:
-        print("Chiave utilizzata: " + chiave_str)
+        print("Chiave utilizzata: 0x" + chiave_str.upper())
+        
     return chiavi
 
 
