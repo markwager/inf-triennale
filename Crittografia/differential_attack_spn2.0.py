@@ -402,7 +402,7 @@ def punto_c_attacco(probabilita_traccia, x_prime, u4_atteso):
         if gap > 0:
             print(f"      > Gap di vittoria: La chiave vera ha staccato i falsi candidati di {gap} hit(s).")
         elif gap == 0:
-            print(f"      > Nessun Gap:La chiave vera e' confusa con il miglior falso positivo.")
+            print(f"      > Nessun Gap: La chiave vera e' confusa con il miglior falso positivo.")
         else:
             print(f"      > Gap negativo: Una chiave falsa ha superato la chiave vera di {abs(gap)} hit(s).")
             
