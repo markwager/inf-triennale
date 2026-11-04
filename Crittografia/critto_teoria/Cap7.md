@@ -190,3 +190,35 @@ Il crittosistema a chiave pubblica proposto da ElGamal si basa sul problema del 
 - **Scelta dei Parametri:** Non è noto alcun algoritmo in tempo polinomiale (*polynomial-time algorithm*) per il problema del Logaritmo Discreto in $\mathbb{Z}_p^*$ quando $p$ è scelto con cura e $\alpha$ è un elemento primitivo modulo $p$. Per un'impostazione sicura, si raccomanda che:
   1. $p$ abbia almeno **$2048$ bit** nella sua rappresentazione binaria;
   2. $p - 1$ possieda almeno un fattore primo "grande".
+
+
+#### L'Esponenziazione come One-way Function e lo Square-and-Multiply Algorithm (Algorithm 6.5)
+
+L'utilità del problema del **Discrete Logarithm** in un contesto crittografico risiede nel fatto che trovare i **discrete logarithms** è (probabilmente) difficile, ma l'operazione inversa dell'**exponentiation** (esponenziazione) può essere calcolata in modo efficiente utilizzando lo **square-and-multiply method** (**Algorithm 6.5**). Detto in altre parole, l'**exponentiation** è una **one-way function** in gruppi $G$ opportuni.
+
+1. **Inefficienza del Metodo Ingenuo e Importanza dello Square-and-Multiply Method:**
+   - Consideriamo la **modular exponentiation** (esponenziazione modulare), ovvero il calcolo di una funzione della forma $x^c \bmod n$ (dove $n$ è un intero di $k$ bit nella sua **binary representation**).
+   - Il calcolo di $x^c \bmod n$ può essere effettuato eseguendo $c - 1$ **modular multiplications** (moltiplicazioni modulari); tuttavia, ciò è inefficiente se $c$ è grande.
+   - In particolare, nel **ElGamal Cryptosystem** in $\mathbb{Z}_p^*$, per avere un'impostazione sicura in cui il **Discrete Logarithm** problem sia **infeasible**, il primo $p$ deve avere almeno $2048$ bit nella sua **binary representation** ($k \ge 2048$), e gli esponenti $a, k \in \mathbb{Z}_{p-1}$ sono anch'essi interi fino a $2048$ bit: eseguire $c - 1$ moltiplicazioni modulari sarebbe computazionalmente infattibile.
+   - Il noto **square-and-multiply algorithm** riduce il numero di **modular multiplications** richieste per calcolare $x^c \bmod n$ ad al massimo **$2\ell$**, dove $\ell$ è il numero di bit nella **binary representation** dell'esponente $c$. Poiché una moltiplicazione modulo $n$ si esegue in tempo $O(k^2)$, la **modular exponentiation** tramite **square-and-multiply** si esegue in tempo:
+     $$O(\ell k^2) = O((\log c) \times k^2)$$
+     costituendo un **polynomial-time algorithm** che rende facile calcolare $\alpha^a \bmod p$ pur restando infattibile invertire l'operazione per trovare $a = \log_\alpha \beta$.
+
+2. **Definizione di `SQUARE-AND-MULTIPLY` (Algorithm 6.5):**
+   Supponiamo che la **binary representation** dell'esponente $c$ (di lunghezza $\ell$ bit) sia:
+   $$c = \sum_{i=0}^{\ell - 1} c_i 2^i$$
+   dove $c_i \in \{0, 1\}$ per $0 \le i \le \ell - 1$. L'algoritmo calcola $z = x^c \bmod n$ (e si applica identicamente per calcolare $\alpha^a$ in qualsiasi **multiplicative group** $(G, \cdot)$):
+
+> [!abstract] Algorithm 6.5: `SQUARE-AND-MULTIPLY`$(x, c, n)$
+> 1. $z \leftarrow 1$
+> 2. **for** $i \leftarrow \ell - 1$ **downto** $0$
+>    **do** $\begin{cases} z \leftarrow z^2 \bmod n \\ \textbf{if } c_i = 1 \\ \quad \textbf{then } z \leftarrow (z \times x) \bmod n \end{cases}$
+> 3. **return** $(z)$
+
+   - **Conteggio delle operazioni:** Nell'**Algorithm 6.5** vengono eseguiti sempre $\ell$ **squarings** (elevamenti al quadrato, $z \leftarrow z^2 \bmod n$) e al massimo $\ell$ **multiplications** (moltiplicazioni per $x$, $z \leftarrow (z \times x) \bmod n$, eseguite solo in corrispondenza dei bit $c_i = 1$), per un totale di al più $2\ell$ **modular multiplications**.
+
+3. **Uso nel ElGamal Cryptosystem (Cryptosystem 7.1):**
+   Nel **ElGamal Cryptosystem** in $\mathbb{Z}_p^*$, sia la generazione della **public key** sia le operazioni di **encryption** e **decryption** sono **modular exponentiations** calcolate efficientemente con lo **square-and-multiply method**:
+   - **Public key:** Bob calcola $\beta \equiv \alpha^a \pmod p$ eseguendo `SQUARE-AND-MULTIPLY`$(\alpha, a, p)$;
+   - **Encryption ($e_K(x, k) = (y_1, y_2)$):** Alice calcola $y_1 = \alpha^k \bmod p$ eseguendo `SQUARE-AND-MULTIPLY`$(\alpha, k, p)$ e calcola $\beta^k \bmod p$ (per ottenere $y_2 = x \beta^k \bmod p$) eseguendo `SQUARE-AND-MULTIPLY`$(\beta, k, p)$;
+   - **Decryption ($d_K(y_1, y_2) = y_2 (y_1^a)^{-1} \bmod p$):** Bob calcola $y_1^a \bmod p$ eseguendo `SQUARE-AND-MULTIPLY`$(y_1, a, p)$ (e ne calcola poi il **multiplicative inverse** modulo $p$).
