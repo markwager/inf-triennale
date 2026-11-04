@@ -234,7 +234,7 @@ def punto_c_attacco(probabilita_traccia, x_prime, u4_atteso):
         return
 
     # Calcolo dinamico del numero di tuple necessarie (T = c / R_p)
-    C_COSTANTE = 6
+    C_COSTANTE = 8
     numero_coppie = int(C_COSTANTE * (1.0 / probabilita_traccia))
     
     print("Costante c scelta: " + str(C_COSTANTE))
