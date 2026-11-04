@@ -111,6 +111,41 @@ def decrypt_message(blocks, keys):
         out += bytes([p >> 8, p & 0xFF]) # Separa i due byte per ricostruire i caratteri
     return out.rstrip(b"\x00").decode(errors="replace")
 
+# ==============================================================================
+# FUNZIONI INPUT CHIAVE
+# ==============================================================================
+
+KEY_PROMPT = """Inserisci la chiave maestra a 80 bit (es. 0x1234567890ABCDEF1234)
+Altrimenti inserisci 'rnd' per generare una chiave casuale
+Oppure premi invio per utilizzare l'ultima chiave\n> """
+
+def load_last_key() -> str:
+    try:
+        with open('last_key.txt', 'r', encoding='utf-8') as f: input_key = f.read()
+    except FileNotFoundError:
+        input_key = ''
+    return input_key
+
+def save_key(key: str) -> None:
+    with open('last_key.txt', 'w', encoding='utf-8') as f: f.write(key)
+
+def get_key() -> list[int]:
+    from random import randint
+
+    while True:
+        chiave_str = input(KEY_PROMPT)
+        if chiave_str == '':
+            chiave_str = load_last_key()
+        if chiave_str == 'rnd\n' or chiave_str == '':
+            chiave_str = "{:0>20X}".format(randint(0, 0xFFFFFFFFFFFFFFFFFFFF))
+        try:
+            chiavi = key_from_hex(chiave_str)
+            save_key(chiave_str)
+            break
+        except ValueError as e:
+            print("Errore: " + str(e) + " Riprova.")
+    return chiavi
+
 
 # ==============================================================================
 # FASE 2: CRITTOANALISI DIFFERENZIALE DINAMICA 
@@ -226,13 +261,7 @@ def punto_c_attacco(probabilita_traccia, x_prime, u4_atteso):
     expected_u4_1 = (u4_atteso >> 12) & 0xF
     expected_u4_2 = (u4_atteso >> 8) & 0xF
 
-    while True:
-        chiave_str = input("Inserisci una chiave maestra a 80 bit per simulare l'attacco (es. 0x1234567890ABCDEF1234): ")
-        try:
-            chiavi = key_from_hex(chiave_str)
-            break
-        except ValueError as e:
-            print("Errore: " + str(e) + " Riprova.")
+    chiavi = get_key()
 
     chiave_vera_k5 = chiavi[4]
     veri_8bit = (chiave_vera_k5 >> 8) & 0xFF
@@ -410,23 +439,6 @@ def punto_c_attacco(probabilita_traccia, x_prime, u4_atteso):
 # MENU INTERATTIVO PRINCIPALE
 # ==============================================================================
 
-def parse_key_input(input_key: str) -> str:
-    from random import randint
-
-    if input_key == '':
-        try:
-            with open('last_key.txt', 'r', encoding='utf-8') as f: input_key = f.read()
-        except FileNotFoundError:
-            input_key = ''
-    if input_key == 'rnd\n' or input_key == '':
-        input_key = "{:0>20X}".format(randint(0, 0xFFFFFFFFFFFFFFFFFFFF))
-
-    return input_key
-
-def save_key(key: str) -> None:
-    with open('last_key.txt', 'w', encoding='utf-8') as f: f.write(key)
-
-
 def main():
     while True:
         print("\n==================================================")
@@ -445,17 +457,7 @@ def main():
             
         elif scelta == "1":
             print("\n--- CIFRATURA ---")
-            while True:
-                chiave_str = input("""Inserisci la chiave maestra a 80 bit (es. 0x1234567890ABCDEF1234)
-Altrimenti inserisci 'rnd' per generare una chiave casuale
-Oppure premi invio per utilizzare l'ultima chiave\n> """)
-                chiave_str = parse_key_input(chiave_str)
-                try:
-                    chiavi = key_from_hex(chiave_str)
-                    save_key(chiave_str)
-                    break
-                except ValueError as e:
-                    print("Errore: " + str(e) + " Riprova.")
+            chiavi = get_key()
                     
             messaggio = input("Inserisci il messaggio in chiaro da cifrare: ")
             blocchi_cifrati = encrypt_message(messaggio, chiavi)
@@ -466,14 +468,8 @@ Oppure premi invio per utilizzare l'ultima chiave\n> """)
                 
         elif scelta == "2":
             print("\n--- DECIFRATURA ---")
-            while True:
-                chiave_str = input("Inserisci la chiave maestra a 80 bit (es. 0x1234567890ABCDEF1234): ")
-                try:
-                    chiavi = key_from_hex(chiave_str)
-                    break
-                except ValueError as e:
-                    print("Errore: " + str(e) + " Riprova.")
-                    
+            chiavi = get_key()
+            
             while True:
                 cifrato_str = input("Inserisci il testo cifrato in esadecimale: ")
                 cifrato_str = cifrato_str.replace(" ", "").replace("\n", "")
