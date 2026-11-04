@@ -410,6 +410,23 @@ def punto_c_attacco(probabilita_traccia, x_prime, u4_atteso):
 # MENU INTERATTIVO PRINCIPALE
 # ==============================================================================
 
+def parse_key_input(input_key: str) -> str:
+    from random import randint
+
+    if input_key == '':
+        try:
+            with open('last_key.txt', 'r', encoding='utf-8') as f: input_key = f.read()
+        except FileNotFoundError:
+            input_key = ''
+    if input_key == 'rnd\n' or input_key == '':
+        input_key = "{:0>20X}".format(randint(0, 0xFFFFFFFFFFFFFFFFFFFF))
+
+    return input_key
+
+def save_key(key: str) -> None:
+    with open('last_key.txt', 'w', encoding='utf-8') as f: f.write(key)
+
+
 def main():
     while True:
         print("\n==================================================")
@@ -429,9 +446,13 @@ def main():
         elif scelta == "1":
             print("\n--- CIFRATURA ---")
             while True:
-                chiave_str = input("Inserisci la chiave maestra a 80 bit (es. 0x1234567890ABCDEF1234): ")
+                chiave_str = input("""Inserisci la chiave maestra a 80 bit (es. 0x1234567890ABCDEF1234)
+Altrimenti inserisci 'rnd' per generare una chiave casuale
+Oppure premi invio per utilizzare l'ultima chiave\n> """)
+                chiave_str = parse_key_input(chiave_str)
                 try:
                     chiavi = key_from_hex(chiave_str)
+                    save_key(chiave_str)
                     break
                 except ValueError as e:
                     print("Errore: " + str(e) + " Riprova.")
