@@ -133,10 +133,11 @@ def get_key() -> list[int]:
     from random import randint
 
     while True:
-        chiave_str = input(KEY_PROMPT).strip("\n ")
+        chiave_str = input(KEY_PROMPT)
         if chiave_str == '':
+            show_key = True
             chiave_str = load_last_key()
-        if chiave_str == 'rnd' or chiave_str == '':
+        if chiave_str == 'rnd\n' or chiave_str == '':
             chiave_str = "{:0>20X}".format(randint(0, 0xFFFFFFFFFFFFFFFFFFFF))
         try:
             chiavi = key_from_hex(chiave_str)
@@ -144,6 +145,8 @@ def get_key() -> list[int]:
             break
         except ValueError as e:
             print("Errore: " + str(e) + " Riprova.")
+    if show_key:
+        print("Chiave utilizzata: " + chiave_str)
     return chiavi
 
 
