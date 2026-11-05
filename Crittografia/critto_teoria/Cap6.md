@@ -12,7 +12,7 @@ Uno svantaggio di un _secret-key cryptosystem_ è che richiede la comunicazione 
 
   
 
-L'idea alla base di un **public-key cryptosystem** (crittosistema a chiave pubblica) è che potrebbe essere possibile trovare un crittosistema in cui sia _computationally infeasible_ (computazionalmente infattibile) determinare $d_K$ a partire da $e_K$. Se così fosse, l'_encryption rule_ $e_K$ diverrebbe una **public key** (chiave pubblica), il cui valore potrebbe essere reso noto a tutti (da qui il termine _public-key system_). Il vantaggio di un _public-key system_ è che Alice (o chiunque altro) può inviare un messaggio cifrato a Bob (senza la comunicazione preventiva di una chiave segreta condivisa) utilizzando l'_encryption rule_ pubblica $e_K$. Bob sarà l'unica persona in grado di decifrare il _ciphertext_, utilizzando la _decryption rule_ $d_K$, che è chiamata **private key** (chiave privata).
+L'idea alla base di un **public-key cryptosystem** è che potrebbe essere possibile trovare un crittosistema in cui sia _computationally infeasible_ (computazionalmente infattibile) determinare $d_K$ a partire da $e_K$. Se così fosse, l'_encryption rule_ $e_K$ diverrebbe una **public key** (chiave pubblica), il cui valore potrebbe essere reso noto a tutti. Il vantaggio di un _public-key system_ è che Alice (o chiunque altro) può inviare un messaggio cifrato a Bob (senza la comunicazione preventiva di una chiave segreta condivisa) utilizzando l'_encryption rule_ pubblica $e_K$. Bob sarà l'unica persona in grado di decifrare il _ciphertext_, utilizzando la _decryption rule_ $d_K$, che è chiamata **private key** (chiave privata).
 
   
 
@@ -54,7 +54,7 @@ Un'osservazione molto importante è che un _public-key cryptosystem_ non può ma
 
   
 
-Concettualmente è utile pensare a un _public-key system_ in termini di un'astrazione chiamata **trapdoor one-way function** (funzione one-way con trapdoor). Definiamo ora informalmente questa nozione.
+Concettualmente è utile pensare a un _public-key system_ in termini di **trapdoor one-way function** (funzione one-way con trapdoor). Definiamo ora informalmente questa nozione.
 
   
 

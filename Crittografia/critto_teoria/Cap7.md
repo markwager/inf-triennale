@@ -174,7 +174,7 @@ Il crittosistema a chiave pubblica proposto da ElGamal si basa sul problema del 
 > [!example] Example 7.1 (Esempio Numerico del Crittosistema ElGamal)
 > - **Parametri e Chiavi:** Sia $p = 2579$ e sia $\alpha = 2$ (elemento primitivo modulo $p$). Bob sceglie la chiave privata $a = 765$ e calcola:
 >   $$\beta = 2^{765} \bmod 2579 = 949$$
-> - **Cifratura (Alice):** Alice desidera inviare il messaggio $x = 1299$ a Bob e sceglie l'intero casuale $k = 853$. Allora calcola:
+> - **Cifratura (Alice):** Alice desidera inviare il messaggio $x = 1299$ a Bob e sceglie l'intero casuale $k = 853$. Allora calcola, usando la chiave pubblica di Bob:
 >   $$\begin{aligned}
 >   y_1 &= 2^{853} \bmod 2579 = 435 \\
 >   y_2 &= 1299 \times 949^{853} \bmod 2579 = 2396
@@ -194,13 +194,13 @@ Il crittosistema a chiave pubblica proposto da ElGamal si basa sul problema del 
 
 #### L'Esponenziazione come One-way Function e lo Square-and-Multiply Algorithm (Algorithm 6.5)
 
-L'utilità del problema del **Discrete Logarithm** in un contesto crittografico risiede nel fatto che trovare i **discrete logarithms** è (probabilmente) difficile, ma l'operazione inversa dell'**exponentiation** (esponenziazione) può essere calcolata in modo efficiente utilizzando lo **square-and-multiply method** (**Algorithm 6.5**). Detto in altre parole, l'**exponentiation** è una **one-way function** in gruppi $G$ opportuni.
+Ricordiamo che trovare i **discrete logarithms** è (probabilmente) difficile, ma l'operazione inversa dell'**exponentiation** (esponenziazione) può essere calcolata in modo efficiente utilizzando lo **square-and-multiply method** (**Algorithm 6.5**). Detto in altre parole, l'**exponentiation** è una **one-way function** in gruppi $G$ opportuni.
 
 1. **Inefficienza del Metodo Ingenuo e Importanza dello Square-and-Multiply Method:**
    - Consideriamo la **modular exponentiation** (esponenziazione modulare), ovvero il calcolo di una funzione della forma $x^c \bmod n$ (dove $n$ è un intero di $k$ bit nella sua **binary representation**).
    - Il calcolo di $x^c \bmod n$ può essere effettuato eseguendo $c - 1$ **modular multiplications** (moltiplicazioni modulari); tuttavia, ciò è inefficiente se $c$ è grande.
-   - In particolare, nel **ElGamal Cryptosystem** in $\mathbb{Z}_p^*$, per avere un'impostazione sicura in cui il **Discrete Logarithm** problem sia **infeasible**, il primo $p$ deve avere almeno $2048$ bit nella sua **binary representation** ($k \ge 2048$), e gli esponenti $a, k \in \mathbb{Z}_{p-1}$ sono anch'essi interi fino a $2048$ bit: eseguire $c - 1$ moltiplicazioni modulari sarebbe computazionalmente infattibile.
-   - Il noto **square-and-multiply algorithm** riduce il numero di **modular multiplications** richieste per calcolare $x^c \bmod n$ ad al massimo **$2\ell$**, dove $\ell$ è il numero di bit nella **binary representation** dell'esponente $c$. Poiché una moltiplicazione modulo $n$ si esegue in tempo $O(k^2)$, la **modular exponentiation** tramite **square-and-multiply** si esegue in tempo:
+   - In particolare, nel **ElGamal Cryptosystem** in $\mathbb{Z}_p^*$, affinchè il **Discrete Logarithm** problem sia **infeasible**, il primo $p$ deve avere almeno $2048$ bit nella sua **binary representation** ($k \ge 2048$), e gli esponenti $a, k \in \mathbb{Z}_{p-1}$ sono anch'essi interi fino a $2048$ bit: eseguire $c - 1$ moltiplicazioni modulari sarebbe computazionalmente infattibile.
+   - Il noto **square-and-multiply algorithm** riduce il numero di moltiplicazioni modulari richieste per calcolare $x^c \bmod n$ ad al massimo **$2\ell$**, dove $\ell$ è il numero di bit nella **binary representation** dell'esponente $c$. Poiché una moltiplicazione modulo $n$ si esegue in tempo $O(k^2)$ (**k è la lunghezza in base 2 della rappr. di n in questo caso**), la **modular exponentiation** tramite **square-and-multiply** si esegue in tempo:
      $$O(\ell k^2) = O((\log c) \times k^2)$$
      costituendo un **polynomial-time algorithm** che rende facile calcolare $\alpha^a \bmod p$ pur restando infattibile invertire l'operazione per trovare $a = \log_\alpha \beta$.
 
@@ -222,3 +222,141 @@ L'utilità del problema del **Discrete Logarithm** in un contesto crittografico 
    - **Public key:** Bob calcola $\beta \equiv \alpha^a \pmod p$ eseguendo `SQUARE-AND-MULTIPLY`$(\alpha, a, p)$;
    - **Encryption ($e_K(x, k) = (y_1, y_2)$):** Alice calcola $y_1 = \alpha^k \bmod p$ eseguendo `SQUARE-AND-MULTIPLY`$(\alpha, k, p)$ e calcola $\beta^k \bmod p$ (per ottenere $y_2 = x \beta^k \bmod p$) eseguendo `SQUARE-AND-MULTIPLY`$(\beta, k, p)$;
    - **Decryption ($d_K(y_1, y_2) = y_2 (y_1^a)^{-1} \bmod p$):** Bob calcola $y_1^a \bmod p$ eseguendo `SQUARE-AND-MULTIPLY`$(y_1, a, p)$ (e ne calcola poi il **multiplicative inverse** modulo $p$).
+
+
+
+---
+
+## Lo Scambio di Chiavi Diffie–Hellman (Diffie–Hellman Key Exchange)
+
+### 1. Introduzione, Scopo del Protocollo e Analogia Concettuale
+
+Il **Diffie–Hellman (DH) key exchange** è un metodo matematico per generare in modo sicuro una chiave crittografica simmetrica attraverso un canale pubblico.
+
+- **Superamento dello scambio fisico delle chiavi:**
+  Tradizionalmente, la comunicazione cifrata sicura tra due parti richiedeva che esse si mettessero d'accordo preliminarmente sulla chiave privata tramite un mezzo fisico sicuro. Diffie–Hellman, invece, consente a due parti che non hanno alcuna conoscenza preliminare l'una dell'altra di stabilire congiuntamente una **shared secret key** (chiave segreta condivisa) comunicando su un canale insicuro, senza mai trasmettere la chiave segreta stessa attraverso il canale pubblico.
+- **Utilizzo per la cifratura simmetrica:**
+  Il protocollo serve a concordare un segreto comune: una volta che Alice e Bob hanno calcolato la chiave segreta condivisa, possono utilizzarla come chiave di cifratura per inviare messaggi sullo stesso canale di comunicazione aperto utilizzando un **cifrario a chiave simmetrica**.
+- **Analogia dei colori (General Overview):**
+  Il concetto alla base dello scambio pubblico può essere illustrato sostituendo i numeri molto grandi con dei colori:
+  1. Alice e Bob concordano pubblicamente su un colore di partenza arbitrario che non ha bisogno di restare segreto (es. **giallo**).
+  2. Ciascuno seleziona anche un colore segreto che tiene solo per sé (es. **rosso** per Alice e **ciano** per Bob).
+  3. Alice e Bob mescolano ciascuno il proprio colore segreto con il colore comune condiviso, ottenendo rispettivamente due miscele intermedie (**arancione-ocra** e **azzurro**), e si scambiano pubblicamente queste due miscele.
+  4. Infine, ciascuno mescola il colore ricevuto dal partner con il proprio colore privato. Entrambi ottengono così una miscela finale identica (**giallo-marrone**).
+  5. Se una terza parte ascolta lo scambio, conosce solo il colore comune iniziale (giallo) e i due colori misti intermedi (arancione-ocra e azzurro), ma per lei è estremamente difficile ricavare il colore segreto finale (giallo-marrone). Tornando all'aritmetica sui grandi numeri, questa inversione è computazionalmente infattibile in un tempo pratico persino per i moderni supercomputer.
+
+---
+
+### 2. Spiegazione Crittografica in $(\mathbb{Z}_p^*, \cdot)$ (Finite Field Diffie–Hellman)
+
+L'implementazione originale e più semplice del protocollo utilizza il **multiplicative group of integers modulo $p$**, ovvero il gruppo moltiplicativo $(\mathbb{Z}_p^*, \cdot) = \{1, 2, \dots, p - 1\}$ definito nella Parte I, dove $p$ è un numero **prime** (primo) e $g$ (indicato con $\alpha$ nelle sezioni precedenti) è una **primitive root modulo $p$** (**primitive element** modulo $p$). 
+
+I valori $p$ e $g$ vengono scelti in questo modo per garantire che il segreto condiviso risultante possa assumere qualsiasi valore compreso tra $1$ e $p - 1$ (poiché $g$ genera l'intero gruppo ciclico $\langle g \rangle = \mathbb{Z}_p^*$ di ordine $p - 1$).
+
+> [!abstract] Protocollo: `DIFFIE–HELLMAN KEY EXCHANGE` in $\mathbb{Z}_p^*$
+> - **Parametri pubblici concordati:** Alice e Bob concordano pubblicamente su un modulo primo $p$ e su una base $g \in \mathbb{Z}_p^*$ (con $g \equiv \alpha$ **primitive root modulo $p$**).
+> 
+> 1. **Scelta ed emissione di Alice:** Alice sceglie un intero segreto casuale $a$ (la sua **private key**) e invia a Bob sul canale pubblico la propria **public key**:
+>    $$A = g^a \bmod p \qquad (\text{con notazione } \alpha: \; A = \alpha^a \bmod p)$$
+> 2. **Scelta ed emissione di Bob:** Bob sceglie un intero segreto casuale $b$ (la sua **private key**) e invia ad Alice sul canale pubblico la propria **public key**:
+>    $$B = g^b \bmod p \qquad (\text{con notazione } \alpha: \; B = \alpha^b \bmod p)$$
+> 3. **Calcolo del segreto condiviso $s$:**
+>    - Alice riceve $B$ e calcola:
+>      $$s = B^a \bmod p$$
+>    - Bob riceve $A$ e calcola:
+>      $$s = A^b \bmod p$$
+>    Alice e Bob condividono ora lo stesso segreto $s \in \mathbb{Z}_p^*$.
+
+- **Dimostrazione della Correttezza Matematica:**
+  Alice e Bob giungono esattamente allo stesso valore $s$ perché, per le proprietà delle potenze nell'aritmetica modulo $p$, vale:
+  $$A^b \bmod p = g^{ab} \bmod p = g^{ba} \bmod p = B^a \bmod p$$
+  Più specificamente:
+  $$(g^a \bmod p)^b \bmod p = (g^b \bmod p)^a \bmod p$$
+
+> [!example] Esempio Numerico 1 (Calcolo Base)
+> - **Parametri pubblici:** Alice e Bob concordano pubblicamente sul modulo primo $p = 23$ e sulla base $g = 5$ (che è una *primitive root* modulo $23$).
+> - **Passo 1 (Alice):** Alice sceglie l'intero segreto $a = 4$ e invia a Bob:
+>   $$A = g^a \bmod p = 5^4 \bmod 23 = 625 \bmod 23 = 4$$
+>   *(in questo specifico caso sia $A$ che $a$ valgono $4$, ma in generale ciò non accade)*.
+> - **Passo 2 (Bob):** Bob sceglie l'intero segreto $b = 3$ e invia ad Alice:
+>   $$B = g^b \bmod p = 5^3 \bmod 23 = 125 \bmod 23 = 10$$
+> - **Passo 3 (Segreto condiviso $s$):**
+>   - Alice calcola: $s = B^a \bmod p = 10^4 \bmod 23 = 10000 \bmod 23 = 18$.
+>   - Bob calcola: $s = A^b \bmod p = 4^3 \bmod 23 = 64 \bmod 23 = 18$.
+>   Entrambi condividono ora il numero segreto $s = 18$.
+
+> [!example] Esempio Numerico 2 e Tabella di Segretezza (Secrecy Chart con Eve)
+> Consideriamo un secondo scambio con $p = 23$ e $g = 5$, in cui Alice sceglie la chiave privata $a = 6$ e Bob sceglie la chiave privata $b = 15$, in presenza di **Eve** (*eavesdropper*, un'intercettatrice passiva che osserva ciò che viene inviato tra Alice e Bob ma non altera il contenuto delle comunicazioni):
+> - **Valori pubblici e privati:**
+>   - $g = 5$: base pubblica (*primitive root*), nota ad Alice, Bob ed Eve;
+>   - $p = 23$: modulo primo pubblico, noto ad Alice, Bob ed Eve;
+>   - $a = 6$: **private key** di Alice, nota solo ad Alice $\implies$ genera la **public key** di Alice $A = g^a \bmod p = 5^6 \bmod 23 = 8$ (nota ad Alice, Bob ed Eve);
+>   - $b = 15$: **private key** di Bob, nota solo a Bob $\implies$ genera la **public key** di Bob $B = g^b \bmod p = 5^{15} \bmod 23 = 19$ (nota ad Alice, Bob ed Eve);
+>   - **Segreto condiviso $s$:** Alice calcola $s = B^a \bmod 23 = 19^6 \bmod 23 = 2$; Bob calcola $s = A^b \bmod 23 = 8^{15} \bmod 23 = 2$.
+> 
+> | Partecipante | Valori Noti (Known) | Valori Ignoti (Unknown) |
+> | :--- | :--- | :--- |
+> | **Alice** | $p = 23, \; g = 5, \; a = 6, \; A = 8, \; B = 19, \; \mathbf{s = 2}$ | $b = 15$ |
+> | **Bob** | $p = 23, \; g = 5, \; b = 15, \; B = 19, \; A = 8, \; \mathbf{s = 2}$ | $a = 6$ |
+> | **Eve (Intercettatrice)** | $p = 23, \; g = 5, \; A = 8, \; B = 19$ | $a = 6, \; b = 15, \; \mathbf{s = 2}$ |
+> 
+> - **Inutilità del prodotto $A \cdot B$ per Eve:** Per Eve non è di alcun aiuto moltiplicare tra loro le due chiavi pubbliche intercettate calcolando $A B \bmod p$, poiché $A B \equiv g^a g^b \equiv g^{a+b} \pmod p$, mentre la chiave segreta condivisa è $s = g^{ab} \bmod p$[cite: 8].
+
+---
+
+### 3. Collegamento con il Discrete Logarithm Problem e Sicurezza dei Parametri
+
+1. **Valori in chiaro, One-way Function e Discrete Logarithm Problem:**
+   - Nello scambio Diffie–Hellman soltanto gli esponenti privati $a$ e $b$ sono mantenuti segreti; tutti gli altri valori — $p, g, g^a \bmod p$ e $g^b \bmod p$ — vengono inviati in chiaro sul canale pubblico.
+   - Il calcolo di $g^a \bmod p$ è noto come **modular exponentiation** (esponenziazione modulare) e può essere eseguito in modo efficiente anche per numeri estremamente grandi (grazie allo **square-and-multiply algorithm**. Si noti che la base $g$ non ha alcun bisogno di essere grande: nella pratica è solitamente un intero molto piccolo (come $2, 3, \dots$).
+   - Al contrario, la forza dello schema risiede nel fatto che calcolare $g^{ab} \bmod p = g^{ba} \bmod p$ conoscendo unicamente $p, g, g^a \bmod p$ e $g^b \bmod p$ richiede tempi estremamente lunghi per qualsiasi algoritmo classico noto. Una funzione facile da calcolare in avanti ma difficile da invertire è chiamata una **one-way function**.
+   - Il problema matematico di ricavare l'esponente privato $a$ conoscendo soltanto $g, p$ e $A = g^a \bmod p$ (ovvero calcolare $a = \log_g A$, o $a = \log_\alpha \beta$ nella notazione del **Problem 7.1**) è esattamente il **Discrete Logarithm Problem (DLP)**.
+
+2. **Dimensione dei Parametri ($p \ge 2048$ bit):**
+   - Negli esempi didattici con $p = 23$ esistono solo $23$ possibili risultati modulo $23$, quindi lo schema sarebbe banale da violare.
+   - Per proteggersi da potenziali vulnerabilità e aumentare la difficoltà per un avversario che tenti di calcolare il logaritmo discreto, si raccomanda di utilizzare numeri primi $p$ di almeno **$2048$ bit** di lunghezza nella loro rappresentazione binaria (o primi di almeno $600$ cifre decimali, per i quali nemmeno i computer moderni più veloci con il miglior algoritmo noto riescono a trovare $a$ dati $g, p$ e $g^a \bmod p$).
+
+3. **Difficoltà reciproca tra le parti:**
+   - Deve essere computazionalmente difficile anche per Alice risolvere la chiave privata di Bob o per Bob risolvere la chiave privata di Alice (ad esempio evitando che un attaccante Eve sostituisca la propria coppia di chiavi pubblica/privata scelte ad hoc per rendere facile ricavare la chiave privata di Bob e compromettere così il segreto condiviso).
+
+---
+
+### 4. Generalizzazione ai Gruppi Ciclici Finiti $(G, \cdot)$
+
+Il protocollo Diffie–Hellman non è limitato a $\mathbb{Z}_p^*$, ma si generalizza a qualsiasi **finite cyclic group** (gruppo ciclico finito) scritto in notazione moltiplicativa $(G, \cdot)$ (come introdotto nella Parte I e nella Sezione 7.1):
+
+> [!abstract] Protocollo Generale: `DIFFIE–HELLMAN` su un Gruppo Ciclico Finito $(G, \cdot)$
+> 1. **Parametri pubblici:** Alice e Bob concordano (tipicamente molto prima dell'esecuzione del protocollo) su un numero naturale $n$ e su un **generating element** (generatore) $g$ (o $\alpha$) nel gruppo ciclico finito $(G, \cdot)$ di ordine $n$ (ovvero $G = \langle g \rangle$ con $|G| = n$). Si assume che $g$ e $n$ siano noti a tutti gli attaccanti[cite: 8].
+> 2. **Scelta di Alice:** Alice sceglie un numero naturale casuale $a$ con $1 < a < n$ e invia a Bob l'elemento $g^a \in G$[cite: 8].
+> 3. **Scelta di Bob:** Bob sceglie un numero naturale casuale $b$ con $1 < b < n$ e invia ad Alice l'elemento $g^b \in G$[cite: 8].
+> 4. **Calcolo del segreto condiviso:**
+>    - Alice calcola l'elemento $(g^b)^a = g^{ba}$ di $G$[cite: 8].
+>    - Bob calcola l'elemento $(g^a)^b = g^{ab}$ di $G$[cite: 8].
+> 
+> Entrambi sono ora in possesso dello stesso elemento del gruppo $g^{ab} = g^{ba} \in G$, che funge da **shared secret key**[cite: 8].
+
+- **Condizione di Sicurezza nel Gruppo $G$ e Varianti:**
+  - Il gruppo $G$ soddisfa la condizione necessaria per una comunicazione sicura fintanto che non esiste alcun algoritmo efficiente per determinare $g^{ab}$ conoscendo solamente $g, g^a$ e $g^b$.
+  - **Elliptic Curve Diffie–Hellman (ECDH):** È una celebre variante che rappresenta gli elementi del gruppo $G$ come punti su una curva ellittica (invece che come interi modulo $p$). Sono state proposte anche varianti su curve iperellittiche.
+
+---
+
+### 5. Chiavi Effimere vs Statiche, Forward Secrecy e Legame con ElGamal
+
+Le chiavi utilizzate in uno scambio Diffie–Hellman possono essere **ephemeral** (effimere/temporanee) oppure **static** (statiche/a lungo termine), o anche miste (**semi-static DH**), offrendo proprietà di sicurezza e casi d'uso differenti:
+
+1. **Ephemeral–Ephemeral (Accordo di chiave e Forward Secrecy):**
+   - Entrambe le parti generano coppie di chiavi temporanee usa-e-getta per la singola sessione. Ciò è pratico perché creare coppie di chiavi pubblica/privata per Diffie–Hellman è computazionalmente economico.
+   - Garantisce la **forward secrecy** (segretezza in avanti, impiegata ad esempio nelle modalità effimere `EDH` o `DHE` del protocollo *Transport Layer Security – TLS*): le chiavi private vengono scartate non appena l'accordo sulla chiave è completato, rendendo le comunicazioni passate al sicuro da eventuali compromissioni future delle chiavi.
+   - Tuttavia, da sola non fornisce **authenticity** (autenticazione), poiché il Diffie–Hellman base è un *non-authenticated key-agreement protocol* (ma funge da base per costruire protocolli autenticati).
+2. **Static–Static (Segreto a lungo termine):**
+   - Entrambe le parti utilizzano chiavi fisse a lungo termine, generando sempre lo stesso segreto condiviso a lungo termine.
+   - Fornisce autenticazione implicita, ma **non** offre *forward secrecy* e, poiché le chiavi sono statiche, non protegge ad esempio contro i *replay-attacks*.
+3. **Ephemeral–Static (Il collegamento diretto con il Crittosistema ElGamal):**
+   - Una parte utilizza una chiave statica a lungo termine, mentre l'altra genera una chiave effimera casuale (non fornisce *forward secrecy*, ma se usata in un accordo di chiave può fornire autenticazione implicita unilaterale).
+   - Questo schema **ephemeral–static** è esattamente quello impiegato nella **ElGamal encryption (Cryptosystem 7.1)** (e nell'*Integrated Encryption Scheme – IES*):
+     - Bob possiede una chiave privata statica $a$ e pubblica la chiave pubblica statica $\beta = \alpha^a \bmod p$ (equivalente a $B = g^b \bmod p$);
+     - Per cifrare un messaggio $x$, Alice sceglie un esponente **effimero** casuale $k \in \mathbb{Z}_{p-1}$ (equivalente ad $a$), invia a Bob la chiave pubblica effimera $y_1 = \alpha^k \bmod p$ (equivalente ad $A = g^a \bmod p$) e calcola il segreto condiviso di Diffie–Hellman $s = \beta^k \bmod p = \alpha^{ak} \bmod p$, usandolo per mascherare il *plaintext* in $y_2 = x \beta^k \bmod p$;
+     - Bob, ricevendo $y_1$, ricalcola lo stesso segreto condiviso di Diffie–Hellman elevando $y_1$ alla propria chiave privata statica $a$: $(y_1)^a \bmod p = (\alpha^k)^a \bmod p = \beta^k \bmod p$, e ne usa l'inverso moltiplicativo per rimuovere la maschera e recuperare $x$.
+1. **Combinazione di Chiavi Statiche ed Effimere (3-DH e X3DH):**
+   - È possibile combinare chiavi statiche a lungo termine (es. $(a, A = g^a)$ per Alice e $(b, B = g^b)$ per Bob) e chiavi effimere (es. $(x, X = g^x)$ e $(y, Y = g^y)$) in un unico scambio di chiavi per ottenere maggiore sicurezza, dando origine ai protocolli **Triple Diffie–Hellman (3-DH)** ed **Extended Triple Diffie–Hellman (X3DH)**.
