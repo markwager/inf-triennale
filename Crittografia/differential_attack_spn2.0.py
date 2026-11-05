@@ -1,4 +1,5 @@
 import random
+from collections import Counter
 
 # ==============================================================================
 # COSTANTI E IMPOSTAZIONI BASE (CRITTOSISTEMA SPN)
@@ -15,8 +16,8 @@ SBOX_INV = [SBOX.index(i) for i in range(16)]
 # PERM: Permutazione fissa dei 16 bit utilizzata nello strato di diffusione.
 # Il valore all'indice 'i' (da 1 a 16) indica la nuova posizione del bit.
 # L'indice 0 è riempito con 'None' per poter usare indici da 1 a 16 come in teoria.
-# PERM = [None, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15, 4, 8, 12, 16]
-PERM = [None, 8, 3, 15, 1, 12, 5, 11, 2, 16, 7, 4, 14, 9, 6, 13, 10]
+PERM = [None, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15, 4, 8, 12, 16]
+# PERM = [None, 8, 3, 15, 1, 12, 5, 11, 2, 16, 7, 4, 14, 9, 6, 13, 10]
 # permutazione alternativa
 
 # PERM_INV: Calcola automaticamente la permutazione inversa.
@@ -162,6 +163,90 @@ def get_key() -> list[int]:
         
     return chiavi
 
+
+# ==============================================================================
+# FUNZIONI CALCOLO TRACCIA
+# ==============================================================================
+from params import SBOX_NO, GROUP_MASK, BLOCK_L, BLOCK_M, MSG_MASK, SIZEOF_INT
+
+def mask_inv(mask: int) -> int:
+    return mask & MSG_MASK
+
+def sbox_delta_pairs(delta: int):
+    """Generate all possible bit group pairs with
+    difference delta having the same size of an sbox"""
+    currmsg = 0
+    while currmsg < SBOX_NO:
+        yield currmsg, currmsg ^ delta
+        currmsg += 1
+
+def sbox_probable_dout(sbox: list[int]) -> list[int]:
+    """Return a list of bit groups.  
+    Given the sbox any two inputs with difference i, output[i]
+    contains the most probable difference of the two outputs."""
+    # set all elements of a list to 0
+    def reset_list(l: list[int]):
+        for i in range(len(l)): l[i] = 0
+
+    # at index i most probable output delta of an
+    # sbox given two inputs with difference i
+    # index 0 has deterministic output 0
+    probable_dout = [0] * SBOX_NO
+    # distribution of output deltas of an sbox
+    # given two inputs with difference din
+    din_distrib = [0] * SBOX_NO
+
+    for din in range(1, SBOX_NO):
+        reset_list(din_distrib)
+        for x1, x2 in sbox_delta_pairs(din):
+            dout = sbox[x1] ^ sbox[x2]
+            din_distrib[dout] += 1
+        probable_dout[din] = max( enumerate(din_distrib), key=lambda x: x[1] )[0]
+
+    return probable_dout
+
+def probable_diff_at_round(din: int, sbox: list[int], perm: list[int], rounds: int):
+    """Calculate the most probable difference that
+    two inputs will have after _rounds_ rounds of SPN.  
+    _din_ is the difference of the two inputs."""
+    common_d = sbox_probable_dout(sbox)
+    # follow the difference through the SPN
+    # ignore key sums as they are linear operations
+    for _ in range(rounds):
+        din = sub(din, common_d)
+        din = permute(din, perm)
+    return din
+
+def zeroed_groups_mask(x: int) -> int:
+    """Return a mask having 1 where bit groups are all 0."""
+    mask = 0
+    group_mask = GROUP_MASK
+    for _ in range(BLOCK_M):
+        if x & group_mask == 0: mask |= group_mask
+        group_mask <<= BLOCK_L
+    return mask
+
+def is_right_pair(y1: int, y2: int, zero_mask: int) -> bool:
+    return ((y1 ^ y2) & zero_mask) == 0
+
+def candidate_keys(mask: int):
+    """Generate all possible candidate keys, zeroed where mask = 1."""
+    k = mask
+    while k <= MSG_MASK:
+        yield k & mask_inv(mask)
+        k += 1
+        k |= mask
+
+def backtrack(y: int, sbox_inv: list[int], key: int):
+    r"""Take an encrypted message _y_ through
+    a key and the inverse _sbox\_inv_ of an sbox."""
+    y = y ^ key
+    return sub(y, sbox_inv)
+
+
+def apply_mask(guess: int, mask: int) -> str:
+    guess_mask = ( ((guess>>i)&1, (mask>>i)&1) for i in range(SIZEOF_INT-1, -1, -1) )
+    return ''.join( '_' if m==0 else '1' if g else '0' for g, m in guess_mask )
 
 # ==============================================================================
 # FASE 2: CRITTOANALISI DIFFERENZIALE DINAMICA 
@@ -341,6 +426,9 @@ def punto_c_attacco(probabilita_traccia, x_prime, u4_atteso):
         coppie_filtrate = []
         totale_generate = 0
 
+        # passive sbox mask
+        passive_sbox_msk = zeroed_groups_mask(u4_atteso)
+
         while len(coppie_filtrate) < target_filtrate:
             totale_generate += 1
             x = random.randrange(0x10000)
@@ -348,36 +436,25 @@ def punto_c_attacco(probabilita_traccia, x_prime, u4_atteso):
             y = encrypt(x, chiavi)
             y_star = encrypt(x_star, chiavi)
 
-            if (y & 0x00FF) == (y_star & 0x00FF):
+            if is_right_pair(y, y_star, passive_sbox_msk):
                 coppie_filtrate.append((x, x_star, y, y_star))
 
-        conteggi = [[0] * 16 for _ in range(16)]
-
+        # nessuna chiave sembra essere giusta, non so perché
+        candidates = Counter()
         for (x, x_star, y, y_star) in coppie_filtrate:
-            y1 = (y >> 12) & 0xF
-            y1_star = (y_star >> 12) & 0xF
-            y2 = (y >> 8) & 0xF
-            y2_star = (y_star >> 8) & 0xF
+            for k in candidate_keys(passive_sbox_msk):
+                yu = backtrack(y, SBOX_INV, k)
+                y_star_u = backtrack(y_star, SBOX_INV, k)
+                if ((yu ^ y_star_u) & mask_inv(passive_sbox_msk)) != u4_atteso: continue
+                candidates[k] += 1
 
-            for L1 in range(16):
-                u4_1_diff = SBOX_INV[y1 ^ L1] ^ SBOX_INV[y1_star ^ L1]
-                if u4_1_diff == expected_u4_1:
-                    for L2 in range(16):
-                        u4_2_diff = SBOX_INV[y2 ^ L2] ^ SBOX_INV[y2_star ^ L2]
-                        if u4_2_diff == expected_u4_2:
-                            conteggi[L1][L2] += 1
+        classifica = candidates.most_common()
+        masked_real_key = chiave_vera_k5 & mask_inv(passive_sbox_msk)
 
-        classifica = sorted(
-            ((conteggi[l1][l2], l1, l2) for l1 in range(16) for l2 in range(16)),
-            reverse=True
-        )
+        hits_chiave_vera = candidates.get( masked_real_key , 0 )
 
-        vero_l1 = (veri_8bit >> 4) & 0xF
-        vero_l2 = veri_8bit & 0xF
-        hits_chiave_vera = conteggi[vero_l1][vero_l2]
-
-        hits_vincitore = classifica[0][0]
-        ex_aequo = [((l1 << 4) | l2) for (h, l1, l2) in classifica if h == hits_vincitore]
+        hits_vincitore = candidates.most_common(1)[0][1]
+        ex_aequo = [ k for (k, h) in classifica if h == hits_vincitore ]
         
         if hits_chiave_vera == hits_vincitore and len(ex_aequo) == 1:
             risultato = "Riuscito"
@@ -387,7 +464,7 @@ def punto_c_attacco(probabilita_traccia, x_prime, u4_atteso):
             risultato = "Fallito"
 
         # Trova il massimo punteggio ottenuto da una chiave SBAGLIATA
-        hits_miglior_falso = max([h for (h, l1, l2) in classifica if ((l1 << 4) | l2) != veri_8bit] + [0])
+        hits_miglior_falso = max( (h for (k, h) in classifica if k != masked_real_key), default=0)
         
         riepilogo_tentativi.append({
             'tentativo': tentativo,
@@ -399,15 +476,14 @@ def punto_c_attacco(probabilita_traccia, x_prime, u4_atteso):
             'risultato': risultato
         })
 
-        print("\n  Top 5 Candidati per i primi 8 bit di K^5 (L1, L2):")
-        print("  Pos | Sottochiave | Hits | P_emp su Filtrate | Nota")
+        print(f"\n  Top 5 Candidati per le sbox attive di K^5 ({mask_inv(passive_sbox_msk):0>16b}):")
+        print("  Pos | Sottochiave      | Hits | P_emp su Filtrate | Nota")
         print("  " + "-" * 60)
 
-        for rank, (h, l1, l2) in enumerate(classifica[:5], start=1):
-            cand_byte = (l1 << 4) | l2
+        for rank, (k, h) in zip( range(1, 6), classifica ):
             p_su_filtrate = h / float(target_filtrate)
-            nota = " <-- VERA CHIAVE" if cand_byte == veri_8bit else ""
-            print(f"  {rank:3d} | 0x{cand_byte:02X} ({cand_byte:08b}) | {h:4d} |     {p_su_filtrate * 100:6.2f}%       |{nota}")
+            nota = " <-- VERA CHIAVE" if k == masked_real_key else ""
+            print(f"  {rank:3d} | {apply_mask(k, mask_inv(passive_sbox_msk))} | {h:4d} |     {p_su_filtrate * 100:6.2f}%       |{nota}")
 
     # =========================================================================
     # --- SUNTO FINALE COMPARATIVO E ANALISI QUALITATIVA ---
@@ -415,7 +491,7 @@ def punto_c_attacco(probabilita_traccia, x_prime, u4_atteso):
     print("\n\n=====================================================================")
     print("  SUNTO FINALE COMPARATIVO DEI " + str(n_tentativi) + " TENTATIVI")
     print("=====================================================================")
-    print(f"Vera sottochiave K^5 da trovare: 0x{veri_8bit:02X} ({veri_8bit:08b})")
+    print(f"Vera sottochiave K^5 da trovare: {chiave_vera_k5:0>16b}")
     print("-" * 85)
     print(" Tent. | c (teorico) | Filtrate | Generate | Hits Vera | Miglior Falso | Esito")
     print("-" * 85)
@@ -465,7 +541,7 @@ def punto_c_attacco(probabilita_traccia, x_prime, u4_atteso):
 
     print(f"\n 3. CONSIDERAZIONE SUL NUMERO DI COPPIE NECESSARIE:")
     print(f"    La teoria della crittoanalisi differenziale indica che servono circa c=6")
-    print(f"    'right pairs' per garantire un margine di vittoria netto sulla chiave vera[cite: 1].")
+    print(f"    'right pairs' per garantire un margine di vittoria netto sulla chiave vera.")
     print(f"    Per ottenere 6 right pairs, servirebbe generare T_teorico = 6 / R_p = {int(t_consigliato)} tuple casuali.")
     print(f"    Sulla base del tasso di filtraggio empirico medio osservato ({tasso_filtro_medio*100:.2f}%),")
     print(f"    il quantitativo stimato di COPPIE GIA' FILTRATE da richiedere in input")
