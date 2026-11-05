@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Cap4.md",
+                "file": "Cap7.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Cap4"
+              "title": "Cap7"
             }
           }
         ]
@@ -190,10 +190,10 @@
   },
   "active": "41f7ce4b8d1ab359",
   "lastOpenFiles": [
+    "Cap4.md",
     "Cap7.md",
     "Cap5.md",
     "Cap6.md",
-    "Cap4.md",
     "Cap1+cap2+cap3.md",
     "Campi finiti.md",
     "Senza nome.canvas",
