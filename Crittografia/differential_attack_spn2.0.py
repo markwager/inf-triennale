@@ -541,7 +541,7 @@ def punto_c_attacco(probabilita_traccia, x_prime, u4_atteso):
 
     print(f"\n 3. CONSIDERAZIONE SUL NUMERO DI COPPIE NECESSARIE:")
     print(f"    La teoria della crittoanalisi differenziale indica che servono circa c=6")
-    print(f"    'right pairs' per garantire un margine di vittoria netto sulla chiave vera[cite: 1].")
+    print(f"    'right pairs' per garantire un margine di vittoria netto sulla chiave vera.")
     print(f"    Per ottenere 6 right pairs, servirebbe generare T_teorico = 6 / R_p = {int(t_consigliato)} tuple casuali.")
     print(f"    Sulla base del tasso di filtraggio empirico medio osservato ({tasso_filtro_medio*100:.2f}%),")
     print(f"    il quantitativo stimato di COPPIE GIA' FILTRATE da richiedere in input")
