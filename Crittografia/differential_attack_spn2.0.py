@@ -15,8 +15,8 @@ SBOX_INV = [SBOX.index(i) for i in range(16)]
 # PERM: Permutazione fissa dei 16 bit utilizzata nello strato di diffusione.
 # Il valore all'indice 'i' (da 1 a 16) indica la nuova posizione del bit.
 # L'indice 0 è riempito con 'None' per poter usare indici da 1 a 16 come in teoria.
-# PERM = [None, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15, 4, 8, 12, 16]
-PERM = [None, 8, 3, 15, 1, 12, 5, 11, 2, 16, 7, 4, 14, 9, 6, 13, 10]
+PERM = [None, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15, 4, 8, 12, 16]
+#PERM = [None, 8, 3, 15, 1, 12, 5, 11, 2, 16, 7, 4, 14, 9, 6, 13, 10]
 # permutazione alternativa
 
 # PERM_INV: Calcola automaticamente la permutazione inversa.
