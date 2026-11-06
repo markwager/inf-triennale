@@ -5,13 +5,11 @@ from collections import Counter
 # COSTANTI E VARIABILI GLOBALI (CRITTOSISTEMA SPN E DIFFERENZIALE)
 # ==============================================================================
 
-SBOX = [0xE, 2, 1, 3, 0xD, 9, 0, 6, 0xF, 4, 5, 0xA, 8, 0xC, 7, 0xB]
-SBOX_INV = [SBOX.index(i) for i in range(16)]
+SBOX = []
+SBOX_INV = []
 
-PERM = [None, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15, 4, 8, 12, 16]
-PERM_INV = [0] * 17 
-for i in range(1, 17):
-    PERM_INV[PERM[i]] = i
+PERM = []
+PERM_INV = []
 
 NR = 4 
 
@@ -35,81 +33,90 @@ def update_globals(new_sbox, new_perm):
     for i in range(1, 17):
         PERM_INV[PERM[i]] = i
 
-def load_list_from_file(filename):
+def load_last_sbox() -> str:
     try:
-        with open(filename, 'r', encoding='utf-8') as f:
-            return [int(x) for x in f.read().strip().split()]
-    except:
-        return []
+        with open('last_sbox.txt', 'r', encoding='utf-8') as f: return f.read().strip()
+    except FileNotFoundError:
+        return ''
 
-def save_list_to_file(filename, data_list):
-    with open(filename, 'w', encoding='utf-8') as f:
-        f.write(" ".join(map(str, data_list)))
+def save_sbox(sbox_str: str) -> None:
+    with open('last_sbox.txt', 'w', encoding='utf-8') as f: f.write(sbox_str)
 
 def get_sbox() -> list[int]:
     prompt = """\nInserisci la S-Box (16 numeri da 0 a 15 separati da spazio)
 Altrimenti inserisci 'rnd' per generare una S-Box casuale
 Oppure premi invio per utilizzare l'ultima S-Box\n> """
+    
+    show_sbox = False
     while True:
-        val = input(prompt).strip().lower()
-        if val == '':
-            sbox = load_list_from_file('last_sbox.txt')
-            if not sbox:
-                sbox = [0xE, 2, 1, 3, 0xD, 9, 0, 6, 0xF, 4, 5, 0xA, 8, 0xC, 7, 0xB]
-            print(f"S-Box utilizzata: {sbox}")
-            save_list_to_file('last_sbox.txt', sbox)
-            return sbox
-        elif val == 'rnd':
-            sbox = list(range(16))
-            random.shuffle(sbox)
-            print(f"S-Box generata: {sbox}")
-            save_list_to_file('last_sbox.txt', sbox)
-            return sbox
-        else:
-            try:
-                sbox = [int(x.replace(',', '')) for x in val.split()]
-                if len(sbox) == 16 and set(sbox) == set(range(16)):
-                    save_list_to_file('last_sbox.txt', sbox)
-                    print(f"S-Box utilizzata: {sbox}")
-                    return sbox
-                else:
-                    print("Errore: La S-Box deve contenere esattamente i numeri da 0 a 15.")
-            except ValueError:
-                print("Errore: Inserisci solo numeri interi validi.")
+        sbox_str = input(prompt).strip()
+        
+        if sbox_str == '':
+            show_sbox = True
+            sbox_str = load_last_sbox()
+            
+        if sbox_str.lower() == 'rnd' or sbox_str == '':
+            sbox_list = list(range(16))
+            random.shuffle(sbox_list)
+            sbox_str = " ".join(map(str, sbox_list))
+            show_sbox = True
+            
+        try:
+            sbox = [int(x.replace(',', '')) for x in sbox_str.split()]
+            if len(sbox) != 16 or set(sbox) != set(range(16)):
+                raise ValueError("Servono esattamente i numeri da 0 a 15 senza ripetizioni.")
+            save_sbox(" ".join(map(str, sbox)))
+            break
+        except ValueError as e:
+            print("Errore: " + str(e) + " Riprova.\n")
+            
+    if show_sbox:
+        print("S-Box utilizzata: " + " ".join(map(str, sbox)))
+        
+    return sbox
+
+def load_last_perm() -> str:
+    try:
+        with open('last_perm.txt', 'r', encoding='utf-8') as f: return f.read().strip()
+    except FileNotFoundError:
+        return ''
+
+def save_perm(perm_str: str) -> None:
+    with open('last_perm.txt', 'w', encoding='utf-8') as f: f.write(perm_str)
 
 def get_perm() -> list[int]:
     prompt = """\nInserisci la Permutazione P-Box (16 numeri da 1 a 16 separati da spazio)
 Altrimenti inserisci 'rnd' per generare una permutazione casuale
 Oppure premi invio per utilizzare l'ultima permutazione\n> """
+    
+    show_perm = False
     while True:
-        val = input(prompt).strip().lower()
-        if val == '':
-            perm_vals = load_list_from_file('last_perm.txt')
-            if not perm_vals:
-                perm_vals = [1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15, 4, 8, 12, 16]
+        perm_str = input(prompt).strip()
+        
+        if perm_str == '':
+            show_perm = True
+            perm_str = load_last_perm()
+            
+        if perm_str.lower() == 'rnd' or perm_str == '':
+            perm_list = list(range(1, 17))
+            random.shuffle(perm_list)
+            perm_str = " ".join(map(str, perm_list))
+            show_perm = True
+            
+        try:
+            perm_vals = [int(x.replace(',', '')) for x in perm_str.split()]
+            if len(perm_vals) != 16 or set(perm_vals) != set(range(1, 17)):
+                raise ValueError("Servono esattamente i numeri da 1 a 16 senza ripetizioni.")
+            save_perm(" ".join(map(str, perm_vals)))
             perm = [None] + perm_vals
-            print(f"Permutazione utilizzata: {perm_vals}")
-            save_list_to_file('last_perm.txt', perm_vals)
-            return perm
-        elif val == 'rnd':
-            perm_vals = list(range(1, 17))
-            random.shuffle(perm_vals)
-            perm = [None] + perm_vals
-            print(f"Permutazione generata: {perm_vals}")
-            save_list_to_file('last_perm.txt', perm_vals)
-            return perm
-        else:
-            try:
-                perm_vals = [int(x.replace(',', '')) for x in val.split()]
-                if len(perm_vals) == 16 and set(perm_vals) == set(range(1, 17)):
-                    perm = [None] + perm_vals
-                    save_list_to_file('last_perm.txt', perm_vals)
-                    print(f"Permutazione utilizzata: {perm_vals}")
-                    return perm
-                else:
-                    print("Errore: La Permutazione deve contenere esattamente i numeri da 1 a 16.")
-            except ValueError:
-                print("Errore: Inserisci solo numeri interi validi.")
+            break
+        except ValueError as e:
+            print("Errore: " + str(e) + " Riprova.\n")
+            
+    if show_perm:
+        print("Permutazione utilizzata: " + " ".join(map(str, perm_vals)))
+        
+    return perm
 
 # ==============================================================================
 # FUNZIONI CORE DEL CIFRARIO E I/O CHIAVE
@@ -244,44 +251,100 @@ def punto_a_ddt():
     return ddt 
 
 def punto_b_traccia(ddt):
-    print("\n--- PUNTO B: CALCOLO DELLA TRACCIA DIFFERENZIALE ---")
-    x_prime = 0x9009
-    print("Input iniziale differenziale x primo: 0x" + format(x_prime, "04X") + " (" + format(x_prime, "016b") + ")")
+    print("\n--- PUNTO B: RICERCA AUTOMATICA DELLA MIGLIOR TRACCIA DIFFERENZIALE ---")
+    print("Scansione di tutte le 65535 possibili differenze di input (x') in corso...")
     
-    stato_corrente = x_prime
-    prob_totale = 1.0
-    numeratore_totale = 1
-    denominatore_totale = 1
+    best_prob = 0.0
+    best_x_prime = 0
+    best_u4 = 0
+    best_num_passive = 0
+    best_numeratore = 0
+    best_denominatore = 1
+
+    for candidate_x in range(1, 0x10000):
+        stato_corrente = candidate_x
+        prob_totale = 1.0
+        numeratore = 1
+        denominatore = 1
+        
+        for round_num in range(1, 4):
+            stato_dopo_sbox = 0
+            for sbox_idx in range(4):
+                shift = 12 - 4 * sbox_idx
+                nibble_in = (stato_corrente >> shift) & 0xF
+                
+                if nibble_in != 0:
+                    massimo = max(ddt[nibble_in])
+                    if massimo == 0:
+                        prob_totale = 0
+                        break
+                    
+                    possibili_uscite = [i for i, val in enumerate(ddt[nibble_in]) if val == massimo]
+                    nibble_out = possibili_uscite[-1]
+                    
+                    stato_dopo_sbox |= (nibble_out << shift)
+                    prob_totale *= (massimo / 16.0)
+                    numeratore *= massimo
+                    denominatore *= 16
+                    
+            if prob_totale == 0:
+                break
+                
+            stato_corrente = permute(stato_dopo_sbox, PERM)
+            
+        if prob_totale > 0:
+            num_passive = sum(1 for i in range(4) if ((stato_corrente >> (12 - 4*i)) & 0xF) == 0)
+            
+            if num_passive > 0:
+                if prob_totale > best_prob or (prob_totale == best_prob and num_passive > best_num_passive):
+                    best_prob = prob_totale
+                    best_x_prime = candidate_x
+                    best_u4 = stato_corrente
+                    best_num_passive = num_passive
+                    best_numeratore = numeratore
+                    best_denominatore = denominatore
+
+    if best_prob == 0:
+        print("\nERRORE CRITICO: Nessuna traccia utile trovata. La S-Box o Permutazione scelta disperde")
+        print("troppo il segnale e non lascia S-Box passive sfruttabili al 4° round.")
+        return 0, 0, 0
+
+    print(f"\n=> MIGLIOR INPUT TROVATO: x' = 0x{best_x_prime:04X} ({best_num_passive} S-Box passive garantite)")
+    print("Ricostruzione del percorso vincente:")
     
+    stato_corrente = best_x_prime
     for round_num in range(1, 4):
         print("\nRound " + str(round_num) + ":")
         stato_dopo_sbox = 0
         for sbox_idx in range(4):
             shift = 12 - 4 * sbox_idx
             nibble_in = (stato_corrente >> shift) & 0xF
+            
             if nibble_in == 0:
-                print("  S-box " + str(sbox_idx + 1) + ": PASSIVA (Input 0x0 (0000), Output 0x0 (0000))")
+                print("  S-box " + str(sbox_idx + 1) + ": PASSIVA (Input 0x0, Output 0x0)")
             else:
                 massimo = max(ddt[nibble_in])
                 possibili_uscite = [i for i, val in enumerate(ddt[nibble_in]) if val == massimo]
                 nibble_out = possibili_uscite[-1]
                 casi = ddt[nibble_in][nibble_out]
                 stato_dopo_sbox |= (nibble_out << shift)
-                prob_totale *= (casi / 16.0)
-                numeratore_totale *= casi
-                denominatore_totale *= 16
                 print("  S-box " + str(sbox_idx + 1) + ": ATTIVA (Input 0x" + format(nibble_in, "X") + 
                       ", Output 0x" + format(nibble_out, "X") + "), casi " + str(casi) + " su 16)")
         
         print("  Stato prima della permutazione: 0x" + format(stato_dopo_sbox, "04X"))
         stato_corrente = permute(stato_dopo_sbox, PERM)
         print("  Stato dopo la permutazione:     0x" + format(stato_corrente, "04X"))
-        
-    print("\nStato finale (differenza attesa u4): 0x" + format(stato_corrente, "04X"))
-    print("Probabilita totale della traccia (R_p): " + str(numeratore_totale) + " su " + str(denominatore_totale) + " (ovvero " + str(prob_totale) + ")")
-    return prob_totale, x_prime, stato_corrente
+
+    print("\nStato finale (differenza attesa u4): 0x" + format(best_u4, "04X"))
+    print("Probabilita totale della traccia (R_p): " + str(best_numeratore) + " su " + str(best_denominatore) + " (ovvero " + str(best_prob) + ")")
+    
+    return best_prob, best_x_prime, best_u4
 
 def punto_c_attacco(probabilita_traccia, x_prime, u4_atteso, chiavi):
+    if probabilita_traccia == 0:
+        print("\nAttacco annullato: impossibile procedere senza una traccia valida.")
+        return
+
     print("\n--- PUNTO C/D: ATTACCO DIFFERENZIALE E ANALISI PROBABILISTICA ---")
     chiave_vera_k5 = chiavi[4]
     
