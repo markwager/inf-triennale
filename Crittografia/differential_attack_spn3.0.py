@@ -346,6 +346,13 @@ def punto_c_attacco(probabilita_traccia, x_prime, u4_atteso, chiavi):
         return
 
     print("\n--- PUNTO C/D: ATTACCO DIFFERENZIALE E ANALISI PROBABILISTICA ---")
+    
+    print(f"\nAnalisi dello stato finale atteso (u4 = 0x{u4_atteso:04X}):")
+    for i in range(4):
+        nibble = (u4_atteso >> (12 - 4 * i)) & 0xF
+        stato = "ATTIVA" if nibble != 0 else "PASSIVA"
+        print(f"  S-Box {i+1}: {stato} (Differenza in ingresso: 0x{nibble:X})")
+
     chiave_vera_k5 = chiavi[4]
     
     passive_sbox_msk = zeroed_groups_mask(u4_atteso)
@@ -360,7 +367,6 @@ def punto_c_attacco(probabilita_traccia, x_prime, u4_atteso, chiavi):
         print(f"--- TENTATIVO {tentativo} DI {n_tentativi} ---")
         print("=" * 50)
 
-        c_costante = float(input(f"Inserisci la costante c (invio per default = 6): ") or '6.0')
         target_filtrate = int(input(f"Inserisci le coppie GIA' FILTRATE (invio per default = 20): ") or '20')
 
         print(f"\nGenerazione casuale di tuple fino a ottenere {target_filtrate} coppie filtrate...")
@@ -407,7 +413,6 @@ def punto_c_attacco(probabilita_traccia, x_prime, u4_atteso, chiavi):
         
         riepilogo_tentativi.append({
             'tentativo': tentativo,
-            'c': c_costante,
             'filtrate': target_filtrate,
             'generate': totale_generate,
             'hits_vera': hits_chiave_vera,
@@ -428,12 +433,12 @@ def punto_c_attacco(probabilita_traccia, x_prime, u4_atteso, chiavi):
     print(f"  SUNTO FINALE COMPARATIVO DEI {n_tentativi} TENTATIVI")
     print("=" * 85)
     print(f"Vera sottochiave K^5 da trovare: {chiave_vera_k5:0>16b} (Valore filtrato: {apply_mask(masked_real_key, active_sbox_msk)})")
-    print("-" * 85)
-    print(" Tent. | c (teorico) | Filtrate | Generate | Hits Vera | Miglior Falso | Esito")
-    print("-" * 85)
+    print("-" * 75)
+    print(" Tent. | Filtrate | Generate | Hits Vera | Miglior Falso | Esito")
+    print("-" * 75)
     for r in riepilogo_tentativi:
-        print(f"  {r['tentativo']:3d}  |    {r['c']:6.2f}   |   {r['filtrate']:6d} |  {r['generate']:7d} |     {r['hits_vera']:3d}     |       {r['hits_miglior_falso']:3d}       | {r['risultato']}")
-    print("-" * 85)
+        print(f"  {r['tentativo']:3d}  |   {r['filtrate']:6d} |  {r['generate']:7d} |     {r['hits_vera']:3d}     |       {r['hits_miglior_falso']:3d}       | {r['risultato']}")
+    print("-" * 75)
 
     successi = sum(1 for r in riepilogo_tentativi if r['risultato'] == "Riuscito")
     parziali = sum(1 for r in riepilogo_tentativi if r['risultato'] == "Parziale (Pari Merito)")
