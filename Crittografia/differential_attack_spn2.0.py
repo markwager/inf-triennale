@@ -452,25 +452,20 @@ def punto_c_attacco(probabilita_traccia, x_prime, u4_atteso):
             print(f"      > Gap negativo: Una chiave falsa ha superato la chiave vera di {abs(gap)} hit(s).")
 
     # =========================================================================
-    # 3. CONSIDERAZIONE FINALE SUL NUMERO OTTIMALE DI COPPIE FILTRATE
+    # 3. EFFICIENZA DEL FILTRAGGIO E ROBUSTEZZA DELL'ATTACCO
     # =========================================================================
     tot_filtrate = sum(r['filtrate'] for r in riepilogo_tentativi)
     tot_generate = sum(r['generate'] for r in riepilogo_tentativi)
-    tasso_filtro_medio = tot_filtrate / tot_generate if tot_generate > 0 else 0
+    tasso_filtro_medio = (tot_filtrate / tot_generate) * 100 if tot_generate > 0 else 0
     
-    # Stinson suggerisce tipicamente c=6 per dominare il rumore statistico.
-    c_sicurezza = 6.0
-    t_consigliato = c_sicurezza / probabilita_traccia
-    filtrate_consigliate = int(t_consigliato * tasso_filtro_medio)
+    gaps = [r['hits_vera'] - r['hits_miglior_falso'] for r in riepilogo_tentativi]
+    avg_gap = sum(gaps) / len(gaps) if gaps else 0
 
-    print(f"\n 3. CONSIDERAZIONE SUL NUMERO DI COPPIE NECESSARIE:")
-    print(f"    La teoria della crittoanalisi differenziale indica che servono circa c=6")
-    print(f"    'right pairs' per garantire un margine di vittoria netto sulla chiave vera.")
-    print(f"    Per ottenere 6 right pairs, servirebbe generare T_teorico = 6 / R_p = {int(t_consigliato)} tuple casuali.")
-    print(f"    Sulla base del tasso di filtraggio empirico medio osservato ({tasso_filtro_medio*100:.2f}%),")
-    print(f"    il quantitativo stimato di COPPIE GIA' FILTRATE da richiedere in input")
-    print(f"    per avere un attacco stabilmente 'Riuscito' e' di circa: {filtrate_consigliate} coppie (o superiore).")
-            
+    print(f"\n 3. EFFICIENZA DEL FILTRAGGIO E ROBUSTEZZA DELL'ATTACCO:")
+    print(f"    - Efficienza setaccio: Il filtro scarta automaticamente circa il {100 - tasso_filtro_medio:.2f}%")
+    print(f"      delle 'wrong pairs' (solo il {tasso_filtro_medio:.2f}% sopravvive per l'analisi).")
+    print(f"    - Vantaggio medio della chiave vera: {avg_gap:.2f} hits rispetto al miglior falso positivo.")
+           
 # ==============================================================================
 # MENU INTERATTIVO PRINCIPALE
 # ==============================================================================

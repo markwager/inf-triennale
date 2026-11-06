@@ -5,7 +5,6 @@ from collections import Counter
 # COSTANTI E VARIABILI GLOBALI (CRITTOSISTEMA SPN E DIFFERENZIALE)
 # ==============================================================================
 
-# Valori di default (saranno sovrascritti dinamicamente dall'utente)
 SBOX = [0xE, 2, 1, 3, 0xD, 9, 0, 6, 0xF, 4, 5, 0xA, 8, 0xC, 7, 0xB]
 SBOX_INV = [SBOX.index(i) for i in range(16)]
 
@@ -16,7 +15,6 @@ for i in range(1, 17):
 
 NR = 4 
 
-# Costanti architetturali per l'attacco generico
 BLOCK_L = 4
 BLOCK_M = 4
 SBOX_NO = 16
@@ -29,12 +27,9 @@ MSG_MASK = 0xFFFF
 # ==============================================================================
 
 def update_globals(new_sbox, new_perm):
-    """Aggiorna le costanti globali del cifrario in base agli input dell'utente."""
     global SBOX, SBOX_INV, PERM, PERM_INV
-    
     SBOX = new_sbox
     SBOX_INV = [SBOX.index(i) for i in range(16)]
-    
     PERM = new_perm
     PERM_INV = [0] * 17
     for i in range(1, 17):
@@ -55,7 +50,6 @@ def get_sbox() -> list[int]:
     prompt = """\nInserisci la S-Box (16 numeri da 0 a 15 separati da spazio)
 Altrimenti inserisci 'rnd' per generare una S-Box casuale
 Oppure premi invio per utilizzare l'ultima S-Box\n> """
-    
     while True:
         val = input(prompt).strip().lower()
         if val == '':
@@ -79,7 +73,7 @@ Oppure premi invio per utilizzare l'ultima S-Box\n> """
                     print(f"S-Box utilizzata: {sbox}")
                     return sbox
                 else:
-                    print("Errore: La S-Box deve contenere esattamente i numeri da 0 a 15 senza ripetizioni.")
+                    print("Errore: La S-Box deve contenere esattamente i numeri da 0 a 15.")
             except ValueError:
                 print("Errore: Inserisci solo numeri interi validi.")
 
@@ -87,7 +81,6 @@ def get_perm() -> list[int]:
     prompt = """\nInserisci la Permutazione P-Box (16 numeri da 1 a 16 separati da spazio)
 Altrimenti inserisci 'rnd' per generare una permutazione casuale
 Oppure premi invio per utilizzare l'ultima permutazione\n> """
-    
     while True:
         val = input(prompt).strip().lower()
         if val == '':
@@ -114,7 +107,7 @@ Oppure premi invio per utilizzare l'ultima permutazione\n> """
                     print(f"Permutazione utilizzata: {perm_vals}")
                     return perm
                 else:
-                    print("Errore: La Permutazione deve contenere esattamente i numeri da 1 a 16 senza ripetizioni.")
+                    print("Errore: La Permutazione deve contenere esattamente i numeri da 1 a 16.")
             except ValueError:
                 print("Errore: Inserisci solo numeri interi validi.")
 
@@ -206,7 +199,6 @@ def mask_inv(mask: int) -> int:
     return ~mask & MSG_MASK
 
 def zeroed_groups_mask(x: int) -> int:
-    """Restituisce una maschera con bit a 1 in corrispondenza dei nibble nulli di x (S-box passive)."""
     mask = 0
     group_mask = GROUP_MASK
     for _ in range(BLOCK_M):
@@ -218,7 +210,6 @@ def is_right_pair(y1: int, y2: int, zero_mask: int) -> bool:
     return ((y1 ^ y2) & zero_mask) == 0
 
 def candidate_keys(mask: int):
-    """Genera tutti i candidati chiave possibili, forzando a 0 i bit dove la maschera è 1."""
     k = mask
     while k <= MSG_MASK:
         yield k & mask_inv(mask)
@@ -226,11 +217,9 @@ def candidate_keys(mask: int):
         k |= mask
 
 def backtrack(y: int, sbox_inv: list[int], key: int):
-    """Inverte parzialmente un ciphertext y attraverso la chiave k e l'ultimo strato di S-box."""
     return sub(y ^ key, sbox_inv)
 
 def apply_mask(guess: int, mask: int) -> str:
-    """Formatta la chiave indovinata mostrando '_' per i bit ignorati dalla maschera."""
     guess_mask = (((guess >> i) & 1, (mask >> i) & 1) for i in range(SIZEOF_INT - 1, -1, -1))
     return ''.join('_' if m == 0 else '1' if g else '0' for g, m in guess_mask)
 
@@ -296,7 +285,6 @@ def punto_c_attacco(probabilita_traccia, x_prime, u4_atteso, chiavi):
     print("\n--- PUNTO C/D: ATTACCO DIFFERENZIALE E ANALISI PROBABILISTICA ---")
     chiave_vera_k5 = chiavi[4]
     
-    # Derivazione dinamica delle maschere in base a u4_atteso
     passive_sbox_msk = zeroed_groups_mask(u4_atteso)
     active_sbox_msk = mask_inv(passive_sbox_msk)
     masked_real_key = chiave_vera_k5 & active_sbox_msk
@@ -323,18 +311,15 @@ def punto_c_attacco(probabilita_traccia, x_prime, u4_atteso, chiavi):
             y = encrypt(x, chiavi)
             y_star = encrypt(x_star, chiavi)
 
-            # Filtro dinamico: controlla le differenze sugli output dove ci aspettiamo 0
             if is_right_pair(y, y_star, passive_sbox_msk):
                 coppie_filtrate.append((x, x_star, y, y_star))
 
         candidates = Counter()
-        # Valutazione dinamica per tutti i candidati chiave permessi dalle S-Box attive
         for (x, x_star, y, y_star) in coppie_filtrate:
             for k in candidate_keys(passive_sbox_msk):
                 yu = backtrack(y, SBOX_INV, k)
                 y_star_u = backtrack(y_star, SBOX_INV, k)
                 
-                # Se la differenza parziale coincide con u4_atteso nelle S-Box attive
                 if ((yu ^ y_star_u) & active_sbox_msk) == u4_atteso: 
                     candidates[k] += 1
 
@@ -388,7 +373,49 @@ def punto_c_attacco(probabilita_traccia, x_prime, u4_atteso, chiavi):
     print("-" * 85)
 
     successi = sum(1 for r in riepilogo_tentativi if r['risultato'] == "Riuscito")
-    print(f"\n TASSO DI SUCCESSO GLOBALE: {successi}/{n_tentativi} ({(successi/n_tentativi)*100:.1f}%)")
+    parziali = sum(1 for r in riepilogo_tentativi if r['risultato'] == "Parziale (Pari Merito)")
+    fallimenti = sum(1 for r in riepilogo_tentativi if r['risultato'] == "Fallito")
+
+    print("\n=====================================================================")
+    print("  ANALISI QUALITATIVA E CONCLUSIONI CRITTOANALITICHE")
+    print("=====================================================================")
+    print(f" 1. TASSO DI SUCCESSO GLOBALE:")
+    print(f"    - Successi Pieni:     {successi}/{n_tentativi} ({(successi/n_tentativi)*100:.1f}%)")
+    print(f"    - Successi Parziali:  {parziali}/{n_tentativi} ({(parziali/n_tentativi)*100:.1f}%)")
+    print(f"    - Fallimenti:         {fallimenti}/{n_tentativi} ({(fallimenti/n_tentativi)*100:.1f}%)")
+
+    print(f"\n 2. METRICHE DI ISOLAMENTO DEL SEGNALE (Per Tentativo):")
+    for r in riepilogo_tentativi:
+        gap = r['hits_vera'] - r['hits_miglior_falso']
+        print(f"    Tentativo {r['tentativo']} (Coppie Filtrate = {r['filtrate']}):")
+        if gap > 0:
+            print(f"      > Gap di vittoria: La chiave vera ha staccato i falsi candidati di {gap} hit(s).")
+        elif gap == 0:
+            print(f"      > Nessun Gap: La chiave vera e' confusa con il miglior falso positivo.")
+        else:
+            print(f"      > Gap negativo: Una chiave falsa ha superato la chiave vera di {abs(gap)} hit(s).")
+
+    # =========================================================================
+    # 3. EFFICIENZA DEL FILTRAGGIO E ROBUSTEZZA DELL'ATTACCO
+    # =========================================================================
+    tot_filtrate = sum(r['filtrate'] for r in riepilogo_tentativi)
+    tot_generate = sum(r['generate'] for r in riepilogo_tentativi)
+    tasso_filtro_medio = (tot_filtrate / tot_generate) * 100 if tot_generate > 0 else 0
+    
+    gaps = [r['hits_vera'] - r['hits_miglior_falso'] for r in riepilogo_tentativi]
+    avg_gap = sum(gaps) / len(gaps) if gaps else 0
+
+    print(f"\n 3. EFFICIENZA DEL FILTRAGGIO E ROBUSTEZZA DELL'ATTACCO:")
+    print(f"    - Efficienza setaccio: Il filtro scarta automaticamente circa il {100 - tasso_filtro_medio:.2f}%")
+    print(f"      delle 'wrong pairs' (solo il {tasso_filtro_medio:.2f}% sopravvive per l'analisi).")
+    print(f"    - Vantaggio medio della chiave vera: {avg_gap:.2f} hits rispetto al miglior falso positivo.")
+    
+    if avg_gap > 2:
+        print(f"    - Valutazione: L'attacco e' molto robusto con le {target_filtrate} coppie filtrate scelte.")
+    elif avg_gap > 0:
+        print(f"    - Valutazione: L'attacco ha un margine ristretto. Potrebbe essere utile aumentare le coppie filtrate.")
+    else:
+        print(f"    - Valutazione: L'attacco non isola stabilmente la chiave. Aumentare significativamente le coppie filtrate.")
 
 def main():
     while True:
