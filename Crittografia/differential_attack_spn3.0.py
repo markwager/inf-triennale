@@ -2,13 +2,13 @@ import random
 from collections import Counter
 
 # ==============================================================================
-# COSTANTI E IMPOSTAZIONI BASE (CRITTOSISTEMA SPN E DIFFERENZIALE)
+# COSTANTI E VARIABILI GLOBALI (CRITTOSISTEMA SPN E DIFFERENZIALE)
 # ==============================================================================
 
+# Valori di default (saranno sovrascritti dinamicamente dall'utente)
 SBOX = [0xE, 2, 1, 3, 0xD, 9, 0, 6, 0xF, 4, 5, 0xA, 8, 0xC, 7, 0xB]
 SBOX_INV = [SBOX.index(i) for i in range(16)]
 
-# PERM standard, ma l'algoritmo funzionerà con qualsiasi permutazione
 PERM = [None, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15, 4, 8, 12, 16]
 PERM_INV = [0] * 17 
 for i in range(1, 17):
@@ -23,6 +23,100 @@ SBOX_NO = 16
 GROUP_MASK = 0xF
 SIZEOF_INT = 16
 MSG_MASK = 0xFFFF
+
+# ==============================================================================
+# FUNZIONI PER AGGIORNAMENTO DINAMICO S-BOX E PERMUTAZIONE
+# ==============================================================================
+
+def update_globals(new_sbox, new_perm):
+    """Aggiorna le costanti globali del cifrario in base agli input dell'utente."""
+    global SBOX, SBOX_INV, PERM, PERM_INV
+    
+    SBOX = new_sbox
+    SBOX_INV = [SBOX.index(i) for i in range(16)]
+    
+    PERM = new_perm
+    PERM_INV = [0] * 17
+    for i in range(1, 17):
+        PERM_INV[PERM[i]] = i
+
+def load_list_from_file(filename):
+    try:
+        with open(filename, 'r', encoding='utf-8') as f:
+            return [int(x) for x in f.read().strip().split()]
+    except:
+        return []
+
+def save_list_to_file(filename, data_list):
+    with open(filename, 'w', encoding='utf-8') as f:
+        f.write(" ".join(map(str, data_list)))
+
+def get_sbox() -> list[int]:
+    prompt = """\nInserisci la S-Box (16 numeri da 0 a 15 separati da spazio)
+Altrimenti inserisci 'rnd' per generare una S-Box casuale
+Oppure premi invio per utilizzare l'ultima S-Box\n> """
+    
+    while True:
+        val = input(prompt).strip().lower()
+        if val == '':
+            sbox = load_list_from_file('last_sbox.txt')
+            if not sbox:
+                sbox = [0xE, 2, 1, 3, 0xD, 9, 0, 6, 0xF, 4, 5, 0xA, 8, 0xC, 7, 0xB]
+            print(f"S-Box utilizzata: {sbox}")
+            save_list_to_file('last_sbox.txt', sbox)
+            return sbox
+        elif val == 'rnd':
+            sbox = list(range(16))
+            random.shuffle(sbox)
+            print(f"S-Box generata: {sbox}")
+            save_list_to_file('last_sbox.txt', sbox)
+            return sbox
+        else:
+            try:
+                sbox = [int(x.replace(',', '')) for x in val.split()]
+                if len(sbox) == 16 and set(sbox) == set(range(16)):
+                    save_list_to_file('last_sbox.txt', sbox)
+                    print(f"S-Box utilizzata: {sbox}")
+                    return sbox
+                else:
+                    print("Errore: La S-Box deve contenere esattamente i numeri da 0 a 15 senza ripetizioni.")
+            except ValueError:
+                print("Errore: Inserisci solo numeri interi validi.")
+
+def get_perm() -> list[int]:
+    prompt = """\nInserisci la Permutazione P-Box (16 numeri da 1 a 16 separati da spazio)
+Altrimenti inserisci 'rnd' per generare una permutazione casuale
+Oppure premi invio per utilizzare l'ultima permutazione\n> """
+    
+    while True:
+        val = input(prompt).strip().lower()
+        if val == '':
+            perm_vals = load_list_from_file('last_perm.txt')
+            if not perm_vals:
+                perm_vals = [1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15, 4, 8, 12, 16]
+            perm = [None] + perm_vals
+            print(f"Permutazione utilizzata: {perm_vals}")
+            save_list_to_file('last_perm.txt', perm_vals)
+            return perm
+        elif val == 'rnd':
+            perm_vals = list(range(1, 17))
+            random.shuffle(perm_vals)
+            perm = [None] + perm_vals
+            print(f"Permutazione generata: {perm_vals}")
+            save_list_to_file('last_perm.txt', perm_vals)
+            return perm
+        else:
+            try:
+                perm_vals = [int(x.replace(',', '')) for x in val.split()]
+                if len(perm_vals) == 16 and set(perm_vals) == set(range(1, 17)):
+                    perm = [None] + perm_vals
+                    save_list_to_file('last_perm.txt', perm_vals)
+                    print(f"Permutazione utilizzata: {perm_vals}")
+                    return perm
+                else:
+                    print("Errore: La Permutazione deve contenere esattamente i numeri da 1 a 16 senza ripetizioni.")
+            except ValueError:
+                print("Errore: Inserisci solo numeri interi validi.")
 
 # ==============================================================================
 # FUNZIONI CORE DEL CIFRARIO E I/O CHIAVE
@@ -71,7 +165,7 @@ def decrypt_message(blocks, keys):
         out += bytes([p >> 8, p & 0xFF])
     return out.rstrip(b"\x00").decode(errors="replace")
 
-KEY_PROMPT = """Inserisci la chiave maestra a 80 bit (es. 0x1234567890ABCDEF1234)
+KEY_PROMPT = """\nInserisci la chiave maestra a 80 bit (es. 0x1234567890ABCDEF1234)
 Altrimenti inserisci 'rnd' per generare una chiave casuale
 Oppure premi invio per utilizzare l'ultima chiave\n> """
 
@@ -198,9 +292,8 @@ def punto_b_traccia(ddt):
     print("Probabilita totale della traccia (R_p): " + str(numeratore_totale) + " su " + str(denominatore_totale) + " (ovvero " + str(prob_totale) + ")")
     return prob_totale, x_prime, stato_corrente
 
-def punto_c_attacco(probabilita_traccia, x_prime, u4_atteso):
+def punto_c_attacco(probabilita_traccia, x_prime, u4_atteso, chiavi):
     print("\n--- PUNTO C/D: ATTACCO DIFFERENZIALE E ANALISI PROBABILISTICA ---")
-    chiavi = get_key()
     chiave_vera_k5 = chiavi[4]
     
     # Derivazione dinamica delle maschere in base a u4_atteso
@@ -208,7 +301,7 @@ def punto_c_attacco(probabilita_traccia, x_prime, u4_atteso):
     active_sbox_msk = mask_inv(passive_sbox_msk)
     masked_real_key = chiave_vera_k5 & active_sbox_msk
     
-    n_tentativi = int(input("Inserisci il numero di tentativi da eseguire (invio per default = 1): ") or '1')
+    n_tentativi = int(input("\nInserisci il numero di tentativi da eseguire (invio per default = 1): ") or '1')
     riepilogo_tentativi = []
 
     for tentativo in range(1, n_tentativi + 1):
@@ -311,20 +404,42 @@ def main():
         
         if scelta == "0":
             break
+            
         elif scelta == "1":
+            print("\n--- CONFIGURAZIONE PARAMETRI ---")
+            sbox_corrente = get_sbox()
+            perm_corrente = get_perm()
+            update_globals(sbox_corrente, perm_corrente)
             chiavi = get_key()
+            
+            print("\n--- CIFRATURA ---")        
             messaggio = input("Messaggio in chiaro da cifrare: ")
             cifrati = encrypt_message(messaggio, chiavi)
             print("Cifrato Hex:", "".join(format(b, "04X") for b in cifrati))
+            
         elif scelta == "2":
+            print("\n--- CONFIGURAZIONE PARAMETRI ---")
+            sbox_corrente = get_sbox()
+            perm_corrente = get_perm()
+            update_globals(sbox_corrente, perm_corrente)
             chiavi = get_key()
+            
+            print("\n--- DECIFRATURA ---")
             cifrato_str = input("Testo cifrato in hex: ").replace(" ", "").replace("\n", "")
             blocchi = [int(cifrato_str[i:i+4], 16) for i in range(0, len(cifrato_str), 4)]
             print("Messaggio decifrato:", decrypt_message(blocchi, chiavi))
+            
         elif scelta == "3":
+            print("\n--- CONFIGURAZIONE PARAMETRI ---")
+            sbox_corrente = get_sbox()
+            perm_corrente = get_perm()
+            update_globals(sbox_corrente, perm_corrente)
+            chiavi = get_key()
+            
             tabella = punto_a_ddt()
             prob, x_diff, u4_final = punto_b_traccia(tabella)
-            punto_c_attacco(prob, x_diff, u4_final)
+            punto_c_attacco(prob, x_diff, u4_final, chiavi)
+            
         else:
             print("Opzione non valida.")
 
