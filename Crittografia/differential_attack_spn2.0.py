@@ -4,28 +4,85 @@ import random
 # COSTANTI E IMPOSTAZIONI BASE (CRITTOSISTEMA SPN)
 # ==============================================================================
 
-# SBOX: Permutazione fissa utilizzata nello strato di sostituzione.
-# Mappa un input di 4 bit (indice da 0 a 15) in un output di 4 bit.
+# SBOX: Permutazione fissa utilizzata nello strato di sostituzione (fissata a codice).
 SBOX = [0xE, 2, 1, 3, 0xD, 9, 0, 6, 0xF, 4, 5, 0xA, 8, 0xC, 7, 0xB]
-
-# SBOX_INV: Calcola automaticamente la S-box inversa per la decifratura.
-# Trova l'indice 'i' in cui si trova il valore 'val', invertendo la mappatura.
 SBOX_INV = [SBOX.index(i) for i in range(16)]
 
-# PERM: Permutazione fissa dei 16 bit utilizzata nello strato di diffusione.
-# Il valore all'indice 'i' (da 1 a 16) indica la nuova posizione del bit.
-# L'indice 0 è riempito con 'None' per poter usare indici da 1 a 16 come in teoria.
-PERM = [None, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15, 4, 8, 12, 16]
-#PERM = [None, 8, 3, 15, 1, 12, 5, 11, 2, 16, 7, 4, 14, 9, 6, 13, 10]
-# permutazione alternativa
-
-# PERM_INV: Calcola automaticamente la permutazione inversa.
-PERM_INV = [0] * 17 
-for i in range(1, 17):
-    PERM_INV[PERM[i]] = i
+# PERM: La permutazione parte vuota, sarà popolata dall'utente o con il default.
+PERM = []
+PERM_INV = []
 
 # NR: Numero di round del cifrario SPN.
 NR = 4 
+
+# ==============================================================================
+# FUNZIONI PER AGGIORNAMENTO DINAMICO PERMUTAZIONE
+# ==============================================================================
+
+def update_globals_perm(new_perm):
+    global PERM, PERM_INV
+    PERM = new_perm
+    PERM_INV = [0] * 17
+    for i in range(1, 17):
+        PERM_INV[PERM[i]] = i
+
+def load_last_perm() -> str:
+    try:
+        with open('last_perm.txt', 'r', encoding='utf-8') as f: 
+            return f.read().strip()
+    except FileNotFoundError:
+        return ''
+
+def save_perm(perm_str: str) -> None:
+    with open('last_perm.txt', 'w', encoding='utf-8') as f: 
+        f.write(perm_str)
+
+def get_perm() -> list[int]:
+    prompt = """\nInserisci la Permutazione P-Box (16 numeri da 1 a 16 separati da spazio)
+- Inserisci 'rnd' per generare una permutazione casuale
+- Inserisci 'last' per caricare l'ultima permutazione salvata
+- Premi INVIO per utilizzare la permutazione di DEFAULT (quella del libro)\n> """
+    
+    show_perm = False
+    while True:
+        perm_str = input(prompt).strip()
+        
+        if perm_str == '':
+            # Se preme solo invio, usa sempre e solo quella di default
+            perm_str = "1 5 9 13 2 6 10 14 3 7 11 15 4 8 12 16"
+            show_perm = True
+            print("=> Hai scelto la permutazione di DEFAULT del libro.")
+            
+        elif perm_str.lower() == 'last':
+            loaded = load_last_perm()
+            if not loaded:
+                print("Errore: Nessuna permutazione salvata trovata in memoria. Riprova.")
+                continue
+            perm_str = loaded
+            show_perm = True
+            print("=> Hai scelto l'ULTIMA permutazione salvata.")
+            
+        elif perm_str.lower() == 'rnd':
+            perm_list = list(range(1, 17))
+            random.shuffle(perm_list)
+            perm_str = " ".join(map(str, perm_list))
+            show_perm = True
+            print("=> Hai generato una permutazione CASUALE.")
+            
+        try:
+            perm_vals = [int(x.replace(',', '')) for x in perm_str.split()]
+            if len(perm_vals) != 16 or set(perm_vals) != set(range(1, 17)):
+                raise ValueError("Servono esattamente i numeri da 1 a 16 senza ripetizioni.")
+            save_perm(" ".join(map(str, perm_vals)))
+            perm = [None] + perm_vals
+            break
+        except ValueError as e:
+            print("Errore: " + str(e) + " Riprova.\n")
+            
+    if show_perm:
+        print("Permutazione P-Box impostata: " + " ".join(map(str, perm_vals)))
+        
+    return perm
 
 # ==============================================================================
 # FUNZIONI CORE DEL CIFRARIO
@@ -117,7 +174,7 @@ def decrypt_message(blocks, keys):
 # FUNZIONI INPUT CHIAVE
 # ==============================================================================
 
-KEY_PROMPT = """Inserisci la chiave maestra a 80 bit (es. 0x1234567890ABCDEF1234)
+KEY_PROMPT = """\nInserisci la chiave maestra a 80 bit (es. 0x1234567890ABCDEF1234)
 Altrimenti inserisci 'rnd' per generare una chiave casuale
 Oppure premi invio per utilizzare l'ultima chiave\n> """
 
@@ -136,7 +193,7 @@ def save_key(key: str) -> None:
 def get_key() -> list[int]:
     from random import randint
     
-    show_key = False  # CORREZIONE: Inizializzazione necessaria per evitare UnboundLocalError
+    show_key = False
     
     while True:
         chiave_str = input(KEY_PROMPT).strip()
@@ -145,7 +202,6 @@ def get_key() -> list[int]:
             show_key = True
             chiave_str = load_last_key()
             
-        # CORREZIONE: Controllo corretto per 'rnd' senza \n
         if chiave_str.lower() == 'rnd' or chiave_str == '':
             chiave_str = "{:0>20X}".format(randint(0, 0xFFFFFFFFFFFFFFFFFFFF))
             show_key = True
@@ -283,7 +339,7 @@ def punto_c_attacco(probabilita_traccia, x_prime, u4_atteso):
     veri_8bit = (chiave_vera_k5 >> 8) & 0xFF
     
     while True:
-        input_tentativi = input("Inserisci il numero di tentativi da eseguire (invio per default = 1): ").strip()
+        input_tentativi = input("\nInserisci il numero di tentativi da eseguire (invio per default = 1): ").strip()
         if input_tentativi == "":
             n_tentativi = 1
             break
@@ -319,7 +375,7 @@ def punto_c_attacco(probabilita_traccia, x_prime, u4_atteso):
                 except ValueError:
                     print("Errore: inserisci un numero valido. Riprova.")
 
-        inverso_rp = 1.0 / probabilita_traccia
+        inverso_rp = 1.0 / probabilita_traccia if probabilita_traccia > 0 else 0
         numero_coppie_teoriche = int(c_costante * inverso_rp)
 
         while True:
@@ -440,10 +496,7 @@ def punto_c_attacco(probabilita_traccia, x_prime, u4_atteso):
     print(f"\n 2. METRICHE DI ISOLAMENTO DEL SEGNALE (Per Tentativo):")
     for r in riepilogo_tentativi:
         gap = r['hits_vera'] - r['hits_miglior_falso']
-        
         print(f"    Tentativo {r['tentativo']} (Coppie Filtrate = {r['filtrate']}):")
-        
-        # Gap Analysis
         if gap > 0:
             print(f"      > Gap di vittoria: La chiave vera ha staccato i falsi candidati di {gap} hit(s).")
         elif gap == 0:
@@ -465,6 +518,13 @@ def punto_c_attacco(probabilita_traccia, x_prime, u4_atteso):
     print(f"    - Efficienza setaccio: Il filtro scarta automaticamente circa il {100 - tasso_filtro_medio:.2f}%")
     print(f"      delle 'wrong pairs' (solo il {tasso_filtro_medio:.2f}% sopravvive per l'analisi).")
     print(f"    - Vantaggio medio della chiave vera: {avg_gap:.2f} hits rispetto al miglior falso positivo.")
+    
+    if avg_gap > 2:
+        print(f"    - Valutazione: L'attacco e' molto robusto con le coppie filtrate scelte.")
+    elif avg_gap > 0:
+        print(f"    - Valutazione: L'attacco ha un margine ristretto. Potrebbe essere utile aumentare le coppie filtrate.")
+    else:
+        print(f"    - Valutazione: L'attacco non isola stabilmente la chiave. Aumentare significativamente le coppie filtrate.")
            
 # ==============================================================================
 # MENU INTERATTIVO PRINCIPALE
@@ -487,6 +547,10 @@ def main():
             break
             
         elif scelta == "1":
+            print("\n--- CONFIGURAZIONE PARAMETRI ---")
+            perm_corrente = get_perm()
+            update_globals_perm(perm_corrente)
+            
             print("\n--- CIFRATURA ---")
             chiavi = get_key()
                     
@@ -498,6 +562,10 @@ def main():
             print("Messaggio cifrato in binario: " + binario)
                 
         elif scelta == "2":
+            print("\n--- CONFIGURAZIONE PARAMETRI ---")
+            perm_corrente = get_perm()
+            update_globals_perm(perm_corrente)
+            
             print("\n--- DECIFRATURA ---")
             chiavi = get_key()
             
@@ -521,6 +589,10 @@ def main():
                 print("Errore in fase di decodifica: " + str(e))
                 
         elif scelta == "3":
+            print("\n--- CONFIGURAZIONE PARAMETRI ---")
+            perm_corrente = get_perm()
+            update_globals_perm(perm_corrente)
+            
             tabella = punto_a_ddt()
             prob, x_diff, u4_final = punto_b_traccia(tabella)
             punto_c_attacco(prob, x_diff, u4_final)
