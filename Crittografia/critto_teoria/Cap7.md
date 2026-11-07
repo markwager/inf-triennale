@@ -116,7 +116,114 @@ Dal **Lagrange's Theorem** e dalla definizione di ordine di un elemento discendo
 > 2. **Esistenza dei Finite Fields ($\mathbb{F}_q$):** Esiste un *finite field* di ordine $q$ (denotato con $\mathbb{F}_q$) se e solo se $q = p^k$ è una potenza di un numero primo $p$ (con $k \ge 1$ intero).
 > 3. **Ciclicità del Multiplicative Group di un Finite Field:** Per qualsiasi *finite field* $\mathbb{F}_q$, il gruppo moltiplicativo $\mathbb{F}_q^* = \mathbb{F}_q \setminus \{0\}$ è un **cyclic group** di ordine $q - 1$. Un generatore $\alpha$ di $\mathbb{F}_q^*$ è chiamato un **primitive element** del campo finito $\mathbb{F}_q$.
 
----
+Ecco la sezione sul **Teorema Cinese del Resto** completamente sistemata, formattata secondo l'estetica del tuo documento (con le spaziature corrette per i separatori `---`, che nel file si erano attaccati al blocco dell'esempio) e integrata con la spiegazione della mappa $\chi^{-1}$ e dei coefficienti ($715, 364, 924$) dell'**Example A.3.18**, così che tutti i passaggi numerici risultino chiari e completi:
+
+  
+
+### A.4 The Chinese Remainder Theorem (Il Teorema Cinese del Resto)
+
+Il **Chinese remainder theorem** (Teorema Cinese del Resto) asserisce che un sistema di congruenze rispetto a moduli a due a due coprimi ammette un'unica soluzione modulo il prodotto dei moduli.
+
+  
+
+- **La Mappa $\chi$ e la Costruzione dell'Inversa $\chi^{-1}$:** Siano $m_1, \dots, m_r$ interi positivi **pairwise relatively prime** (a due a due relativamente primi, ovvero $\gcd(m_i, m_j) = 1$ per ogni $i \neq j$), e sia:
+    
+      
+    
+    $$M = m_1 \times m_2 \times \dots \times m_r = \prod_{i=1}^r m_i$$
+    
+    Si definisce la funzione:
+    
+      
+    
+    $$\chi : \mathbb{Z}_M \to \mathbb{Z}_{m_1} \times \dots \times \mathbb{Z}_{m_r}$$
+    
+    data da $\chi(x) = (x \bmod m_1, \dots, x \bmod m_r)$. Risolvere il sistema di congruenze $x \equiv a_i \pmod{m_i}$ equivale a invertire la mappa $\chi$, calcolando $x = \chi^{-1}(a_1, \dots, a_r)$.
+    
+      
+    
+
+> [!important] Theorem A.3.20 (Chinese remainder theorem) Supponiamo che $m_1, \dots, m_r$ siano interi positivi **pairwise relatively prime** (a due a due relativamente primi), e supponiamo che $a_1, \dots, a_r$ siano interi. Allora il sistema di $r$ congruenze:
+> 
+>   
+> 
+> $$\begin{aligned}  x &\equiv a_1 \pmod{m_1} \\  x &\equiv a_2 \pmod{m_2} \\  &\;\;\vdots \\  x &\equiv a_r \pmod{m_r}  \end{aligned}$$
+> 
+> ha una **unique solution** (soluzione unica) modulo $M = m_1 \times \dots \times m_r$, che è data da:
+> 
+>   
+> 
+> $$x = \chi^{-1}(a_1, \dots, a_r)$$
+
+- **Formula Esplicita di Risoluzione (Algoritmo per calcolare $\chi^{-1}$):** Per calcolare esplicitamente l'unica soluzione $x = \chi^{-1}(a_1, \dots, a_r) \in \mathbb{Z}_M$ si procede nei seguenti passi:
+    
+      
+    1. Per ciascun $i = 1, \dots, r$, si calcola:
+        
+          
+        
+        $$M_i = \frac{M}{m_i}$$
+        
+    2. Poiché $\gcd(M_i, m_i) = 1$, l'intero $M_i$ possiede un **multiplicative inverse** modulo $m_i$ (calcolabile in modo efficiente tramite l'`EXTENDED EUCLIDEAN ALGORITHM`). Si calcola quindi per ciascun $i = 1, \dots, r$:
+        
+          
+        
+        $$y_i = M_i^{-1} \bmod m_i$$
+        
+    3. La soluzione unica modulo $M$ è data dalla combinazione lineare:
+        
+          
+        
+        $$x = \chi^{-1}(a_1, \dots, a_r) = \left( \sum_{i=1}^r a_i M_i y_i \right) \bmod M$$
+        
+
+> [!example] Example A.3.18 & Example A.3.21 (Applicazione del Chinese Remainder Theorem)
+> 
+>   
+> 
+> - **Costruzione della formula generale (Example A.3.18):** Consideriamo i moduli $m_1 = 7$, $m_2 = 11$ e $m_3 = 13$ (che sono primi distinti e quindi a due a due coprimi). Il modulo totale è:
+>     
+>       
+>     
+>     $$M = 7 \times 11 \times 13 = 1001$$
+>     
+>     Calcoliamo i parametri $M_i = M / m_i$, gli inversi $y_i = M_i^{-1} \bmod m_i$ e i moltiplicatori $M_i y_i$:
+>     
+>       
+>     - **Per $i = 1$ ($m_1 = 7$):**
+>         
+>           
+>         
+>         $$M_1 = \frac{1001}{7} = 143 \implies y_1 = 143^{-1} \bmod 7 = 3^{-1} \bmod 7 = 5 \implies M_1 y_1 = 143 \times 5 = \mathbf{715}$$
+>         
+>     - **Per $i = 2$ ($m_2 = 11$):**
+>         
+>           
+>         
+>         $$M_2 = \frac{1001}{11} = 91 \implies y_2 = 91^{-1} \bmod 11 = 3^{-1} \bmod 11 = 4 \implies M_2 y_2 = 91 \times 4 = \mathbf{364}$$
+>         
+>     - **Per $i = 3$ ($m_3 = 13$):**
+>         
+>           
+>         
+>         $$M_3 = \frac{1001}{13} = 77 \implies y_3 = 77^{-1} \bmod 13 = 12^{-1} \bmod 13 = 12 \implies M_3 y_3 = 77 \times 12 = \mathbf{924}$$
+>         
+>         Pertanto, per qualsiasi tripla $(a_1, a_2, a_3)$, la formula risolutiva modulo $1001$ è:
+>         
+>           
+>         
+>         $$x = \chi^{-1}(a_1, a_2, a_3) = (715 a_1 + 364 a_2 + 924 a_3) \bmod 1001$$
+>         
+> - **Risoluzione del sistema specifico (Example A.3.21):** Utilizzando la formula appena sviluppata, il sistema di congruenze:
+>     
+>       
+>     
+>     $$\begin{aligned} > x &\equiv 3 \pmod 7 \\ > x &\equiv 6 \pmod{11} \\ > x &\equiv 5 \pmod{13} > \end{aligned}$$
+>     
+>     (in cui $a_1 = 3$, $a_2 = 6$, $a_3 = 5$) ha l'unica soluzione modulo $M = 1001$ data da:
+>     
+>     $$\begin{aligned} > x &\equiv 715 \times 3 + 364 \times 6 + 924 \times 5 \pmod{1001} \\ > &\equiv 8949 \pmod{1001} \\ > &\equiv 941 \pmod{1001} > \end{aligned}$$
+>
 
 ## Parte II: Capitolo 7 – Il Problema del Logaritmo Discreto e il Crittosistema ElGamal
 
@@ -226,8 +333,7 @@ Ricordiamo che trovare i **discrete logarithms** è (probabilmente) difficile, m
 
 
 ---
-
-## Lo Scambio di Chiavi Diffie–Hellman (Diffie–Hellman Key Exchange)
+## Parte III: Lo Scambio di Chiavi Diffie–Hellman (Diffie–Hellman Key Exchange)
 
 ### 1. Introduzione, Scopo del Protocollo e Analogia Concettuale
 
@@ -360,3 +466,207 @@ Le chiavi utilizzate in uno scambio Diffie–Hellman possono essere **ephemeral*
      - Bob, ricevendo $y_1$, ricalcola lo stesso segreto condiviso di Diffie–Hellman elevando $y_1$ alla propria chiave privata statica $a$: $(y_1)^a \bmod p = (\alpha^k)^a \bmod p = \beta^k \bmod p$, e ne usa l'inverso moltiplicativo per rimuovere la maschera e recuperare $x$.
 1. **Combinazione di Chiavi Statiche ed Effimere (3-DH e X3DH):**
    - È possibile combinare chiavi statiche a lungo termine (es. $(a, A = g^a)$ per Alice e $(b, B = g^b)$ per Bob) e chiavi effimere (es. $(x, X = g^x)$ e $(y, Y = g^y)$) in un unico scambio di chiavi per ottenere maggiore sicurezza, dando origine ai protocolli **Triple Diffie–Hellman (3-DH)** ed **Extended Triple Diffie–Hellman (X3DH)**.
+
+
+
+
+## Parte IV: Algoritmi per la Risoluzione del Logaritmo Discreto
+
+In tutta questa sezione, supponiamo che $(G, \cdot)$ sia un **multiplicative group** (gruppo moltiplicativo) e che $\alpha \in G$ abbia **order** (ordine) $n$ (quindi genera un **subgroup**; se $G$ fosse ciclico e generato da $\alpha$, allora si avrebbe $\langle \alpha \rangle = G$). Quindi, il problema del **Discrete Logarithm** (Logaritmo Discreto) può essere formulato così: Dato $\beta \in \langle \alpha \rangle$, trovare l'unico esponente $a$, con $0 \le a \le n - 1$, tale che $\alpha^a = \beta$.
+
+  
+
+Iniziamo analizzando alcuni algoritmi elementari che possono essere utilizzati per risolvere il **Discrete Logarithm problem**. Nelle nostre analisi, supporremo che il calcolo di un prodotto di due elementi nel gruppo $G$ richieda tempo costante (cioè $O(1)$).
+
+  
+
+- **Ricerca Esaustiva (Exhaustive search):** Il problema del Logaritmo Discreto può essere risolto tramite ricerca esaustiva in tempo $O(n)$ e spazio $O(1)$, semplicemente calcolando $\alpha, \alpha^2, \alpha^3, \dots$ finché non si trova $\beta = \alpha^a$. Ogni termine $\alpha^i$ nell'elenco precedente viene calcolato moltiplicando il termine precedente $\alpha^{i-1}$ per $\alpha$, e quindi il tempo totale richiesto è $O(n)$.
+    
+      
+    
+- **Precalcolo e Ricerca Binaria (Time-memory trade-off):** Un altro approccio consiste nel precalcolare tutti i possibili valori di $\alpha^i$, per poi ordinare la lista delle coppie ordinate $(i, \alpha^i)$ rispetto alle loro seconde coordinate. Quindi, dato $\beta$, possiamo eseguire una ricerca binaria nella lista ordinata al fine di trovare il valore $a$ tale che $\alpha^a = \beta$. Questo richiede un tempo di precalcolo $O(n)$ per calcolare le $n$ potenze di $\alpha$, e un tempo $O(n \log n)$ per ordinare la lista di dimensione $n$. Se trascuriamo i fattori logaritmici, come si fa solitamente nell'analisi di questi algoritmi, possiamo risolvere il problema in tempo $O(1)$ con precalcolo $O(n)$ e memoria $O(n)$.
+    
+      
+    
+
+In entrambi i casi, se la cardinalità di $G$ è esponenziale, questi attacchi sarebbero troppo inefficienti. Viene quindi introdotto un algoritmo **pseudopolinomiale**: l'algoritmo di Pohlig-Hellman.
+
+  
+
+### 7.2.3 The Pohlig-Hellman Algorithm (L'Algoritmo di Pohlig-Hellman)
+
+Supponiamo che l'ordine $n$ si fattorizzi come:
+
+  
+
+$$n = \prod_{i=1}^k p_i^{c_i},$$
+
+dove i $p_i$ sono numeri **prime** (primi) distinti. Il valore $a = \log_\alpha \beta$ è determinato in modo univoco modulo $n$. Osserviamo innanzitutto che se possiamo calcolare $a \bmod p_i^{c_i}$ per ogni $i$, con $1 \le i \le k$, allora possiamo calcolare l'intero $a \bmod n$ tramite il **Chinese Remainder Theorem** (Teorema Cinese del Resto).
+
+  
+
+Fissiamo quindi un singolo fattore, supponendo che $q$ sia primo e che:
+
+  
+
+$$n \equiv 0 \pmod{q^c} \qquad \text{e} \qquad n \not\equiv 0 \pmod{q^{c+1}}$$
+
+. Mostreremo come calcolare il valore:
+
+  
+
+$$x = a \bmod q^c,$$
+
+dove $0 \le x \le q^c - 1$. Possiamo esprimere $x$ nella rappresentazione in base $q$ (_radix q representation_) come:
+
+  
+
+$$x = \sum_{i=0}^{c-1} a_i q^i,$$
+
+dove $0 \le a_i \le q - 1$ per $0 \le i \le c - 1$. Inoltre, possiamo esprimere $a$ per intero come:
+
+  
+
+$$a = x + s q^c$$
+
+per qualche intero $s$. Di conseguenza, combinando le due espressioni abbiamo che:
+
+  
+
+$$a = \sum_{i=0}^{c-1} a_i q^i + s q^c$$
+
+.
+
+  
+
+#### 1. Calcolo di $a_0$
+
+Il primo passo dell'algoritmo consiste nel calcolare $a_0$. L'osservazione principale utilizzata nell'algoritmo è la seguente:
+
+  
+
+$$\beta^{n/q} = \alpha^{a_0 n/q} \quad (7.1)$$
+
+. Dimostriamo che l'equazione (7.1) è valida come segue:
+
+  
+
+$$\begin{aligned} \beta^{n/q} &= (\alpha^a)^{n/q} \\ &= (\alpha^{a_0 + a_1q + \dots + a_{c-1}q^{c-1} + sq^c})^{n/q} \\ &= (\alpha^{a_0 + Kq})^{n/q} \quad \text{dove } K \text{ è un intero} \\ &= \alpha^{a_0 n/q} \alpha^{Kn} \\ &= \alpha^{a_0 n/q} \end{aligned}$$
+
+.
+
+  
+
+Usando l'equazione (7.1), è una questione semplice determinare $a_0$. Questo può essere fatto, ad esempio, calcolando progressivamente:
+
+  
+
+$$\gamma = \alpha^{n/q}, \gamma^2, \dots$$
+
+finché $\gamma^i = \beta^{n/q}$ per qualche $i \le q - 1$. Quando questo accade, sappiamo che $a_0 = i$.
+
+  
+
+#### 2. Calcolo dei successivi $a_j$ (per $c > 1$)
+
+Ora, se $c = 1$, abbiamo finito. Altrimenti $c > 1$, e procediamo a determinare $a_1, \dots, a_{c-1}$ in modo iterativo. Questo viene fatto in modo simile al calcolo di $a_0$. Indichiamo $\beta_0 = \beta$, e definiamo:
+
+  
+
+$$\beta_j = \beta \alpha^{-(a_0 + a_1 q + \dots + a_{j-1} q^{j-1})}$$
+
+per $1 \le j \le c - 1$. Facciamo uso della seguente generalizzazione dell'equazione (7.1):
+
+  
+
+$$\beta_j^{n/q^{j+1}} = \alpha^{a_j n/q} \quad (7.2)$$
+
+. (Osserviamo che l'equazione (7.2) si riduce all'equazione (7.1) quando $j = 0$). La dimostrazione dell'equazione (7.2) è del tutto analoga a quella dell'equazione (7.1):
+
+  
+
+$$\begin{aligned} \beta_j^{n/q^{j+1}} &= \left(\alpha^{a-(a_0 + a_1 q + \dots + a_{j-1} q^{j-1})}\right)^{n/q^{j+1}} \\ &= \left(\alpha^{a_j q^j + \dots + a_{c-1} q^{c-1} + s q^c}\right)^{n/q^{j+1}} \\ &= \left(\alpha^{a_j q^j + K_j q^{j+1}}\right)^{n/q^{j+1}} \quad \text{dove } K_j \text{ è un intero} \\ &= \alpha^{a_j n/q} \alpha^{K_j n} \\ &= \alpha^{a_j n/q} \end{aligned}$$
+
+.
+
+  
+
+Pertanto, dato $\beta_j$, è semplice calcolare $a_j$ dall'equazione (7.2). Per completare la descrizione dell'algoritmo, è sufficiente osservare che $\beta_{j+1}$ può essere calcolato da $\beta_j$ mediante una semplice relazione di ricorrenza, una volta noto $a_j$:
+
+  
+
+$$\beta_{j+1} = \beta_j \alpha^{-a_j q^j} \quad (7.3)$$
+
+.
+
+  
+
+Di conseguenza, possiamo calcolare $a_0, \beta_1, a_1, \beta_2, \dots, \beta_{c-1}, a_{c-1}$ applicando alternativamente le equazioni (7.2) e (7.3).
+
+  
+
+#### 3. Definizione dell'Algoritmo ed Esempio
+
+> [!abstract] Algorithm 7.3: `POHLIG-HELLMAN`$(G, n, \alpha, \beta, q, c)$
+> 
+>   
+> 
+> 1. $j \leftarrow 0$
+>     
+>       
+>     
+> 2. $\beta_j \leftarrow \beta$
+>     
+>       
+>     
+> 3. **while** $j \le c - 1$ **do** $\begin{cases} \delta \leftarrow \beta_j^{n/q^{j+1}} \\ \text{find } i \text{ such that } \delta = \alpha^{in/q} \\ a_j \leftarrow i \\ \beta_{j+1} \leftarrow \beta_j \alpha^{-a_j q^j} \\ j \leftarrow j + 1 \end{cases}$
+>     
+>       
+>     
+> 4. **return** $(a_0, \dots, a_{c-1})$
+>     
+>       
+>     
+
+> [!example] Example 7.4 (Algoritmo di Pohlig-Hellman)
+> 
+>   
+> 
+> - **Parametri e Obiettivo:** Supponiamo che $p = 29$ e $\alpha = 2$. Il numero $p$ è primo e $\alpha$ è un **primitive element** modulo $p$, e abbiamo che l'ordine è $n = p - 1 = 28 = 2^2 \cdot 7^1$. Supponiamo $\beta = 18$, quindi vogliamo determinare $a = \log_2 18$. Procediamo calcolando prima $a \bmod 4$ e poi calcolando $a \bmod 7$.
+>     
+>       
+>     
+> - **Base $q = 2, c = 2$:** Iniziando con $q = 2$ e $c = 2$ e applicando l'Algorithm 7.3, troviamo che $a_0 = 1$ e $a_1 = 1$. Pertanto, $a \equiv 3 \pmod 4$.
+>     
+>       
+>     
+> - **Base $q = 7, c = 1$:** Successivamente, applichiamo l'Algorithm 7.3 con $q = 7$ e $c = 1$. Troviamo che $a_0 = 4$, quindi $a \equiv 4 \pmod 7$.
+>     
+>       
+>     
+> - **Chinese Remainder Theorem:** Infine, risolvendo il sistema:
+>     
+>       
+>     
+>     $$a \equiv 3 \pmod 4$$
+>     
+>     $$a \equiv 4 \pmod 7$$
+>     
+>     usando il Teorema Cinese del Resto, otteniamo $a \equiv 11 \pmod{28}$. Ovvero, abbiamo calcolato $\log_2 18 = 11$ in $\mathbb{Z}_{29}$.
+>     
+>       
+>     
+
+#### Complessità Computazionale
+
+Consideriamo la complessità dell'Algorithm 7.3. Non è difficile notare che un'implementazione diretta di questo algoritmo viene eseguita in tempo $O(cq)$. Questo aspetto può tuttavia essere migliorato, osservando che ogni calcolo di un valore $i$ tale per cui $\delta = \alpha^{in/q}$ può essere visto come la soluzione di una particolare istanza del **Discrete Logarithm problem**. Nello specifico, abbiamo che $\delta = \alpha^{in/q}$ se e solo se:
+
+  
+
+$$i = \log_{\alpha^{n/q}} \delta$$
+
+.
+
+  
+
+L'elemento $\alpha^{n/q}$ ha ordine $q$, e pertanto ogni $i$ può essere calcolato (usando ad esempio lo `SHANKS' ALGORITHM`) in tempo $O(\sqrt{q})$. La complessità per l'Algorithm 7.3 può quindi essere ridotta a $O(c\sqrt{q})$.

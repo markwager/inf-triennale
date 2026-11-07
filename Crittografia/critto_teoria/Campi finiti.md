@@ -8,8 +8,6 @@
     
 - **Definizione A.1.2 (Riduzione Modulare):** Dividendo $a$ e $b$ per $m$ otteniamo quozienti e resti interi: $a = q_1m + r_1$ e $b = q_2m + r_2$, con $0 \le r_1 \le m - 1$ e $0 \le r_2 \le m - 1$. Allora $a \equiv b \pmod m$ se e solo se $r_1 = r_2$. Utilizziamo la notazione $a \bmod m$ per indicare il resto $r_1$ quando $a$ è diviso per $m$. Sostituire $a$ con $a \bmod m$ si definisce **riduzione modulare** ($a$ è ridotto modulo $m$).
     
-      
-    
 
 > [!example] Esempio A.1.3 (Calcolo di riduzioni modulari e numeri negativi)
 > 

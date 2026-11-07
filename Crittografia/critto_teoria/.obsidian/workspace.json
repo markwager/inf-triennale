@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Cap7.md",
+                "file": "Campi finiti.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Cap7"
+              "title": "Campi finiti"
             }
           }
         ]
@@ -83,7 +83,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 200
+    "width": 200,
+    "collapsed": true
   },
   "right": {
     "id": "7ff625c4cf5bbafe",
@@ -190,8 +191,8 @@
   },
   "active": "41f7ce4b8d1ab359",
   "lastOpenFiles": [
-    "Cap6.md",
     "Cap7.md",
+    "Cap6.md",
     "Campi finiti.md",
     "Cap4.md",
     "Cap5.md",
