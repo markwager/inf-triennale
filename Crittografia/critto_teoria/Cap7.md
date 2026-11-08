@@ -11,16 +11,16 @@ Il problema del **Discrete Logarithm** (Problem 7.1) viene definito nel contesto
 #### 1. Definizione di Group e Abelian Group
 
 > [!abstract] Definizione di Group e Abelian Group
-> Un **group** (gruppo) è una coppia $(G, *)$, dove $G$ è un insieme e $*$ è una **binary operation** (operazione binaria) su $G$ (ovvero una funzione $* : G \times G \to G$), tale che siano soddisfatte le seguenti tre proprietà[cite: 8]:
+> Un **group** (gruppo) è una coppia $(G, *)$, dove $G$ è un insieme e $*$ è una **binary operation** (operazione binaria) su $G$ (ovvero una funzione $* : G \times G \to G$), tale che siano soddisfatte le seguenti tre proprietà:
 > 
-> 1. **Associative law (Associatività):** Per tutti gli $a, b, c \in G$, vale[cite: 8]:
+> 1. **Associative law (Associatività):** Per tutti gli $a, b, c \in G$, vale:
 >    $$(a * b) * c = a * (b * c)$$
-> 2. **Identity element (Elemento identità):** Esiste un elemento $e \in G$, chiamato **identity** (identità), tale che per tutti gli $a \in G$ vale[cite: 8]:
+> 2. **Identity element (Elemento identità):** Esiste un elemento $e \in G$, chiamato **identity** (identità), tale che per tutti gli $a \in G$ vale:
 >    $$a * e = e * a = a$$
-> 3. **Inverses (Inversi):** Per ciascun $a \in G$, esiste un elemento $a^{-1} \in G$, chiamato l'**inverse** (inverso) di $a$, tale che[cite: 8]:
+> 3. **Inverses (Inversi):** Per ciascun $a \in G$, esiste un elemento $a^{-1} \in G$, chiamato l'**inverse** (inverso) di $a$, tale che:
 >    $$a * a^{-1} = a^{-1} * a = e$$
 > 
-> Un gruppo $(G, *)$ è chiamato **abelian** (abeliano, oppure **commutative**, commutativo) se, per tutti gli $a, b \in G$, vale inoltre[cite: 8]:
+> Un gruppo $(G, *)$ è chiamato **abelian** (abeliano, oppure **commutative**, commutativo) se, per tutti gli $a, b \in G$, vale inoltre:
 > $$a * b = b * a$$
 
 - **Notazione Moltiplicativa vs Notazione Additiva:**
@@ -116,13 +116,10 @@ Dal **Lagrange's Theorem** e dalla definizione di ordine di un elemento discendo
 > 2. **Esistenza dei Finite Fields ($\mathbb{F}_q$):** Esiste un *finite field* di ordine $q$ (denotato con $\mathbb{F}_q$) se e solo se $q = p^k$ è una potenza di un numero primo $p$ (con $k \ge 1$ intero).
 > 3. **Ciclicità del Multiplicative Group di un Finite Field:** Per qualsiasi *finite field* $\mathbb{F}_q$, il gruppo moltiplicativo $\mathbb{F}_q^* = \mathbb{F}_q \setminus \{0\}$ è un **cyclic group** di ordine $q - 1$. Un generatore $\alpha$ di $\mathbb{F}_q^*$ è chiamato un **primitive element** del campo finito $\mathbb{F}_q$.
 
-Ecco la sezione sul **Teorema Cinese del Resto** completamente sistemata, formattata secondo l'estetica del tuo documento (con le spaziature corrette per i separatori `---`, che nel file si erano attaccati al blocco dell'esempio) e integrata con la spiegazione della mappa $\chi^{-1}$ e dei coefficienti ($715, 364, 924$) dell'**Example A.3.18**, così che tutti i passaggi numerici risultino chiari e completi:
-
   
-
 ### A.4 The Chinese Remainder Theorem (Il Teorema Cinese del Resto)
 
-Il **Chinese remainder theorem** (Teorema Cinese del Resto) asserisce che un sistema di congruenze rispetto a moduli a due a due coprimi ammette un'unica soluzione modulo il prodotto dei moduli.
+Il **Chinese remainder theorem** (Teorema Cinese del Resto) afferma che un sistema di congruenze rispetto a moduli a due a due coprimi ammette un'unica soluzione modulo il prodotto dei moduli.
 
   
 
@@ -218,11 +215,11 @@ Il **Chinese remainder theorem** (Teorema Cinese del Resto) asserisce che un sis
 >     
 >       
 >     
->     $$\begin{aligned} > x &\equiv 3 \pmod 7 \\ > x &\equiv 6 \pmod{11} \\ > x &\equiv 5 \pmod{13} > \end{aligned}$$
+>     $$\begin{aligned}  x &\equiv 3 \pmod 7 \\  x &\equiv 6 \pmod{11} \\  x &\equiv 5 \pmod{13}  \end{aligned}$$
 >     
 >     (in cui $a_1 = 3$, $a_2 = 6$, $a_3 = 5$) ha l'unica soluzione modulo $M = 1001$ data da:
 >     
->     $$\begin{aligned} > x &\equiv 715 \times 3 + 364 \times 6 + 924 \times 5 \pmod{1001} \\ > &\equiv 8949 \pmod{1001} \\ > &\equiv 941 \pmod{1001} > \end{aligned}$$
+>     $$\begin{aligned}  x &\equiv 715 \times 3 + 364 \times 6 + 924 \times 5 \pmod{1001} \\  &\equiv 8949 \pmod{1001} \\  &\equiv 941 \pmod{1001}  \end{aligned}$$
 >
 
 ## Parte II: Capitolo 7 – Il Problema del Logaritmo Discreto e il Crittosistema ElGamal
@@ -256,7 +253,7 @@ Il **ElGamal Cryptosystem** si basa sul problema del **Discrete Logarithm** (Log
 
 ### 7.1.1 The ElGamal Cryptosystem (Il Crittosistema ElGamal)
 
-Il crittosistema a chiave pubblica proposto da ElGamal si basa sul problema del **Discrete Logarithm** nel gruppo moltiplicativo $(\mathbb{Z}_p^*, \cdot)$.
+ElGamal si basa sul problema del **Discrete Logarithm** nel gruppo moltiplicativo $(\mathbb{Z}_p^*, \cdot)$.
 
 - **Cifratura Randomizzata:** L'operazione di cifratura nel Crittosistema ElGamal è **randomized** (randomizzata), poiché il *ciphertext* dipende sia dal *plaintext* $x$ sia da un valore casuale $k \in \mathbb{Z}_{p-1}$ scelto da Alice. Pertanto, esistono molti *ciphertexts* (esattamente $p - 1$) che sono cifrature dello stesso *plaintext*.
 - **Meccanismo Informale (Masking):**
@@ -293,7 +290,7 @@ Il crittosistema a chiave pubblica proposto da ElGamal si basa sul problema del 
 
 #### Condizioni di Sicurezza e Parametri Raccomandati
 
-- **Dipendenza dal Discrete Logarithm Problem:** Il Crittosistema ElGamal è insicuro se Oscar riesce a calcolare $a = \log_\alpha \beta$, poiché in tal caso può decifrare i *ciphertexts* esattamente come fa Bob. Pertanto, una condizione necessaria affinché il Crittosistema ElGamal sia sicuro è che il problema del Logaritmo Discreto in $\mathbb{Z}_p^*$ sia infattibile.
+- **Dipendenza dal Discrete Logarithm Problem:** ElGamal è insicuro se Oscar riesce a calcolare $a = \log_\alpha \beta$, poiché in tal caso può decifrare i *ciphertexts* come fa Bob. Pertanto, una condizione necessaria affinché sia sicuro è che il problema del Logaritmo Discreto in $\mathbb{Z}_p^*$ sia infattibile.
 - **Scelta dei Parametri:** Non è noto alcun algoritmo in tempo polinomiale (*polynomial-time algorithm*) per il problema del Logaritmo Discreto in $\mathbb{Z}_p^*$ quando $p$ è scelto con cura e $\alpha$ è un elemento primitivo modulo $p$. Per un'impostazione sicura, si raccomanda che:
   1. $p$ abbia almeno **$2048$ bit** nella sua rappresentazione binaria;
   2. $p - 1$ possieda almeno un fattore primo "grande".
@@ -413,8 +410,8 @@ I valori $p$ e $g$ vengono scelti in questo modo per garantire che il segreto co
 ### 3. Collegamento con il Discrete Logarithm Problem e Sicurezza dei Parametri
 
 1. **Valori in chiaro, One-way Function e Discrete Logarithm Problem:**
-   - Nello scambio Diffie–Hellman soltanto gli esponenti privati $a$ e $b$ sono mantenuti segreti; tutti gli altri valori — $p, g, g^a \bmod p$ e $g^b \bmod p$ — vengono inviati in chiaro sul canale pubblico.
-   - Il calcolo di $g^a \bmod p$ è noto come **modular exponentiation** (esponenziazione modulare) e può essere eseguito in modo efficiente anche per numeri estremamente grandi (grazie allo **square-and-multiply algorithm**. Si noti che la base $g$ non ha alcun bisogno di essere grande: nella pratica è solitamente un intero molto piccolo (come $2, 3, \dots$).
+   - Nello scambio Diffie–Hellman soltanto gli esponenti privati $a$ e $b$ sono mantenuti segreti; tutti gli altri valori vengono inviati in chiaro sul canale pubblico.
+   - Il calcolo di $g^a \bmod p$ è noto come **modular exponentiation** (esponenziazione modulare) e può essere eseguito in modo efficiente anche per numeri grandi (grazie allo **square-and-multiply algorithm**. Si noti che la base $g$ non ha alcun bisogno di essere grande: nella pratica è solitamente un intero molto piccolo (come $2, 3, \dots$).
    - Al contrario, la forza dello schema risiede nel fatto che calcolare $g^{ab} \bmod p = g^{ba} \bmod p$ conoscendo unicamente $p, g, g^a \bmod p$ e $g^b \bmod p$ richiede tempi estremamente lunghi per qualsiasi algoritmo classico noto. Una funzione facile da calcolare in avanti ma difficile da invertire è chiamata una **one-way function**.
    - Il problema matematico di ricavare l'esponente privato $a$ conoscendo soltanto $g, p$ e $A = g^a \bmod p$ (ovvero calcolare $a = \log_g A$, o $a = \log_\alpha \beta$ nella notazione del **Problem 7.1**) è esattamente il **Discrete Logarithm Problem (DLP)**.
 
@@ -432,14 +429,14 @@ I valori $p$ e $g$ vengono scelti in questo modo per garantire che il segreto co
 Il protocollo Diffie–Hellman non è limitato a $\mathbb{Z}_p^*$, ma si generalizza a qualsiasi **finite cyclic group** (gruppo ciclico finito) scritto in notazione moltiplicativa $(G, \cdot)$ (come introdotto nella Parte I e nella Sezione 7.1):
 
 > [!abstract] Protocollo Generale: `DIFFIE–HELLMAN` su un Gruppo Ciclico Finito $(G, \cdot)$
-> 1. **Parametri pubblici:** Alice e Bob concordano (tipicamente molto prima dell'esecuzione del protocollo) su un numero naturale $n$ e su un **generating element** (generatore) $g$ (o $\alpha$) nel gruppo ciclico finito $(G, \cdot)$ di ordine $n$ (ovvero $G = \langle g \rangle$ con $|G| = n$). Si assume che $g$ e $n$ siano noti a tutti gli attaccanti[cite: 8].
-> 2. **Scelta di Alice:** Alice sceglie un numero naturale casuale $a$ con $1 < a < n$ e invia a Bob l'elemento $g^a \in G$[cite: 8].
-> 3. **Scelta di Bob:** Bob sceglie un numero naturale casuale $b$ con $1 < b < n$ e invia ad Alice l'elemento $g^b \in G$[cite: 8].
+> 1. **Parametri pubblici:** Alice e Bob concordano (tipicamente molto prima dell'esecuzione del protocollo) su un numero naturale $n$ e su un **generating element** (generatore) $g$ (o $\alpha$) nel gruppo ciclico finito $(G, \cdot)$ di ordine $n$ (ovvero $G = \langle g \rangle$ con $|G| = n$). Si assume che $g$ e $n$ siano noti a tutti gli attaccanti.
+> 2. **Scelta di Alice:** Alice sceglie un numero naturale casuale $a$ con $1 < a < n$ e invia a Bob l'elemento $g^a \in G$.
+> 3. **Scelta di Bob:** Bob sceglie un numero naturale casuale $b$ con $1 < b < n$ e invia ad Alice l'elemento $g^b \in G$.
 > 4. **Calcolo del segreto condiviso:**
->    - Alice calcola l'elemento $(g^b)^a = g^{ba}$ di $G$[cite: 8].
->    - Bob calcola l'elemento $(g^a)^b = g^{ab}$ di $G$[cite: 8].
+>    - Alice calcola l'elemento $(g^b)^a = g^{ba}$ di $G$.
+>    - Bob calcola l'elemento $(g^a)^b = g^{ab}$ di $G$.
 > 
-> Entrambi sono ora in possesso dello stesso elemento del gruppo $g^{ab} = g^{ba} \in G$, che funge da **shared secret key**[cite: 8].
+> Entrambi sono ora in possesso dello stesso elemento del gruppo $g^{ab} = g^{ba} \in G$, che funge da **shared secret key**.
 
 - **Condizione di Sicurezza nel Gruppo $G$ e Varianti:**
   - Il gruppo $G$ soddisfa la condizione necessaria per una comunicazione sicura fintanto che non esiste alcun algoritmo efficiente per determinare $g^{ab}$ conoscendo solamente $g, g^a$ e $g^b$.
@@ -466,8 +463,6 @@ Le chiavi utilizzate in uno scambio Diffie–Hellman possono essere **ephemeral*
      - Bob, ricevendo $y_1$, ricalcola lo stesso segreto condiviso di Diffie–Hellman elevando $y_1$ alla propria chiave privata statica $a$: $(y_1)^a \bmod p = (\alpha^k)^a \bmod p = \beta^k \bmod p$, e ne usa l'inverso moltiplicativo per rimuovere la maschera e recuperare $x$.
 1. **Combinazione di Chiavi Statiche ed Effimere (3-DH e X3DH):**
    - È possibile combinare chiavi statiche a lungo termine (es. $(a, A = g^a)$ per Alice e $(b, B = g^b)$ per Bob) e chiavi effimere (es. $(x, X = g^x)$ e $(y, Y = g^y)$) in un unico scambio di chiavi per ottenere maggiore sicurezza, dando origine ai protocolli **Triple Diffie–Hellman (3-DH)** ed **Extended Triple Diffie–Hellman (X3DH)**.
-
-
 
 
 ## Parte IV: Algoritmi per la Risoluzione del Logaritmo Discreto
@@ -501,7 +496,7 @@ Supponiamo che l'ordine $n$ si fattorizzi come:
 
 $$n = \prod_{i=1}^k p_i^{c_i},$$
 
-dove i $p_i$ sono numeri **prime** (primi) distinti. Il valore $a = \log_\alpha \beta$ è determinato in modo univoco modulo $n$. Osserviamo innanzitutto che se possiamo calcolare $a \bmod p_i^{c_i}$ per ogni $i$, con $1 \le i \le k$, allora possiamo calcolare l'intero $a \bmod n$ tramite il **Chinese Remainder Theorem** (Teorema Cinese del Resto).
+dove i $p_i$ sono numeri **prime** (primi) distinti. Il valore $a = \log_\alpha \beta$ è determinato in modo univoco modulo $n$. Osserviamo che se possiamo calcolare $a \bmod p_i^{c_i}$ per ogni $i$, con $1 \le i \le k$, allora possiamo calcolare l'intero $a \bmod n$ tramite il **Chinese Remainder Theorem** (Teorema Cinese del Resto).
 
   
 
@@ -536,7 +531,6 @@ per qualche intero $s$. Di conseguenza, combinando le due espressioni abbiamo ch
 $$a = \sum_{i=0}^{c-1} a_i q^i + s q^c$$
 
 .
-
   
 
 #### 1. Calcolo di $a_0$
