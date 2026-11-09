@@ -83,8 +83,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 200,
-    "collapsed": true
+    "width": 200
   },
   "right": {
     "id": "7ff625c4cf5bbafe",
@@ -191,8 +190,9 @@
   },
   "active": "abcc90c66a31f577",
   "lastOpenFiles": [
-    "Ex cap3+cap4.md",
+    "ex cap7.md",
     "Cap7.md",
+    "Ex cap3+cap4.md",
     "Campi finiti.md",
     "Cap6.md",
     "Cap4.md",

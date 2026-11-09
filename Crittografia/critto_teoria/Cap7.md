@@ -624,32 +624,24 @@ Di conseguenza, possiamo calcolare $a_0, \beta_1, a_1, \beta_2, \dots, \beta_{c-
 
 > [!example] Example 7.4 (Algoritmo di Pohlig-Hellman)
 > 
->   
+> * **Parametri e Obiettivo:** Supponiamo che $p = 29$ e $\alpha = 2$. Il numero $p$ è primo e $\alpha$ è un **primitive element** modulo $p$, e abbiamo che l'ordine è $n = p - 1 = 28 = 2^2 \cdot 7^1$ (fattorizzazione in numeri primi). Supponiamo $\beta = 18$, quindi vogliamo determinare $a = \log_2 18$. Procediamo calcolando prima $a \bmod 4$ e poi calcolando $a \bmod 7$.
 > 
-> - **Parametri e Obiettivo:** Supponiamo che $p = 29$ e $\alpha = 2$. Il numero $p$ è primo e $\alpha$ è un **primitive element** modulo $p$, e abbiamo che l'ordine è $n = p - 1 = 28 = 2^2 \cdot 7^1$. Supponiamo $\beta = 18$, quindi vogliamo determinare $a = \log_2 18$. Procediamo calcolando prima $a \bmod 4$ e poi calcolando $a \bmod 7$.
->     
->       
->     
-> - **Base $q = 2, c = 2$:** Iniziando con $q = 2$ e $c = 2$ e applicando l'Algorithm 7.3, troviamo che $a_0 = 1$ e $a_1 = 1$. Pertanto, $a \equiv 3 \pmod 4$.
->     
->       
->     
-> - **Base $q = 7, c = 1$:** Successivamente, applichiamo l'Algorithm 7.3 con $q = 7$ e $c = 1$. Troviamo che $a_0 = 4$, quindi $a \equiv 4 \pmod 7$.
->     
->       
->     
-> - **Chinese Remainder Theorem:** Infine, risolvendo il sistema:
->     
->       
->     
->     $$a \equiv 3 \pmod 4$$
->     
->     $$a \equiv 4 \pmod 7$$
->     
->     usando il Teorema Cinese del Resto, otteniamo $a \equiv 11 \pmod{28}$. Ovvero, abbiamo calcolato $\log_2 18 = 11$ in $\mathbb{Z}_{29}$.
->     
->       
->     
+> * **Base $q = 2, c = 2$:** Iniziando con $q = 2$ e $c = 2$ e applicando l'Algorithm 7.3, cerchiamo l'espansione $a \bmod 4 = a_0 + a_1 \cdot 2$. Precalcoliamo la base $\gamma = \alpha^{n/q} \bmod p = 2^{14} \bmod 29 = 28$.
+>   * *Iterazione $j = 0$:* Impostiamo $\beta_0 = 18$. Calcoliamo $\delta = \beta_0^{n/q^{0+1}} \bmod 29 = 18^{14} \bmod 29 = 28$. Troviamo $i$ tale che $\gamma^i = \delta \implies 28^i \equiv 28$, che ci dà $a_0 = 1$.
+>   * *Iterazione $j = 1$:* Calcoliamo $\beta_1 = \beta_0 \cdot \alpha^{-a_0 q^0} \bmod 29 = 18 \cdot 2^{-1} \bmod 29 = 18 \cdot 15 \bmod 29 = 9$. Calcoliamo $\delta = \beta_1^{n/q^{1+1}} \bmod 29 = 9^7 \bmod 29 = 28$. Troviamo $i$ tale che $\gamma^i = \delta \implies 28^i \equiv 28$, che ci dà $a_1 = 1$.
+>   * Pertanto, $a \equiv a_0 + a_1 \cdot 2 \equiv 1 + 2 \equiv 3 \pmod 4$.
+> 
+> * **Base $q = 7, c = 1$:** Successivamente, applichiamo l'Algorithm 7.3 con $q = 7$ e $c = 1$. Cerchiamo $a \bmod 7 = a_0$. Precalcoliamo la base $\gamma = \alpha^{n/q} \bmod p = 2^4 \bmod 29 = 16$.
+>   * *Iterazione $j = 0$:* Impostiamo $\beta_0 = 18$. Calcoliamo $\delta = \beta_0^{n/q^1} \bmod 29 = 18^4 \bmod 29 = 25$.
+>   * Troviamo $i$ tale che $\gamma^i = \delta \implies 16^i \equiv 25 \pmod{29}$. Testando le potenze troviamo $16^4 \bmod 29 = 25$, ottenendo $a_0 = 4$.
+>   * Troviamo che $a_0 = 4$, quindi $a \equiv 4 \pmod 7$.
+> 
+> * **Chinese Remainder Theorem:** Infine, risolvendo il sistema:
+>   $$a \equiv 3 \pmod 4$$
+>   $$a \equiv 4 \pmod 7$$
+>   usando il Teorema Cinese del Resto (con $M = 28$, moltiplicatori $M_1 = 7, y_1 = 3$ e $M_2 = 4, y_2 = 2$), otteniamo:
+>   $$a \equiv (3 \cdot 7 \cdot 3 + 4 \cdot 4 \cdot 2) \bmod 28 \equiv (63 + 32) \bmod 28 \equiv 95 \bmod 28 \equiv 11 \pmod{28}$$
+>   Ovvero, abbiamo calcolato $\log_2 18 = 11$ in $\mathbb{Z}_{29}$.
 
 #### Complessità Computazionale
 
@@ -664,3 +656,101 @@ $$i = \log_{\alpha^{n/q}} \delta$$
   
 
 L'elemento $\alpha^{n/q}$ ha ordine $q$, e pertanto ogni $i$ può essere calcolato (usando ad esempio lo `SHANKS' ALGORITHM`) in tempo $O(\sqrt{q})$. La complessità per l'Algorithm 7.3 può quindi essere ridotta a $O(c\sqrt{q})$.
+
+
+
+### 7.2.2 The Pollard Rho Discrete Logarithm Algorithm (L'Algoritmo Rho di Pollard)
+
+Sia $(G, \cdot)$ un gruppo e sia $\alpha \in G$ un elemento avente ordine $n$. Sia $\beta \in \langle \alpha \rangle$ l'elemento di cui vogliamo trovare il logaritmo discreto. Poiché $\langle \alpha \rangle$ è ciclico di ordine $n$, possiamo trattare $\log_\alpha \beta$ come un elemento di $\mathbb{Z}_n$.
+
+Come con l'algoritmo rho per la fattorizzazione, formiamo una sequenza $x_1, x_2, \dots$ applicando iterativamente una funzione $f$ dall'aspetto casuale (*random-looking*). Una volta ottenuti due elementi $x_i$ e $x_j$ nella sequenza tali che $x_i = x_j$ con $i < j$, possiamo (si spera) calcolare $\log_\alpha \beta$. Proprio come abbiamo fatto nel caso dell'algoritmo di fattorizzazione, cercheremo una collisione della forma $x_i = x_{2i}$, al fine di risparmiare tempo e memoria.
+
+Sia $S_1 \cup S_2 \cup S_3$ una partizione di $G$ in tre sottoinsiemi di dimensioni approssimativamente uguali. Definiamo una funzione $f : \langle \alpha \rangle \times \mathbb{Z}_n \times \mathbb{Z}_n \to \langle \alpha \rangle \times \mathbb{Z}_n \times \mathbb{Z}_n$ come segue:
+
+$$f(x, a, b) = \begin{cases} 
+(\beta x, a, b + 1) & \text{se } x \in S_1 \\ 
+(x^2, 2a, 2b) & \text{se } x \in S_2 \\ 
+(\alpha x, a + 1, b) & \text{se } x \in S_3 
+\end{cases}$$
+
+Inoltre, a ciascuna delle triple $(x, a, b)$ che formiamo è richiesto di avere la proprietà che $x = \alpha^a \beta^b$. Iniziamo con una tripla iniziale avente questa proprietà, ad esempio $(1, 0, 0)$. Osserviamo che $f(x, a, b)$ soddisfa la proprietà desiderata se la soddisfa $(x, a, b)$. Quindi definiamo:
+
+$$(x_i, a_i, b_i) = \begin{cases} 
+(1, 0, 0) & \text{se } i = 0 \\ 
+f(x_{i-1}, a_{i-1}, b_{i-1}) & \text{se } i \ge 1 
+\end{cases}$$
+
+Confrontiamo le triple $(x_{2i}, a_{2i}, b_{2i})$ e $(x_i, a_i, b_i)$ finché non troviamo un valore di $i \ge 1$ tale per cui $x_{2i} = x_i$. Quando ciò si verifica, abbiamo che:
+
+$$\alpha^{a_{2i}} \beta^{b_{2i}} = \alpha^{a_i} \beta^{b_i}$$
+
+Se indichiamo $c = \log_\alpha \beta$, allora deve verificarsi il caso in cui:
+
+$$\alpha^{a_{2i} + c b_{2i}} = \alpha^{a_i + c b_i}$$
+
+Poiché $\alpha$ ha ordine $n$, ne consegue che:
+
+$$a_{2i} + c b_{2i} \equiv a_i + c b_i \pmod n$$
+
+Questo può essere riscritto come:
+
+$$c(b_{2i} - b_i) \equiv a_i - a_{2i} \pmod n$$
+
+Se $\gcd(b_{2i} - b_i, n) = 1$, allora possiamo risolvere per $c$ come segue:
+
+$$c = (a_i - a_{2i})(b_{2i} - b_i)^{-1} \bmod n$$
+
+Illustriamo l'applicazione del suddetto algoritmo con un esempio. Notiamo che facciamo attenzione ad assicurarci che $1 \notin S_2$ (poiché otterremmo $x_i = (1, 0, 0)$ per tutti gli interi $i \ge 0$ se fosse $1 \in S_2$).
+
+> [!example] Example 7.3 (Algoritmo Rho di Pollard)
+> L'intero $p = 809$ è primo, e si può verificare che l'elemento $\alpha = 89$ ha ordine $n = 101$ in $\mathbb{Z}_{809}^*$. L'elemento $\beta = 618$ si trova nel sottogruppo $\langle \alpha \rangle$; calcoleremo $\log_\alpha \beta$.
+> 
+> Supponiamo di definire gli insiemi $S_1, S_2$, e $S_3$ come segue:
+> $$\begin{aligned}
+> S_1 &= \{ x \in \mathbb{Z}_{809} : x \equiv 1 \pmod 3 \} \\
+> S_2 &= \{ x \in \mathbb{Z}_{809} : x \equiv 0 \pmod 3 \} \\
+> S_3 &= \{ x \in \mathbb{Z}_{809} : x \equiv 2 \pmod 3 \}
+> \end{aligned}$$
+> 
+> Per $i = 1, 2, \dots$, otteniamo le triple $(x_{2i}, a_{2i}, b_{2i})$ e $(x_i, a_i, b_i)$ come segue:
+> 
+> | $i$ | $(x_i, a_i, b_i)$ | $(x_{2i}, a_{2i}, b_{2i})$ |
+> | :--- | :--- | :--- |
+> | 1 | $(618, 0, 1)$ | $(76, 0, 2)$ |
+> | 2 | $(76, 0, 2)$ | $(113, 0, 4)$ |
+> | 3 | $(46, 0, 3)$ | $(488, 1, 5)$ |
+> | 4 | $(113, 0, 4)$ | $(605, 4, 10)$ |
+> | 5 | $(349, 1, 4)$ | $(422, 5, 11)$ |
+> | 6 | $(488, 1, 5)$ | $(683, 7, 11)$ |
+> | 7 | $(555, 2, 5)$ | $(451, 8, 12)$ |
+> | 8 | $(605, 4, 10)$ | $(344, 9, 13)$ |
+> | 9 | $(451, 5, 10)$ | $(112, 11, 13)$ |
+> | 10 | $(422, 5, 11)$ | $(422, 11, 15)$ |
+> 
+> La prima collisione nella lista precedente è $x_{10} = x_{20} = 422$. L'equazione da risolvere è:
+> $$c = (5 - 11)(15 - 11)^{-1} \bmod 101 = (-6 \times 4^{-1}) \bmod 101 = 49$$
+> 
+> Pertanto, $\log_{89} 618 = 49$ nel gruppo $\mathbb{Z}_{809}^*$.
+
+> [!abstract] Algorithm 7.2: `POLLARD RHO DISCRETE LOG ALGORITHM`$(G, n, \alpha, \beta)$
+> **procedure** $f(x, a, b)$
+> &nbsp;&nbsp;&nbsp;&nbsp;**if** $x \in S_1$
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**then** $f \leftarrow (\beta x, a, (b + 1) \bmod n)$
+> &nbsp;&nbsp;&nbsp;&nbsp;**else if** $x \in S_2$
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**then** $f \leftarrow (x^2, 2a \bmod n, 2b \bmod n)$
+> &nbsp;&nbsp;&nbsp;&nbsp;**else** 
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$f \leftarrow (\alpha x, (a + 1) \bmod n, b)$
+> &nbsp;&nbsp;&nbsp;&nbsp;**return** $(f)$
+> 
+> **main**
+> &nbsp;&nbsp;&nbsp;&nbsp;define the partition $G = S_1 \cup S_2 \cup S_3$
+> &nbsp;&nbsp;&nbsp;&nbsp;$(x, a, b) \leftarrow f(1, 0, 0)$
+> &nbsp;&nbsp;&nbsp;&nbsp;$(x_0, a_0, b_0) \leftarrow f(x, a, b)$
+> &nbsp;&nbsp;&nbsp;&nbsp;**while** $x \neq x_0$ **do** $\begin{cases} (x, a, b) \leftarrow f(x, a, b) \\ (x_0, a_0, b_0) \leftarrow f(x_0, a_0, b_0) \\ (x_0, a_0, b_0) \leftarrow f(x_0, a_0, b_0) \end{cases}$
+> &nbsp;&nbsp;&nbsp;&nbsp;**if** $\gcd(b_0 - b, n) \neq 1$
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**then return** ("failure")
+> &nbsp;&nbsp;&nbsp;&nbsp;**else return** $((a - a_0)(b_0 - b)^{-1} \bmod n)$
+
+Nella situazione in cui $\gcd(b_0 - b, n) > 1$, l'**Algorithm 7.2** termina con l'output “failure” (*fallimento*). La situazione potrebbe non essere così disperata, tuttavia. Se $\gcd(b_0 - b, n) = d$, allora non è difficile dimostrare che la congruenza $c(b_0 - b) \equiv a - a_0 \pmod n$ ammette esattamente $d$ possibili soluzioni. Se $d$ non è troppo grande, è relativamente semplice trovare le $d$ soluzioni alla congruenza e verificare quale di esse sia quella corretta.
+
+L'**Algorithm 7.2** può essere analizzato in modo simile all'algoritmo rho di Pollard per la fattorizzazione. Sotto ragionevoli assunzioni riguardanti la casualità della funzione $f$, ci aspettiamo di essere in grado di calcolare i logaritmi discreti in gruppi ciclici di ordine $n$ in $O(\sqrt{n})$ iterazioni dell'algoritmo.
