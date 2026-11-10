@@ -34,10 +34,12 @@ def save_perm(perm_str: str) -> None:
         f.write(perm_str)
 
 def get_perm() -> list[int]:
-    prompt = """\nInserisci la Permutazione P-Box (16 numeri da 1 a 16 separati da spazio)
+    prompt = """
+Inserisci la Permutazione P-Box (16 numeri da 1 a 16 separati da spazio)
 - Inserisci 'rnd' per generare una permutazione casuale
 - Inserisci 'last' per caricare l'ultima permutazione salvata
-- Premi INVIO per utilizzare la permutazione di DEFAULT (quella del libro)\n> """
+- Premi INVIO per utilizzare la permutazione di DEFAULT (quella del libro)
+> """
     
     show_perm = False
     while True:
@@ -72,7 +74,7 @@ def get_perm() -> list[int]:
             perm = [None] + perm_vals
             break
         except ValueError as e:
-            print("Errore: " + str(e) + " Riprova.\n")
+            print("Errore: " + str(e) + " Riprova.")
             
     if show_perm:
         print("Permutazione P-Box impostata: " + " ".join(map(str, perm_vals)))
@@ -130,9 +132,11 @@ def decrypt_message(blocks, keys):
 # FUNZIONI INPUT CHIAVE
 # ==============================================================================
 
-KEY_PROMPT = """\nInserisci la chiave maestra a 80 bit (es. 0x1234567890ABCDEF1234)
+KEY_PROMPT = """
+Inserisci la chiave maestra a 80 bit (es. 0x1234567890ABCDEF1234)
 Altrimenti inserisci 'rnd' per generare una chiave casuale
-Oppure premi invio per utilizzare l'ultima chiave\n> """
+Oppure premi invio per utilizzare l'ultima chiave
+> """
 
 def load_last_key() -> str:
     try:
@@ -163,7 +167,7 @@ def get_key() -> list[int]:
             save_key(chiave_str)
             break
         except ValueError as e:
-            print("Errore: " + str(e) + " Riprova.\n")
+            print("Errore: " + str(e) + " Riprova.")
             
     if show_key:
         print("Chiave utilizzata: 0x" + chiave_str.upper())
@@ -183,7 +187,7 @@ def punto_a_ddt():
             ddt[dx][dy] += 1 
     
     intestazione_colonne = " ".join(format(i, "04b") for i in range(16)) 
-    print("x'\\y'       | " + intestazione_colonne) 
+    print("x'\y'       | " + intestazione_colonne) 
     print("-" * 85) 
     
     for dx, riga in enumerate(ddt): 
@@ -354,6 +358,17 @@ def punto_c_attacco(probabilita_traccia, x_prime, u4_atteso):
             p_su_filtrate = h / float(target_filtrate)
             nota = " <-- VERA CHIAVE" if cand_byte == veri_8bit else ""
             print(f"  {rank:3d} | 0x{cand_byte:02X} ({cand_byte:08b}) | {h:4d} |     {p_su_filtrate * 100:6.2f}%       |{nota}")
+
+        # Stampa la chiave vera se non e' in top 5
+        if all(((l1 << 4) | l2) != veri_8bit for _, l1, l2 in classifica[:5]):
+            try:
+                rank_vera = next(i for i, (_, l1, l2) in enumerate(classifica, start=1) if ((l1 << 4) | l2) == veri_8bit)
+                p_su_filtrate_vera = hits_chiave_vera / float(target_filtrate)
+                print("  " + "-" * 60)
+                print(f"  {rank_vera:3d} | 0x{veri_8bit:02X} ({veri_8bit:08b}) | {hits_chiave_vera:4d} |     {p_su_filtrate_vera * 100:6.2f}%       | <-- VERA CHIAVE (non in Top 5)")
+            except StopIteration:
+                print("  " + "-" * 60)
+                print(f"    - | 0x{veri_8bit:02X} ({veri_8bit:08b}) |    0 |       0.00%       | <-- VERA CHIAVE (0 hits, non in classifica)")
 
     # =========================================================================
     # --- SUNTO FINALE COMPARATIVO E ANALISI QUALITATIVA ---

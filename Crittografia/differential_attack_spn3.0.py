@@ -43,9 +43,11 @@ def save_sbox(sbox_str: str) -> None:
     with open('last_sbox.txt', 'w', encoding='utf-8') as f: f.write(sbox_str)
 
 def get_sbox() -> list[int]:
-    prompt = """\nInserisci la S-Box (16 numeri da 0 a 15 separati da spazio)
+    prompt = """
+Inserisci la S-Box (16 numeri da 0 a 15 separati da spazio)
 Altrimenti inserisci 'rnd' per generare una S-Box casuale
-Oppure premi invio per utilizzare l'ultima S-Box\n> """
+Oppure premi invio per utilizzare l'ultima S-Box
+> """
     
     show_sbox = False
     while True:
@@ -68,7 +70,7 @@ Oppure premi invio per utilizzare l'ultima S-Box\n> """
             save_sbox(" ".join(map(str, sbox)))
             break
         except ValueError as e:
-            print("Errore: " + str(e) + " Riprova.\n")
+            print("Errore: " + str(e) + " Riprova.")
             
     if show_sbox:
         print("S-Box utilizzata: " + " ".join(map(str, sbox)))
@@ -85,9 +87,11 @@ def save_perm(perm_str: str) -> None:
     with open('last_perm.txt', 'w', encoding='utf-8') as f: f.write(perm_str)
 
 def get_perm() -> list[int]:
-    prompt = """\nInserisci la Permutazione P-Box (16 numeri da 1 a 16 separati da spazio)
+    prompt = """
+Inserisci la Permutazione P-Box (16 numeri da 1 a 16 separati da spazio)
 Altrimenti inserisci 'rnd' per generare una permutazione casuale
-Oppure premi invio per utilizzare l'ultima permutazione\n> """
+Oppure premi invio per utilizzare l'ultima permutazione
+> """
     
     show_perm = False
     while True:
@@ -111,7 +115,7 @@ Oppure premi invio per utilizzare l'ultima permutazione\n> """
             perm = [None] + perm_vals
             break
         except ValueError as e:
-            print("Errore: " + str(e) + " Riprova.\n")
+            print("Errore: " + str(e) + " Riprova.")
             
     if show_perm:
         print("Permutazione utilizzata: " + " ".join(map(str, perm_vals)))
@@ -165,9 +169,11 @@ def decrypt_message(blocks, keys):
         out += bytes([p >> 8, p & 0xFF])
     return out.rstrip(b"\x00").decode(errors="replace")
 
-KEY_PROMPT = """\nInserisci la chiave maestra a 80 bit (es. 0x1234567890ABCDEF1234)
+KEY_PROMPT = """
+Inserisci la chiave maestra a 80 bit (es. 0x1234567890ABCDEF1234)
 Altrimenti inserisci 'rnd' per generare una chiave casuale
-Oppure premi invio per utilizzare l'ultima chiave\n> """
+Oppure premi invio per utilizzare l'ultima chiave
+> """
 
 def load_last_key() -> str:
     try:
@@ -193,7 +199,7 @@ def get_key() -> list[int]:
             save_key(chiave_str)
             break
         except ValueError as e:
-            print("Errore: " + str(e) + " Riprova.\n")
+            print("Errore: " + str(e) + " Riprova.")
     if show_key:
         print("Chiave utilizzata: 0x" + chiave_str.upper())
     return chiavi
@@ -243,7 +249,7 @@ def punto_a_ddt():
             ddt[dx][dy] += 1 
     
     intestazione_colonne = " ".join(format(i, "04b") for i in range(16)) 
-    print("x'\\y'       | " + intestazione_colonne) 
+    print("x'\y'       | " + intestazione_colonne) 
     print("-" * 85) 
     for dx, riga in enumerate(ddt): 
         valori = " ".join(format(v, "4d") for v in riga) 
@@ -428,6 +434,17 @@ def punto_c_attacco(probabilita_traccia, x_prime, u4_atteso, chiavi):
             p_su_filtrate = h / float(target_filtrate)
             nota = " <-- VERA CHIAVE" if k == masked_real_key else ""
             print(f"  {rank:3d} | {apply_mask(k, active_sbox_msk)} | {h:4d} |     {p_su_filtrate * 100:6.2f}%       |{nota}")
+
+        # Stampa la chiave vera se non e' in top 5
+        if all(k != masked_real_key for k, h in classifica[:5]):
+            try:
+                rank_vera = next(i for i, (k, h) in enumerate(classifica, start=1) if k == masked_real_key)
+                p_su_filtrate_vera = hits_chiave_vera / float(target_filtrate)
+                print("  " + "-" * 60)
+                print(f"  {rank_vera:3d} | {apply_mask(masked_real_key, active_sbox_msk)} | {hits_chiave_vera:4d} |     {p_su_filtrate_vera * 100:6.2f}%       | <-- VERA CHIAVE (non in Top 5)")
+            except StopIteration:
+                print("  " + "-" * 60)
+                print(f"    - | {apply_mask(masked_real_key, active_sbox_msk)} |    0 |       0.00%       | <-- VERA CHIAVE (0 hits, non in classifica)")
 
     print("\n\n" + "=" * 85)
     print(f"  SUNTO FINALE COMPARATIVO DEI {n_tentativi} TENTATIVI")
