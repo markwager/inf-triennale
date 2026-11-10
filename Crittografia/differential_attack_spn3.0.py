@@ -352,18 +352,21 @@ def punto_c_attacco(probabilita_traccia, x_prime, u4_atteso, chiavi):
         return
 
     print("\n--- PUNTO C/D: ATTACCO DIFFERENZIALE E ANALISI PROBABILISTICA ---")
-    
+
+    """
+    divisione dei nibble in u4_atteso per verificare se siano attivi o passivi
+    """
     print(f"\nAnalisi dello stato finale atteso (u4 = 0x{u4_atteso:04X}):")
     for i in range(4):
         nibble = (u4_atteso >> (12 - 4 * i)) & 0xF
         stato = "ATTIVA" if nibble != 0 else "PASSIVA"
         print(f"  S-Box {i+1}: {stato} (Differenza in ingresso: 0x{nibble:X})")
 
-    chiave_vera_k5 = chiavi[4]
+    chiave_vera_k5 = chiavi[4] #prende ultima sottochiave di K
     
-    passive_sbox_msk = zeroed_groups_mask(u4_atteso)
-    active_sbox_msk = mask_inv(passive_sbox_msk)
-    masked_real_key = chiave_vera_k5 & active_sbox_msk
+    passive_sbox_msk = zeroed_groups_mask(u4_atteso) #prende i nibble passivi
+    active_sbox_msk = mask_inv(passive_sbox_msk) #prende quelli attivi
+    masked_real_key = chiave_vera_k5 & active_sbox_msk #prende sottochiave target
     
     n_tentativi = int(input("\nInserisci il numero di tentativi da eseguire (invio per default = 1): ") or '1')
     riepilogo_tentativi = []
@@ -379,7 +382,7 @@ def punto_c_attacco(probabilita_traccia, x_prime, u4_atteso, chiavi):
         coppie_filtrate = []
         totale_generate = 0
 
-        while len(coppie_filtrate) < target_filtrate:
+        while len(coppie_filtrate) < target_filtrate: #filtra fino al #coppie di tuple da filtrare
             totale_generate += 1
             x = random.randrange(0x10000)
             x_star = x ^ x_prime
