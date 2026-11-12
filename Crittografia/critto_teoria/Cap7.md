@@ -490,116 +490,122 @@ In entrambi i casi, se la cardinalità di $G$ è esponenziale, questi attacchi s
 
 ### 7.2.3 The Pohlig-Hellman Algorithm (L'Algoritmo di Pohlig-Hellman)
 
-Supponiamo che l'ordine $n$ si fattorizzi come:
+#### L'idea di base: Divide et Impera e Teorema Cinese del Resto
+
+Sia $(G, \cdot)$ un gruppo moltiplicativo, $\alpha \in G$ un elemento di ordine $n$ e $\beta \in \langle \alpha \rangle$. Vogliamo trovare il logaritmo discreto $a = \log_\alpha \beta$, ovvero l'unico intero $a$ (con $0 \le a \le n - 1$) tale che $\alpha^a = \beta$. Poiché le potenze di $\alpha$ si ripetono ciclicamente ogni $n$ passi ($\alpha^n = 1$), il valore $a$ è determinato in modo **univoco modulo $n$**.
 
   
 
-$$n = \prod_{i=1}^k p_i^{c_i},$$
-
-dove i $p_i$ sono numeri **prime** (primi) distinti. Il valore $a = \log_\alpha \beta$ è determinato in modo univoco modulo $n$. Osserviamo che se possiamo calcolare $a \bmod p_i^{c_i}$ per ogni $i$, con $1 \le i \le k$, allora possiamo calcolare l'intero $a \bmod n$ tramite il **Chinese Remainder Theorem** (Teorema Cinese del Resto).
+Se l'ordine $n$ è molto grande, calcolare direttamente $a \bmod n$ è inefficiente. Tuttavia, supponiamo che $n$ non sia un numero primo, ma si fattorizzi in potenze di numeri primi distinti $p_i$:
 
   
 
-Fissiamo quindi un singolo fattore, supponendo che $q$ sia primo e che:
+$$n = \prod_{i=1}^k p_i^{c_i}$$
+
+L'idea dell'algoritmo di Pohlig-Hellman consiste nello spezzare il problema grande in $k$ sottoproblemi più piccoli:
+
+  
+
+1. Per ciascun fattore $p_i^{c_i}$ (con $1 \le i \le k$), si calcola il resto parziale $a \bmod p_i^{c_i}$.
+    
+      
+    
+2. Una volta trovati tutti i resti $a \bmod p_1^{c_1}, \dots, a \bmod p_k^{c_k}$, poiché i moduli $p_i^{c_i}$ sono a due a due coprimi, si utilizza il **Chinese Remainder Theorem** (Teorema Cinese del Resto) per ricostruire in modo univoco il valore cercato $a \bmod n$.
+    
+      
+    
+
+#### Scomposizione in base $q$ su un singolo fattore $q^c$
+
+Concentriamoci su uno qualsiasi dei fattori primi della fattorizzazione di $n$, che chiamiamo $q$, con il suo massimo esponente $c$. Formalmente, $q$ è primo e vale:
 
   
 
 $$n \equiv 0 \pmod{q^c} \qquad \text{e} \qquad n \not\equiv 0 \pmod{q^{c+1}}$$
 
-. Mostreremo come calcolare il valore:
+(ovvero $q^c$ divide esattamente $n$, mentre $q^{c+1}$ non lo divide). Il nostro obiettivo è calcolare il resto:
 
   
 
-$$x = a \bmod q^c,$$
+$$x = a \bmod q^c \qquad (\text{con } 0 \le x \le q^c - 1)$$
 
-dove $0 \le x \le q^c - 1$. Possiamo esprimere $x$ nella rappresentazione in base $q$ (_radix q representation_) come:
-
-  
-
-$$x = \sum_{i=0}^{c-1} a_i q^i,$$
-
-dove $0 \le a_i \le q - 1$ per $0 \le i \le c - 1$. Inoltre, possiamo esprimere $a$ per intero come:
+Proprio come qualsiasi numero può essere scritto in binario (base $2$) o in decimale (base $10$), possiamo scrivere $x$ nella sua rappresentazione in **base $q$** (_radix $q$ representation_) come una sommatoria di $c$ "cifre" $a_0, a_1, \dots, a_{c-1}$:
 
   
 
-$$a = x + s q^c$$
+$$x = \sum_{i=0}^{c-1} a_i q^i = a_0 + a_1 q + a_2 q^2 + \dots + a_{c-1} q^{c-1}$$
 
-per qualche intero $s$. Di conseguenza, combinando le due espressioni abbiamo che:
+dove ciascuna cifra soddisfa $0 \le a_i \le q - 1$.
 
   
 
-$$a = \sum_{i=0}^{c-1} a_i q^i + s q^c$$
+Poiché $x$ è il resto della divisione di $a$ per $q^c$, per definizione di divisione con resto esiste un quoziente intero $s$ tale che $a = x + s q^c$. Sostituendo l'espansione di $x$, otteniamo la scrittura completa dell'esponente segreto $a$:
 
-.
   
 
-#### 1. Calcolo di $a_0$
+$$a = \sum_{i=0}^{c-1} a_i q^i + s q^c = a_0 + a_1 q + \dots + a_{c-1} q^{c-1} + s q^c$$
 
-Il primo passo dell'algoritmo consiste nel calcolare $a_0$. L'osservazione principale utilizzata nell'algoritmo è la seguente:
+Per trovare $x = a \bmod q^c$, ci basta quindi scoprire una alla volta le cifre $a_0, a_1, \dots, a_{c-1}$.
+
+  
+
+#### 1. Passo Base: Calcolo della prima cifra $a_0$
+
+Per isolare la prima cifra $a_0$ ed eliminare tutte le altre ($a_1, \dots, a_{c-1}$ e $s$), eleviamo $\beta$ alla potenza $n/q$. Vale la seguente relazione fondamentale:
 
   
 
 $$\beta^{n/q} = \alpha^{a_0 n/q} \quad (7.1)$$
 
-. Dimostriamo che l'equazione (7.1) è valida come segue:
+**Perché funziona l'equazione (7.1)? (Dimostrazione):** Tutti i termini dell'espansione di $a$ dal secondo in poi ($a_1 q + \dots + a_{c-1} q^{c-1} + s q^c$) sono multipli di $q$, quindi possiamo raccogliere $q$ e scriverli come $K q$, dove $K$ è un intero. Sostituendo $a = a_0 + K q$ in $\beta^{n/q}$ otteniamo:
 
   
 
-$$\begin{aligned} \beta^{n/q} &= (\alpha^a)^{n/q} \\ &= (\alpha^{a_0 + a_1q + \dots + a_{c-1}q^{c-1} + sq^c})^{n/q} \\ &= (\alpha^{a_0 + Kq})^{n/q} \quad \text{dove } K \text{ è un intero} \\ &= \alpha^{a_0 n/q} \alpha^{Kn} \\ &= \alpha^{a_0 n/q} \end{aligned}$$
+$$\begin{aligned} \beta^{n/q} &= (\alpha^a)^{n/q} \\ &= (\alpha^{a_0 + a_1q + \dots + a_{c-1}q^{c-1} + sq^c})^{n/q} \\ &= (\alpha^{a_0 + Kq})^{n/q} \quad \text{dove } K \text{ è un intero} \\ &= \alpha^{a_0 n/q} \cdot \alpha^{K q (n/q)} \\ &= \alpha^{a_0 n/q} \cdot (\alpha^n)^K \\ &= \alpha^{a_0 n/q} \end{aligned}$$
 
-.
-
-  
-
-Usando l'equazione (7.1), è una questione semplice determinare $a_0$. Questo può essere fatto, ad esempio, calcolando progressivamente:
+(poiché $\alpha$ ha ordine $n$, vale $\alpha^n = 1$, e quindi il termine $\alpha^{Kn} = 1^K = 1$ scompare completamente).
 
   
 
-$$\gamma = \alpha^{n/q}, \gamma^2, \dots$$
-
-finché $\gamma^i = \beta^{n/q}$ per qualche $i \le q - 1$. Quando questo accade, sappiamo che $a_0 = i$.
+**Come si trova $a_0$ in pratica:** Definiamo l'elemento base $\gamma = \alpha^{n/q}$. L'equazione (7.1) diventa semplicemente $\beta^{n/q} = \gamma^{a_0}$. Ci basta quindi calcolare le potenze $\gamma^0, \gamma^1, \gamma^2, \dots$ finché non troviamo l'esponente $i \in \{0, \dots, q - 1\}$ tale che $\gamma^i = \beta^{n/q}$. Quell'indice $i$ è esattamente $a_0$.
 
   
 
-#### 2. Calcolo dei successivi $a_j$ (per $c > 1$)
+#### 2. Passo Iterativo: Calcolo delle cifre successive $a_j$ (per $c > 1$)
 
-Ora, se $c = 1$, abbiamo finito. Altrimenti $c > 1$, e procediamo a determinare $a_1, \dots, a_{c-1}$ in modo iterativo. Questo viene fatto in modo simile al calcolo di $a_0$. Indichiamo $\beta_0 = \beta$, e definiamo:
+Se $c = 1$, l'espansione ha una sola cifra ($x = a_0$) e abbiamo finito. Se invece $c > 1$, dobbiamo trovare $a_1, \dots, a_{c-1}$ una dopo l'altra.
+
+  
+
+L'idea è semplice: ad ogni passo $j$ (con $1 \le j \le c - 1$), "cancelliamo" da $\beta = \alpha^a$ le cifre $a_0, a_1, \dots, a_{j-1}$ che abbiamo già scoperto nei passi precedenti, definendo un elemento aggiornato $\beta_j$ (con $\beta_0 = \beta$):
 
   
 
 $$\beta_j = \beta \alpha^{-(a_0 + a_1 q + \dots + a_{j-1} q^{j-1})}$$
 
-per $1 \le j \le c - 1$. Facciamo uso della seguente generalizzazione dell'equazione (7.1):
-
-  
-
-$$\beta_j^{n/q^{j+1}} = \alpha^{a_j n/q} \quad (7.2)$$
-
-. (Osserviamo che l'equazione (7.2) si riduce all'equazione (7.1) quando $j = 0$). La dimostrazione dell'equazione (7.2) è del tutto analoga a quella dell'equazione (7.1):
-
-  
-
-$$\begin{aligned} \beta_j^{n/q^{j+1}} &= \left(\alpha^{a-(a_0 + a_1 q + \dots + a_{j-1} q^{j-1})}\right)^{n/q^{j+1}} \\ &= \left(\alpha^{a_j q^j + \dots + a_{c-1} q^{c-1} + s q^c}\right)^{n/q^{j+1}} \\ &= \left(\alpha^{a_j q^j + K_j q^{j+1}}\right)^{n/q^{j+1}} \quad \text{dove } K_j \text{ è un intero} \\ &= \alpha^{a_j n/q} \alpha^{K_j n} \\ &= \alpha^{a_j n/q} \end{aligned}$$
-
-.
-
-  
-
-Pertanto, dato $\beta_j$, è semplice calcolare $a_j$ dall'equazione (7.2). Per completare la descrizione dell'algoritmo, è sufficiente osservare che $\beta_{j+1}$ può essere calcolato da $\beta_j$ mediante una semplice relazione di ricorrenza, una volta noto $a_j$:
+In pratica, ogni nuovo $\beta_{j+1}$ si ottiene da quello precedente moltiplicando per $\alpha^{-a_j q^j}$ appena dopo aver trovato $a_j$:
 
   
 
 $$\beta_{j+1} = \beta_j \alpha^{-a_j q^j} \quad (7.3)$$
 
-.
+Avendo rimosso le prime $j$ cifre dall'esponente, ora la cifra più piccola rimasta nell'esponente di $\beta_j$ è $a_j q^j$. Per isolare $a_j$ e mandare a zero (modulo $n$) tutte le cifre successive da $q^{j+1}$ in poi, eleviamo $\beta_j$ alla potenza $n/q^{j+1}$:
 
   
 
-Di conseguenza, possiamo calcolare $a_0, \beta_1, a_1, \beta_2, \dots, \beta_{c-1}, a_{c-1}$ applicando alternativamente le equazioni (7.2) e (7.3).
+$$\beta_j^{n/q^{j+1}} = \alpha^{a_j n/q} \quad (7.2)$$
+
+**Perché funziona l'equazione (7.2)? (Dimostrazione):** Raccogliendo $q^{j+1}$ in tutti i termini successivi ad $a_j q^j$, possiamo scriverli come $K_j q^{j+1}$ (con $K_j$ intero):
 
   
 
-#### 3. Definizione dell'Algoritmo ed Esempio
+$$\begin{aligned} \beta_j^{n/q^{j+1}} &= \left(\alpha^{a-(a_0 + a_1 q + \dots + a_{j-1} q^{j-1})}\right)^{n/q^{j+1}} \\ &= \left(\alpha^{a_j q^j + a_{j+1} q^{j+1} + \dots + a_{c-1} q^{c-1} + s q^c}\right)^{n/q^{j+1}} \\ &= \left(\alpha^{a_j q^j + K_j q^{j+1}}\right)^{n/q^{j+1}} \quad \text{dove } K_j \text{ è un intero} \\ &= \alpha^{a_j q^j (n/q^{j+1})} \cdot \alpha^{K_j q^{j+1} (n/q^{j+1})} \\ &= \alpha^{a_j n/q} \cdot \alpha^{K_j n} \\ &= \alpha^{a_j n/q} \end{aligned}$$
+
+Notiamo che a destra dell'uguale compare sempre $\alpha^{a_j n/q} = \gamma^{a_j}$ (dove $\gamma = \alpha^{n/q}$ è sempre la stessa base precalcolata al passo 0). Pertanto, ad ogni passo $j$ si calcola $\delta = \beta_j^{n/q^{j+1}}$, si cerca l'esponente $i$ tale che $\gamma^i = \delta$, si pone $a_j = i$ e si aggiorna $\beta_{j+1}$ tramite la (7.3).
+
+  
+
+#### 3. Definizione Formale dell'Algoritmo ed Esempio
 
 > [!abstract] Algorithm 7.3: `POHLIG-HELLMAN`$(G, n, \alpha, \beta, q, c)$
 > 
@@ -624,133 +630,253 @@ Di conseguenza, possiamo calcolare $a_0, \beta_1, a_1, \beta_2, \dots, \beta_{c-
 
 > [!example] Example 7.4 (Algoritmo di Pohlig-Hellman)
 > 
-> * **Parametri e Obiettivo:** Supponiamo che $p = 29$ e $\alpha = 2$. Il numero $p$ è primo e $\alpha$ è un **primitive element** modulo $p$, e abbiamo che l'ordine è $n = p - 1 = 28 = 2^2 \cdot 7^1$ (fattorizzazione in numeri primi). Supponiamo $\beta = 18$, quindi vogliamo determinare $a = \log_2 18$. Procediamo calcolando prima $a \bmod 4$ e poi calcolando $a \bmod 7$.
+>   
 > 
-> * **Base $q = 2, c = 2$:** Iniziando con $q = 2$ e $c = 2$ e applicando l'Algorithm 7.3, cerchiamo l'espansione $a \bmod 4 = a_0 + a_1 \cdot 2$. Precalcoliamo la base $\gamma = \alpha^{n/q} \bmod p = 2^{14} \bmod 29 = 28$.
->   * *Iterazione $j = 0$:* Impostiamo $\beta_0 = 18$. Calcoliamo $\delta = \beta_0^{n/q^{0+1}} \bmod 29 = 18^{14} \bmod 29 = 28$. Troviamo $i$ tale che $\gamma^i = \delta \implies 28^i \equiv 28$, che ci dà $a_0 = 1$.
->   * *Iterazione $j = 1$:* Calcoliamo $\beta_1 = \beta_0 \cdot \alpha^{-a_0 q^0} \bmod 29 = 18 \cdot 2^{-1} \bmod 29 = 18 \cdot 15 \bmod 29 = 9$. Calcoliamo $\delta = \beta_1^{n/q^{1+1}} \bmod 29 = 9^7 \bmod 29 = 28$. Troviamo $i$ tale che $\gamma^i = \delta \implies 28^i \equiv 28$, che ci dà $a_1 = 1$.
->   * Pertanto, $a \equiv a_0 + a_1 \cdot 2 \equiv 1 + 2 \equiv 3 \pmod 4$.
-> 
-> * **Base $q = 7, c = 1$:** Successivamente, applichiamo l'Algorithm 7.3 con $q = 7$ e $c = 1$. Cerchiamo $a \bmod 7 = a_0$. Precalcoliamo la base $\gamma = \alpha^{n/q} \bmod p = 2^4 \bmod 29 = 16$.
->   * *Iterazione $j = 0$:* Impostiamo $\beta_0 = 18$. Calcoliamo $\delta = \beta_0^{n/q^1} \bmod 29 = 18^4 \bmod 29 = 25$.
->   * Troviamo $i$ tale che $\gamma^i = \delta \implies 16^i \equiv 25 \pmod{29}$. Testando le potenze troviamo $16^4 \bmod 29 = 25$, ottenendo $a_0 = 4$.
->   * Troviamo che $a_0 = 4$, quindi $a \equiv 4 \pmod 7$.
-> 
-> * **Chinese Remainder Theorem:** Infine, risolvendo il sistema:
->   $$a \equiv 3 \pmod 4$$
->   $$a \equiv 4 \pmod 7$$
->   usando il Teorema Cinese del Resto (con $M = 28$, moltiplicatori $M_1 = 7, y_1 = 3$ e $M_2 = 4, y_2 = 2$), otteniamo:
->   $$a \equiv (3 \cdot 7 \cdot 3 + 4 \cdot 4 \cdot 2) \bmod 28 \equiv (63 + 32) \bmod 28 \equiv 95 \bmod 28 \equiv 11 \pmod{28}$$
->   Ovvero, abbiamo calcolato $\log_2 18 = 11$ in $\mathbb{Z}_{29}$.
+> - **Parametri e Obiettivo:** Sia $p = 29$ (primo) e $\alpha = 2$ (elemento primitivo in $\mathbb{Z}_{29}^*$), per cui l'ordine di $\alpha$ è $n = p - 1 = 28$. Fattorizzando $n$ in primi otteniamo $n = 28 = 2^2 \cdot 7^1$. Dato $\beta = 18$, vogliamo calcolare $a = \log_2 18 \bmod 28$. Dividiamo il problema calcolando prima $a \bmod 2^2$ (cioè $\bmod 4$) e poi $a \bmod 7^1$ (cioè $\bmod 7$).
+>     
+>       
+>     
+> - **Fase 1: Fattore $q = 2, c = 2$ (Calcolo di $a \bmod 4 = a_0 + a_1 \cdot 2$):** Precalcoliamo l'elemento base $\gamma = \alpha^{n/q} \bmod 29 = 2^{28/2} \bmod 29 = 2^{14} \bmod 29 = 28$.
+>     
+>       
+>     - _Iterazione $j = 0$ (troviamo $a_0$):_
+>         
+>           
+>         - $\beta_0 = 18$.
+>             
+>               
+>             
+>         - $\delta = \beta_0^{n/q^{0+1}} \bmod 29 = 18^{28/2} \bmod 29 = 18^{14} \bmod 29 = 28$.
+>             
+>               
+>             
+>         - Cerchiamo $i \in \{0, 1\}$ tale che $\gamma^i \equiv \delta \pmod{29}$, ovvero $28^i \equiv 28 \pmod{29}$, da cui $i = 1 \implies \mathbf{a_0 = 1}$.
+>             
+>               
+>             
+>     - _Iterazione $j = 1$ (troviamo $a_1$):_
+>         
+>           
+>         - Aggiorniamo $\beta_1 = \beta_0 \cdot \alpha^{-a_0 q^0} \bmod 29 = 18 \cdot 2^{-1} \bmod 29$. Poiché $2 \cdot 15 = 30 \equiv 1 \pmod{29}$, l'inverso di $2$ è $15$, quindi $\beta_1 = 18 \cdot 15 \bmod 29 = 270 \bmod 29 = 9$.
+>             
+>               
+>             
+>         - $\delta = \beta_1^{n/q^{1+1}} \bmod 29 = 9^{28/4} \bmod 29 = 9^7 \bmod 29 = 28$.
+>             
+>               
+>             
+>         - Cerchiamo $i \in \{0, 1\}$ tale che $28^i \equiv 28 \pmod{29}$, da cui $i = 1 \implies \mathbf{a_1 = 1}$.
+>             
+>               
+>             
+>     - _Risultato Fase 1:_ $a \equiv a_0 + a_1 \cdot 2 = 1 + 1 \cdot 2 = \mathbf{3 \pmod 4}$.
+>         
+>           
+>         
+> - **Fase 2: Fattore $q = 7, c = 1$ (Calcolo di $a \bmod 7 = a_0$):** Precalcoliamo la nuova base $\gamma = \alpha^{n/q} \bmod 29 = 2^{28/7} \bmod 29 = 2^4 \bmod 29 = 16$.
+>     
+>       
+>     - _Iterazione $j = 0$ (troviamo $a_0$):_
+>         
+>           
+>         - $\beta_0 = 18$.
+>             
+>               
+>             
+>         - $\delta = \beta_0^{n/q^1} \bmod 29 = 18^4 \bmod 29 = 25$.
+>             
+>               
+>             
+>         - Cerchiamo $i \in \{0, \dots, 6\}$ tale che $\gamma^i \equiv \delta \pmod{29}$, ovvero $16^i \equiv 25 \pmod{29}$. Provando i valori troviamo $16^4 \bmod 29 = 25$, da cui $i = 4 \implies \mathbf{a_0 = 4}$.
+>             
+>               
+>             
+>     - _Risultato Fase 2:_ $a \equiv \mathbf{4 \pmod 7}$.
+>         
+>           
+>         
+> - **Fase 3: Ricomposizione con il Chinese Remainder Theorem (CRT):** Mettiamo a sistema le due congruenze trovate:
+>     
+>       
+>     
+>     $$\begin{cases} a \equiv 3 \pmod 4 \\ a \equiv 4 \pmod 7 \end{cases}$$
+>     
+>     Applicando la formula del CRT con modulo totale $M = 4 \cdot 7 = 28$ (dove $M_1 = 28/4 = 7$, $y_1 = 7^{-1} \bmod 4 = 3$ e $M_2 = 28/7 = 4$, $y_2 = 4^{-1} \bmod 7 = 2$), otteniamo:
+>     
+>       
+>     
+>     $$a \equiv (3 \cdot 7 \cdot 3 + 4 \cdot 4 \cdot 2) \bmod 28 \equiv (63 + 32) \bmod 28 \equiv 95 \bmod 28 \equiv \mathbf{11 \pmod{28}}$$
+>     
+>     Pertanto, il logaritmo discreto cercato è $a = \log_2 18 = 11$ in $\mathbb{Z}_{29}^*$.
+>     
+>       
+>     
 
 #### Complessità Computazionale
 
-Consideriamo la complessità dell'Algorithm 7.3. Non è difficile notare che un'implementazione diretta di questo algoritmo viene eseguita in tempo $O(cq)$. Questo aspetto può tuttavia essere migliorato, osservando che ogni calcolo di un valore $i$ tale per cui $\delta = \alpha^{in/q}$ può essere visto come la soluzione di una particolare istanza del **Discrete Logarithm problem**. Nello specifico, abbiamo che $\delta = \alpha^{in/q}$ se e solo se:
-
-  
-
-$$i = \log_{\alpha^{n/q}} \delta$$
-
-.
-
-  
-
-L'elemento $\alpha^{n/q}$ ha ordine $q$, e pertanto ogni $i$ può essere calcolato (usando ad esempio lo `SHANKS' ALGORITHM`) in tempo $O(\sqrt{q})$. La complessità per l'Algorithm 7.3 può quindi essere ridotta a $O(c\sqrt{q})$.
-
-
+- **Approccio diretto ($O(cq)$):** In ciascuna delle $c$ iterazioni del ciclo `while`, trovare $i$ provando una ad una le potenze di $\gamma = \alpha^{n/q}$ richiede al massimo $q$ tentativi, portando a un tempo $O(cq)$.
+    
+      
+    
+- **Ottimizzazione con Shanks ($O(c\sqrt{q})$):** Osserviamo che trovare $i \in \{0, \dots, q-1\}$ tale che $\delta = (\alpha^{n/q})^i$ equivale esattamente a risolvere un mini-logaritmo discreto $i = \log_{\alpha^{n/q}} \delta$ nel sottogruppo generato da $\gamma = \alpha^{n/q}$, che ha ordine $q$. Usando un algoritmo da $O(\sqrt{q})$ (come lo `SHANKS' ALGORITHM` o Pollard Rho) invece della ricerca lineare, la complessità di `POHLIG-HELLMAN` scende a **$O(c\sqrt{q})$**.
+    
+      
+    
 
 ### 7.2.2 The Pollard Rho Discrete Logarithm Algorithm (L'Algoritmo Rho di Pollard)
 
-Sia $(G, \cdot)$ un gruppo e sia $\alpha \in G$ un elemento avente ordine $n$. Sia $\beta \in \langle \alpha \rangle$ l'elemento di cui vogliamo trovare il logaritmo discreto. Poiché $\langle \alpha \rangle$ è ciclico di ordine $n$, possiamo trattare $\log_\alpha \beta$ come un elemento di $\mathbb{Z}_n$.
+#### L'idea di base: Cercare una collisione in memoria costante
 
-Come con l'algoritmo rho per la fattorizzazione, formiamo una sequenza $x_1, x_2, \dots$ applicando iterativamente una funzione $f$ dall'aspetto casuale (*random-looking*). Una volta ottenuti due elementi $x_i$ e $x_j$ nella sequenza tali che $x_i = x_j$ con $i < j$, possiamo (si spera) calcolare $\log_\alpha \beta$. Proprio come abbiamo fatto nel caso dell'algoritmo di fattorizzazione, cercheremo una collisione della forma $x_i = x_{2i}$, al fine di risparmiare tempo e memoria.
+Sia $(G, \cdot)$ un gruppo moltiplicativo, $\alpha \in G$ un elemento di ordine $n$, e $\beta \in \langle \alpha \rangle$. Vogliamo calcolare il logaritmo discreto $c = \log_\alpha \beta \in \mathbb{Z}_n$ (qui chiamiamo l'incognita $c$ per lasciare libere le lettere $a$ e $b$).
 
-Sia $S_1 \cup S_2 \cup S_3$ una partizione di $G$ in tre sottoinsiemi di dimensioni approssimativamente uguali. Definiamo una funzione $f : \langle \alpha \rangle \times \mathbb{Z}_n \times \mathbb{Z}_n \to \langle \alpha \rangle \times \mathbb{Z}_n \times \mathbb{Z}_n$ come segue:
+  
 
-$$f(x, a, b) = \begin{cases} 
-(\beta x, a, b + 1) & \text{se } x \in S_1 \\ 
-(x^2, 2a, 2b) & \text{se } x \in S_2 \\ 
-(\alpha x, a + 1, b) & \text{se } x \in S_3 
-\end{cases}$$
+L'algoritmo Rho di Pollard genera una sequenza di elementi $x_0, x_1, x_2, \dots \in \langle \alpha \rangle$ tramite una funzione deterministica $f$ progettata per sembrare "casuale" (_random-looking_). Ogni elemento $x_i$ della sequenza viene sempre accompagnato da due esponenti noti $(a_i, b_i) \in \mathbb{Z}_n \times \mathbb{Z}_n$ tali da mantenere sempre vera la seguente **proprietà invariante**:
 
-Inoltre, a ciascuna delle triple $(x, a, b)$ che formiamo è richiesto di avere la proprietà che $x = \alpha^a \beta^b$. Iniziamo con una tripla iniziale avente questa proprietà, ad esempio $(1, 0, 0)$. Osserviamo che $f(x, a, b)$ soddisfa la proprietà desiderata se la soddisfa $(x, a, b)$. Quindi definiamo:
+  
 
-$$(x_i, a_i, b_i) = \begin{cases} 
-(1, 0, 0) & \text{se } i = 0 \\ 
-f(x_{i-1}, a_{i-1}, b_{i-1}) & \text{se } i \ge 1 
-\end{cases}$$
+$$x_i = \alpha^{a_i} \beta^{b_i}$$
 
-Confrontiamo le triple $(x_{2i}, a_{2i}, b_{2i})$ e $(x_i, a_i, b_i)$ finché non troviamo un valore di $i \ge 1$ tale per cui $x_{2i} = x_i$. Quando ciò si verifica, abbiamo che:
+Poiché il gruppo $\langle \alpha \rangle$ è finito (ha $n$ elementi), la sequenza dei valori $x_i$ dovrà prima o poi ripetersi, creando una **collisione** $x_i = x_j$ (con $i < j$) che disegna un percorso a forma della lettera greca $\rho$ (_rho_). Quando troviamo due combinazioni diverse che producono lo stesso elemento $\alpha^{a_i} \beta^{b_i} = \alpha^{a_j} \beta^{b_j}$, possiamo ricavare l'incognita $c = \log_\alpha \beta$ risolvendo una semplice equazione lineare modulo $n$.
+
+  
+
+#### 1. Costruzione della funzione iterativa $f$
+
+Dividiamo il gruppo $G$ in tre sottoinsiemi disgiunti $S_1, S_2, S_3$ ($G = S_1 \cup S_2 \cup S_3$) all'incirca della stessa dimensione.
+
+  
+
+Definiamo la funzione di passo $f : \langle \alpha \rangle \times \mathbb{Z}_n \times \mathbb{Z}_n \to \langle \alpha \rangle \times \mathbb{Z}_n \times \mathbb{Z}_n$ che prende una tripla $(x, a, b)$ (con $x = \alpha^a \beta^b$) e calcola la tripla successiva in base all'insieme in cui cade $x$:
+
+  
+
+$$f(x, a, b) = \begin{cases} (\beta x, \; a, \; (b + 1) \bmod n) & \text{se } x \in S_1 \quad \text{(moltiplica per } \beta \implies \text{incrementa } b\text{)} \\ (x^2, \; 2a \bmod n, \; 2b \bmod n) & \text{se } x \in S_2 \quad \text{(eleva al quadrato } \implies \text{raddoppia } a \text{ e } b\text{)} \\ (\alpha x, \; (a + 1) \bmod n, \; b) & \text{se } x \in S_3 \quad \text{(moltiplica per } \alpha \implies \text{incrementa } a\text{)} \end{cases}$$
+
+- **Verifica dell'invariante:** Se $x = \alpha^a \beta^b$, allora:
+    
+      
+    - nel caso $S_1$: $\beta x = \alpha^a \beta^{b+1}$;
+        
+          
+        
+    - nel caso $S_2$: $x^2 = (\alpha^a \beta^b)^2 = \alpha^{2a} \beta^{2b}$;
+        
+          
+        
+    - nel caso $S_3$: $\alpha x = \alpha^{a+1} \beta^b$. Quindi l'uguaglianza $x_i = \alpha^{a_i} \beta^{b_i}$ resta sempre garantita ad ogni passo.
+        
+          
+        
+- **Punto di partenza e regola su $S_2$:** Si parte dalla tripla iniziale $(x_0, a_0, b_0) = (1, 0, 0)$, che soddisfa banalmente $1 = \alpha^0 \beta^0$. Bisogna solo fare attenzione a scegliere la partizione in modo che **$1 \notin S_2$**, altrimenti al primo passo avremmo $1^2 = 1$ e la sequenza rimarrebbe bloccata per sempre su $(1, 0, 0)$.
+    
+      
+    
+
+#### 2. Ricerca della collisione ($x_i = x_{2i}$) ed estrazione del logaritmo $c$
+
+Per evitare di salvare in memoria tutti i valori generati $x_1, x_2, \dots$, utilizziamo il metodo della "tartaruga e della lepre" (ricerca di una collisione della forma $x_i = x_{2i}$): ad ogni iterazione $i \ge 1$, facciamo avanzare una prima tripla di **un solo passo** ($(x_i, a_i, b_i)$) e una seconda tripla di **due passi** ($(x_{2i}, a_{2i}, b_{2i})$), confrontando unicamente queste due finché non troviamo $x_{2i} = x_i$.
+
+  
+
+Quando troviamo $x_{2i} = x_i$, per l'invariante vale:
+
+  
 
 $$\alpha^{a_{2i}} \beta^{b_{2i}} = \alpha^{a_i} \beta^{b_i}$$
 
-Se indichiamo $c = \log_\alpha \beta$, allora deve verificarsi il caso in cui:
+Poiché per definizione $\beta = \alpha^c$ (dove $c = \log_\alpha \beta$ è la nostra incognita), sostituiamo $\beta = \alpha^c$ nell'equazione:
 
-$$\alpha^{a_{2i} + c b_{2i}} = \alpha^{a_i + c b_i}$$
+  
 
-Poiché $\alpha$ ha ordine $n$, ne consegue che:
+$$\alpha^{a_{2i}} (\alpha^c)^{b_{2i}} = \alpha^{a_i} (\alpha^c)^{b_i} \implies \alpha^{a_{2i} + c b_{2i}} = \alpha^{a_i + c b_i}$$
+
+Dato che $\alpha$ ha ordine $n$, due potenze di $\alpha$ sono uguali se e solo se i loro esponenti sono congrui modulo $n$:
+
+  
 
 $$a_{2i} + c b_{2i} \equiv a_i + c b_i \pmod n$$
 
-Questo può essere riscritto come:
+Portando i termini con l'incognita $c$ a sinistra e i termini noti a destra, otteniamo una congruenza lineare di primo grado nell'incognita $c$:
+
+  
 
 $$c(b_{2i} - b_i) \equiv a_i - a_{2i} \pmod n$$
 
-Se $\gcd(b_{2i} - b_i, n) = 1$, allora possiamo risolvere per $c$ come segue:
+- **Caso standard ($\gcd(b_{2i} - b_i, n) = 1$):** Se $(b_{2i} - b_i)$ è coprimo con $n$, è invertibile modulo $n$. Moltiplicando per l'inverso $(b_{2i} - b_i)^{-1} \bmod n$, ricaviamo direttamente il logaritmo discreto:
+    
+      
+    
+    $$c = (a_i - a_{2i})(b_{2i} - b_i)^{-1} \bmod n$$
+    
+- **Caso degenere ($\gcd(b_{2i} - b_i, n) = d > 1$):** L'algoritmo base dichiara `"failure"`, ma in realtà se $d$ è piccolo la congruenza $c(b_{2i} - b_i) \equiv a_i - a_{2i} \pmod n$ ammette esattamente $d$ soluzioni possibili modulo $n$, che si possono calcolare e testare una per una verificando quale soddisfa $\alpha^c = \beta$.
+    
+      
+    
 
-$$c = (a_i - a_{2i})(b_{2i} - b_i)^{-1} \bmod n$$
+#### 3. Definizione Formale dell'Algoritmo ed Esempio
 
-Illustriamo l'applicazione del suddetto algoritmo con un esempio. Notiamo che facciamo attenzione ad assicurarci che $1 \notin S_2$ (poiché otterremmo $x_i = (1, 0, 0)$ per tutti gli interi $i \ge 0$ se fosse $1 \in S_2$).
+> [!abstract] Algorithm 7.2: `POLLARD RHO DISCRETE LOG ALGORITHM`$(G, n, \alpha, \beta)$ **procedure** $f(x, a, b)$     **if** $x \in S_1$         **then** $f \leftarrow (\beta x, a, (b + 1) \bmod n)$     **else if** $x \in S_2$         **then** $f \leftarrow (x^2, 2a \bmod n, 2b \bmod n)$     **else**         $f \leftarrow (\alpha x, (a + 1) \bmod n, b)$     **return** $(f)$
+> 
+>   
+> 
+> **main**     define the partition $G = S_1 \cup S_2 \cup S_3$     $(x, a, b) \leftarrow f(1, 0, 0)$     $(x_0, a_0, b_0) \leftarrow f(x, a, b)$     **while** $x \neq x_0$ **do** $\begin{cases} (x, a, b) \leftarrow f(x, a, b) \\ (x_0, a_0, b_0) \leftarrow f(x_0, a_0, b_0) \\ (x_0, a_0, b_0) \leftarrow f(x_0, a_0, b_0) \end{cases}$     **if** $\gcd(b_0 - b, n) \neq 1$         **then return** ("failure")     **else return** $((a - a_0)(b_0 - b)^{-1} \bmod n)$
+> 
+>   
+
+_(Nota sul codice: nell'`Algorithm 7.2`, la tripla $(x, a, b)$ rappresenta il passo singolo $(x_i, a_i, b_i)$, mentre $(x_0, a_0, b_0)$ viene aggiornata due volte nel ciclo `while` e rappresenta il passo doppio $(x_{2i}, a_{2i}, b_{2i})$)_.
+
+  
 
 > [!example] Example 7.3 (Algoritmo Rho di Pollard)
-> L'intero $p = 809$ è primo, e si può verificare che l'elemento $\alpha = 89$ ha ordine $n = 101$ in $\mathbb{Z}_{809}^*$. L'elemento $\beta = 618$ si trova nel sottogruppo $\langle \alpha \rangle$; calcoleremo $\log_\alpha \beta$.
 > 
-> Supponiamo di definire gli insiemi $S_1, S_2$, e $S_3$ come segue:
-> $$\begin{aligned}
-> S_1 &= \{ x \in \mathbb{Z}_{809} : x \equiv 1 \pmod 3 \} \\
-> S_2 &= \{ x \in \mathbb{Z}_{809} : x \equiv 0 \pmod 3 \} \\
-> S_3 &= \{ x \in \mathbb{Z}_{809} : x \equiv 2 \pmod 3 \}
-> \end{aligned}$$
+>   
 > 
-> Per $i = 1, 2, \dots$, otteniamo le triple $(x_{2i}, a_{2i}, b_{2i})$ e $(x_i, a_i, b_i)$ come segue:
+> - **Parametri e Obiettivo:** Lavoriamo nel gruppo $\mathbb{Z}_{809}^*$ (con $p = 809$ primo). L'elemento $\alpha = 89$ ha ordine $n = 101$ in $\mathbb{Z}_{809}^*$ (quindi le moltiplicazioni sulle $x$ si fanno $\bmod 809$, mentre gli esponenti $a$ e $b$ si riducono $\bmod 101$). Dato $\beta = 618 \in \langle \alpha \rangle$, vogliamo calcolare $c = \log_{89} 618$.
+>     
+>       
+>     
+> - **Partizione del gruppo:** Suddividiamo $\mathbb{Z}_{809}$ in base al resto della divisione per $3$ (notando che $1 \in S_1$, quindi $1 \notin S_2$):
+>     
+>       
+>     
+>     $$\begin{aligned} S_1 &= \{ x \in \mathbb{Z}_{809} : x \equiv 1 \pmod 3 \} \\ S_2 &= \{ x \in \mathbb{Z}_{809} : x \equiv 0 \pmod 3 \} \\ S_3 &= \{ x \in \mathbb{Z}_{809} : x \equiv 2 \pmod 3 \} \end{aligned}$$
+>     
+> - **Generazione della sequenza:** Partendo da $(1, 0, 0)$, poiché $1 \equiv 1 \pmod 3 \implies 1 \in S_1$, al passo $i=1$ abbiamo $(x_1, a_1, b_1) = (618 \cdot 1 \bmod 809, 0, 1) = (618, 0, 1)$. Proseguendo iterativamente per $i = 1, 2, \dots, 10$, otteniamo:
+>     
+>       
+>     
 > 
-> | $i$ | $(x_i, a_i, b_i)$ | $(x_{2i}, a_{2i}, b_{2i})$ |
-> | :--- | :--- | :--- |
-> | 1 | $(618, 0, 1)$ | $(76, 0, 2)$ |
-> | 2 | $(76, 0, 2)$ | $(113, 0, 4)$ |
-> | 3 | $(46, 0, 3)$ | $(488, 1, 5)$ |
-> | 4 | $(113, 0, 4)$ | $(605, 4, 10)$ |
-> | 5 | $(349, 1, 4)$ | $(422, 5, 11)$ |
-> | 6 | $(488, 1, 5)$ | $(683, 7, 11)$ |
-> | 7 | $(555, 2, 5)$ | $(451, 8, 12)$ |
-> | 8 | $(605, 4, 10)$ | $(344, 9, 13)$ |
-> | 9 | $(451, 5, 10)$ | $(112, 11, 13)$ |
-> | 10 | $(422, 5, 11)$ | $(422, 11, 15)$ |
+> |**i**|**(xi​,ai​,bi​)**|**(x2i​,a2i​,b2i​)**|
+> |---|---|---|
+> |1|$(618, 0, 1)$|$(76, 0, 2)$|
+> |2|$(76, 0, 2)$|$(113, 0, 4)$|
+> |3|$(46, 0, 3)$|$(488, 1, 5)$|
+> |4|$(113, 0, 4)$|$(605, 4, 10)$|
+> |5|$(349, 1, 4)$|$(422, 5, 11)$|
+> |6|$(488, 1, 5)$|$(683, 7, 11)$|
+> |7|$(555, 2, 5)$|$(451, 8, 12)$|
+> |8|$(605, 4, 10)$|$(344, 9, 13)$|
+> |9|$(451, 5, 10)$|$(112, 11, 13)$|
+> |**10**|**$(422, 5, 11)$**|**$(422, 11, 15)$**|
 > 
-> La prima collisione nella lista precedente è $x_{10} = x_{20} = 422$. L'equazione da risolvere è:
-> $$c = (5 - 11)(15 - 11)^{-1} \bmod 101 = (-6 \times 4^{-1}) \bmod 101 = 49$$
-> 
-> Pertanto, $\log_{89} 618 = 49$ nel gruppo $\mathbb{Z}_{809}^*$.
+> - **Risoluzione della collisione:** All'iterazione $i = 10$ troviamo la collisione $x_{10} = x_{20} = 422$, con esponenti $(a_{10}, b_{10}) = (5, 11)$ e $(a_{20}, b_{20}) = (11, 15)$. Applichiamo la formula risolutiva modulo $n = 101$:
+>     
+>       
+>     
+>     $$c = (a_{10} - a_{20})(b_{20} - b_{10})^{-1} \bmod 101 = (5 - 11)(15 - 11)^{-1} \bmod 101 = (-6 \times 4^{-1}) \bmod 101$$
+>     
+>     Poiché $4 \times 76 = 304 = 3 \times 101 + 1 \equiv 1 \pmod{101}$, l'inverso è $4^{-1} \equiv 76 \pmod{101}$ (oppure, notando che $-6 + 2 \times 101 = 196$ e $196 / 4 = 49$), otteniamo:
+>     
+>       
+>     
+>     $$c = (-6 \times 76) \bmod 101 = -456 \bmod 101 = \mathbf{49}$$
+>     
+>     Pertanto, $\log_{89} 618 = 49$ in $\mathbb{Z}_{809}^*$.
+>     
+>       
+>     
 
-> [!abstract] Algorithm 7.2: `POLLARD RHO DISCRETE LOG ALGORITHM`$(G, n, \alpha, \beta)$
-> **procedure** $f(x, a, b)$
-> &nbsp;&nbsp;&nbsp;&nbsp;**if** $x \in S_1$
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**then** $f \leftarrow (\beta x, a, (b + 1) \bmod n)$
-> &nbsp;&nbsp;&nbsp;&nbsp;**else if** $x \in S_2$
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**then** $f \leftarrow (x^2, 2a \bmod n, 2b \bmod n)$
-> &nbsp;&nbsp;&nbsp;&nbsp;**else** 
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$f \leftarrow (\alpha x, (a + 1) \bmod n, b)$
-> &nbsp;&nbsp;&nbsp;&nbsp;**return** $(f)$
-> 
-> **main**
-> &nbsp;&nbsp;&nbsp;&nbsp;define the partition $G = S_1 \cup S_2 \cup S_3$
-> &nbsp;&nbsp;&nbsp;&nbsp;$(x, a, b) \leftarrow f(1, 0, 0)$
-> &nbsp;&nbsp;&nbsp;&nbsp;$(x_0, a_0, b_0) \leftarrow f(x, a, b)$
-> &nbsp;&nbsp;&nbsp;&nbsp;**while** $x \neq x_0$ **do** $\begin{cases} (x, a, b) \leftarrow f(x, a, b) \\ (x_0, a_0, b_0) \leftarrow f(x_0, a_0, b_0) \\ (x_0, a_0, b_0) \leftarrow f(x_0, a_0, b_0) \end{cases}$
-> &nbsp;&nbsp;&nbsp;&nbsp;**if** $\gcd(b_0 - b, n) \neq 1$
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**then return** ("failure")
-> &nbsp;&nbsp;&nbsp;&nbsp;**else return** $((a - a_0)(b_0 - b)^{-1} \bmod n)$
+#### Complessità Computazionale
 
-Nella situazione in cui $\gcd(b_0 - b, n) > 1$, l'**Algorithm 7.2** termina con l'output “failure” (*fallimento*). La situazione potrebbe non essere così disperata, tuttavia. Se $\gcd(b_0 - b, n) = d$, allora non è difficile dimostrare che la congruenza $c(b_0 - b) \equiv a - a_0 \pmod n$ ammette esattamente $d$ possibili soluzioni. Se $d$ non è troppo grande, è relativamente semplice trovare le $d$ soluzioni alla congruenza e verificare quale di esse sia quella corretta.
-
-L'**Algorithm 7.2** può essere analizzato in modo simile all'algoritmo rho di Pollard per la fattorizzazione. Sotto ragionevoli assunzioni riguardanti la casualità della funzione $f$, ci aspettiamo di essere in grado di calcolare i logaritmi discreti in gruppi ciclici di ordine $n$ in $O(\sqrt{n})$ iterazioni dell'algoritmo.
+Assumendo che la funzione $f$ si comporti come una mappa casuale su un insieme di dimensione $n$, per il paradosso del compleanno la prima collisione $x_i = x_{2i}$ si verifica in media dopo **$O(\sqrt{n})$** iterazioni (utilizzando spazio di memoria costante $O(1)$, poiché vengono memorizzate solo due triple alla volta).
