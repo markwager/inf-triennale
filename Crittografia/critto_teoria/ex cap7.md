@@ -881,3 +881,356 @@ $$
 >
 > 
 > *(Verifica:* $10^{17102} \bmod 31153 = 12611$*).*
+
+
+
+
+## Esercizio 7.3
+
+> [!abstract] Testo dell'Esercizio 7.3 L'intero $p = 458009$ è primo e $\alpha = 2$ ha ordine $n = 57251$ in $\mathbb{Z}_p^*$. Utilizzare il `POLLARD RHO ALGORITHM` per calcolare il logaritmo discreto in $\mathbb{Z}_p^*$ di $\beta = 56851$ in base $\alpha$. Prendere il valore iniziale $x_0 = 1$ e definire la partizione $(S_1, S_2, S_3)$ come nell'**Example 7.3**. Trovare il più piccolo intero $i$ tale che $x_i = x_{2i}$, e quindi calcolare il logaritmo discreto desiderato.
+> 
+>   
+
+### 1. Impostazione Teorica (Sezione 7.2.2, Algorithm 7.2)
+
+Nel gruppo moltiplicativo $G = \mathbb{Z}_{458009}^*$, l'elemento $\alpha = 2$ genera un sottogruppo ciclico $\langle \alpha \rangle$ di ordine $n = 57251$ (che è un numero primo, dato che $p - 1 = 458008 = 8 \times 57251$). Tutte le moltiplicazioni tra elementi del gruppo ($x_i \in \langle \alpha \rangle$) vengono eseguite **modulo $p = 458009$**, mentre tutte le operazioni sugli esponenti ($a_i, b_i \in \mathbb{Z}_n$) vengono ridotte **modulo $n = 57251$**.
+
+  
+
+1. **Partizione del gruppo $(S_1, S_2, S_3)$:** Come nell'**Example 7.3**, partizioniamo $\mathbb{Z}_{458009}^*$ in tre sottoinsiemi in base al resto modulo $3$ (osservando che $1 \in S_1$ e quindi $1 \notin S_2$, evitando cicli banali su $(1, 0, 0)$):
+    
+      
+    
+    $$\begin{aligned} S_1 &= \{ x \in \mathbb{Z}_{458009}^* : x \equiv 1 \pmod 3 \} \\ S_2 &= \{ x \in \mathbb{Z}_{458009}^* : x \equiv 0 \pmod 3 \} \\ S_3 &= \{ x \in \mathbb{Z}_{458009}^* : x \equiv 2 \pmod 3 \} \end{aligned}$$
+    
+2. **Funzione iterativa $f$ e proprietà invariante:** Partendo dalla tripla iniziale $(x_0, a_0, b_0) = (1, 0, 0)$, definiamo per ogni $i \ge 1$ la sequenza $(x_i, a_i, b_i) = f(x_{i-1}, a_{i-1}, b_{i-1})$ tramite la funzione:
+    
+      
+    
+    $$f(x, a, b) = \begin{cases} (\beta x \bmod p, \; a, \; (b + 1) \bmod n) & \text{se } x \in S_1 \quad (x \equiv 1 \pmod 3) \\ (x^2 \bmod p, \; 2a \bmod n, \; 2b \bmod n) & \text{se } x \in S_2 \quad (x \equiv 0 \pmod 3) \\ (\alpha x \bmod p, \; (a + 1) \bmod n, \; b) & \text{se } x \in S_3 \quad (x \equiv 2 \pmod 3) \end{cases}$$
+    
+    Ad ogni passo è preservata la **proprietà invariante**:
+    
+      
+    
+    $$x_i \equiv \alpha^{a_i} \beta^{b_i} \pmod p$$
+    
+3. **Condizione di collisione ($x_i = x_{2i}$) ed equazione risolutiva:** Quando si individua il più piccolo indice $i \ge 1$ tale che $x_i = x_{2i}$, posto $c = \log_\alpha \beta$, vale:
+    
+      
+    
+    $$\alpha^{a_{2i}} \beta^{b_{2i}} \equiv \alpha^{a_i} \beta^{b_i} \pmod p \iff \alpha^{a_{2i} + c b_{2i}} \equiv \alpha^{a_i + c b_i} \pmod p$$
+    
+    Poiché $\alpha$ ha ordine $n = 57251$, gli esponenti sono congrui modulo $n$:
+    
+      
+    
+    $$c(b_{2i} - b_i) \equiv a_i - a_{2i} \pmod n$$
+    
+    Se $\gcd(b_{2i} - b_i, n) = 1$, l'unica soluzione modulo $n$ è data da:
+    
+      
+    
+    $$c = (a_i - a_{2i})(b_{2i} - b_i)^{-1} \bmod n$$
+    
+
+### 2. Implementazione in Python dell'Algorithm 7.2
+
+Python
+
+```
+from typing import Tuple
+
+def f_step(x: int, a: int, b: int, p: int, n: int, alpha: int, beta: int) -> Tuple[int, int, int]:
+    """Procedura f(x, a, b) dell'Algorithm 7.2 con partizione basata su x mod 3."""
+    rem = x % 3
+    if rem == 1:      # x in S_1
+        return (beta * x) % p, a, (b + 1) % n
+    elif rem == 0:    # x in S_2
+        return (x * x) % p, (2 * a) % n, (2 * b) % n
+    else:             # x in S_3 (rem == 2)
+        return (alpha * x) % p, (a + 1) % n, b
+
+def pollard_rho_dlog(p: int, n: int, alpha: int, beta: int) -> None:
+    """Algorithm 7.2: POLLARD RHO DISCRETE LOG ALGORITHM(G, n, alpha, beta)."""
+    # Inizializzazione i = 0: (x_0, a_0, b_0) = (1, 0, 0)
+    x_i, a_i, b_i = 1, 0, 0
+    x_2i, a_2i, b_2i = 1, 0, 0
+    
+    i = 0
+    while True:
+        i += 1
+        # Passo singolo (tartaruga): (x_i, a_i, b_i)
+        x_i, a_i, b_i = f_step(x_i, a_i, b_i, p, n, alpha, beta)
+        # Passo doppio (lepre): (x_{2i}, a_{2i}, b_{2i})
+        x_2i, a_2i, b_2i = f_step(x_2i, a_2i, b_2i, p, n, alpha, beta)
+        x_2i, a_2i, b_2i = f_step(x_2i, a_2i, b_2i, p, n, alpha, beta)
+        
+        if x_i == x_2i:
+            break
+
+    diff_a = (a_i - a_2i) % n
+    diff_b = (b_2i - b_i) % n
+    inv_diff_b = pow(diff_b, -1, n)
+    c = (diff_a * inv_diff_b) % n
+
+    print(f"Collisione trovata a i = {i}:")
+    print(f"  (x_{i}, a_{i}, b_{i})   = ({x_i}, {a_i}, {b_i})")
+    print(f"  (x_{2*i}, a_{2*i}, b_{2*i}) = ({x_2i}, {a_2i}, {b_2i})")
+    print(f"Logaritmo discreto c = {c} (Verifica: {pow(alpha, c, p) == beta})")
+
+if __name__ == "__main__":
+    pollard_rho_dlog(p=458009, n=57251, alpha=2, beta=56851)
+```
+
+### 3. Svolgimento Numerico e Calcolo del Logaritmo Discreto
+
+1. **Primi passi dell'iterazione e individuazione della collisione:** Partendo da $(x_0, a_0, b_0) = (1, 0, 0)$:
+    
+      
+    
+    - Poiché $1 \equiv 1 \pmod 3 \implies 1 \in S_1$, per $i = 1$ abbiamo $(x_1, a_1, b_1) = (56851 \times 1 \bmod 458009, \; 0, \; 1) = (56851, 0, 1)$.
+        
+          
+        
+    - Poiché $56851 \equiv 1 \pmod 3 \implies 56851 \in S_1$, per $i = 2$ abbiamo $(x_2, a_2, b_2) = (56851^2 \bmod 458009, \; 0, \; 2) = (324697, 0, 2)$.
+        
+          
+        
+    
+    Proseguendo iterativamente, riportiamo i primi passi e il punto di collisione:
+    
+      
+    
+    |**i**|**(xi​,ai​,bi​)**|**(x2i​,a2i​,b2i​)**|
+    |---|---|---|
+    |$1$|$(56851, \; 0, \; 1)$|$(324697, \; 0, \; 2)$|
+    |$2$|$(324697, \; 0, \; 2)$|$(424840, \; 1, \; 3)$|
+    |$3$|$(212420, \; 0, \; 3)$|$(232522, \; 2, \; 8)$|
+    |$4$|$(424840, \; 1, \; 3)$|$(295215, \; 4, \; 18)$|
+    |$5$|$(390243, \; 1, \; 4)$|$(212527, \; 16, \; 72)$|
+    |$\vdots$|$\vdots$|$\vdots$|
+    |**$444$**|**$(339768, \; 22811, \; 35067)$**|**$(339768, \; 37251, \; 5360)$**|
+    
+    Il più piccolo intero positivo $i$ per cui $x_i = x_{2i}$ è quindi:
+    
+      
+    
+    $$\mathbf{i = 444} \qquad (\text{con } x_{444} = x_{888} = \mathbf{339768})$$
+    
+2. **Risoluzione della congruenza lineare modulo $n = 57251$:** Sostituendo i valori $(a_{444}, b_{444}) = (22811, 35067)$ e $(a_{888}, b_{888}) = (37251, 5360)$ nell'equazione $c(b_{2i} - b_i) \equiv a_i - a_{2i} \pmod n$:
+    
+      
+    - Differenza dei coefficienti $b$:
+        
+          
+        
+        $$b_{888} - b_{444} \bmod 57251 = (5360 - 35067) \bmod 57251 = -29707 \bmod 57251 = \mathbf{27544}$$
+        
+    - Differenza dei coefficienti $a$:
+        
+          
+        
+        $$a_{444} - a_{888} \bmod 57251 = (22811 - 37251) \bmod 57251 = -14440 \bmod 57251 = \mathbf{42811}$$
+        
+    - Calcolo dell'inverso moltiplicativo $27544^{-1} \bmod 57251$ tramite l'`EXTENDED EUCLIDEAN ALGORITHM` (**Algorithm 6.2**):
+        
+          
+        
+        $$\begin{aligned} 57251 &= 2 \times 27544 + 2163 \\ 27544 &= 12 \times 2163 + 1588 \\ 2163 &= 1 \times 1588 + 575 \\ 1588 &= 2 \times 575 + 438 \\ 575 &= 1 \times 438 + 137 \\ 438 &= 3 \times 137 + 27 \\ 137 &= 5 \times 27 + 2 \\ 27 &= 13 \times 2 + 1 \end{aligned}$$
+        
+        Poiché $\gcd(27544, 57251) = 1$, risalendo i coefficienti $t_j$ si ottiene:
+        
+          
+        
+        $$27544^{-1} \bmod 57251 = \mathbf{27580} \qquad (\text{infatti } 27544 \times 27580 = 759663520 = 13269 \times 57251 + 1)$$
+        
+    - Calcolo di $c = \log_2 56851$:
+        
+          
+        
+        $$c = (42811 \times 27580) \bmod 57251 = 1180727380 \bmod 57251 = \mathbf{40007}$$
+        
+
+> [!example] Risultato Finale Esercizio 7.3
+> 
+>   
+> 
+> - Primo indice di collisione: $\mathbf{i = 444}$ ($x_{444} = x_{888} = 339768$)
+>     
+>       
+>     
+> - Logaritmo discreto:
+>     
+>       
+>     
+>     $$\log_2 56851 = \mathbf{40007} \quad \text{in } \mathbb{Z}_{458009}^*$$
+>     
+>     _(Verifica: $2^{40007} \bmod 458009 = 56851$)._
+>     
+>       
+>     
+
+## Esercizio 7.6
+
+> [!abstract] Testo dell'Esercizio 7.6
+> 
+> Sia $p = 227$. L'elemento $\alpha = 2$ è primitivo in $\mathbb{Z}_p^*$.
+> 
+>   
+> 
+> - **(a)** Calcolare $\alpha^{32}, \alpha^{40}, \alpha^{59}$ e $\alpha^{156}$ modulo $p$, e fattorizzarli sulla _factor base_ $\mathcal{B} = \{2, 3, 5, 7, 11\}$.
+>     
+>       
+>     
+> - **(b)** Utilizzando il fatto che $\log_2 2 = 1$, calcolare $\log_2 3, \log_2 5, \log_2 7$ e $\log_2 11$ dalle fattorizzazioni ottenute al punto precedente (tutti i logaritmi sono logaritmi discreti in $\mathbb{Z}_p^*$ in base $\alpha = 2$).
+>     
+>       
+>     
+> - **(c)** Supponiamo ora di voler calcolare $\log_2 173$. Moltiplicare $173$ per il valore "casuale" $2^{177} \bmod p$. Fattorizzare il risultato sulla _factor base_, e procedere a calcolare $\log_2 173$ utilizzando i logaritmi dei numeri nella _factor base_ calcolati in precedenza.
+>     
+>       
+>     
+
+### Soluzione del Punto (a) – Esponenziazioni Modulari e Fattorizzazione su $\mathcal{B}$
+
+Lavoriamo nel gruppo moltiplicativo $\mathbb{Z}_{227}^*$ (con $p = 227$ primo). Poiché $\alpha = 2$ è un **primitive element** modulo $227$, il suo ordine è $n = \vert{}\mathbb{Z}_{227}^*\vert{} = p - 1 = 226$. La _factor base_ fissata è:
+
+  
+
+$$\mathcal{B} = \{2, 3, 5, 7, 11\}$$
+
+Calcoliamo preliminarmente le potenze successive di $2$ per raddoppiamento (_squaring_) modulo $227$:
+
+  
+
+$$\begin{aligned} 2^8 \bmod 227 &= 256 \bmod 227 = 29 \\ 2^{16} \bmod 227 &= 29^2 \bmod 227 = 841 \bmod 227 = 160 \\ 2^{32} \bmod 227 &= 160^2 \bmod 227 = 25600 \bmod 227 = 176 \equiv -51 \pmod{227} \\ 2^{64} \bmod 227 &= (-51)^2 \bmod 227 = 2601 \bmod 227 = 104 \\ 2^{128} \bmod 227 &= 104^2 \bmod 227 = 10816 \bmod 227 = 147 \end{aligned}$$
+
+Calcoliamo ora le quattro potenze richieste e fattorizziamo ciascun resto intero sui primi di $\mathcal{B}$:
+
+  
+
+1. **Per $x_1 = 32$:**
+    
+      
+    
+    $$2^{32} \bmod 227 = \mathbf{176} = 16 \times 11 = \mathbf{2^4 \times 11^1}$$
+    
+2. **Per $x_2 = 40$ ($40 = 32 + 8$):**
+    
+      
+    
+    $$2^{40} \bmod 227 = (2^{32} \times 2^8) \bmod 227 = (176 \times 29) \bmod 227 = 5104 \bmod 227 = \mathbf{110} = \mathbf{2^1 \times 5^1 \times 11^1}$$
+    
+3. **Per $x_3 = 59$ ($59 = 40 + 16 + 3$):**
+    
+      
+    
+    $$2^{59} \bmod 227 = (2^{40} \times 2^{16} \times 2^3) \bmod 227 = (110 \times 160 \times 8) \bmod 227 = (121 \times 8) \bmod 227 = 968 \bmod 227 = \mathbf{60} = \mathbf{2^2 \times 3^1 \times 5^1}$$
+    
+4. **Per $x_4 = 156$ ($156 = 128 + 16 + 8 + 4$):**
+    
+      
+    
+    $$2^{156} \bmod 227 = (2^{128} \times 2^{16} \times 2^8 \times 2^4) \bmod 227 = (147 \times 160 \times 29 \times 16) \bmod 227 = \mathbf{28} = \mathbf{2^2 \times 7^1}$$
+    
+
+### Soluzione del Punto (b) – Calcolo dei Logaritmi della Factor Base ($\bmod 226$)
+
+Come illustrato nella Sezione 7.2.4, ciascuna congruenza moltiplicativa della forma $\alpha^{x_j} \equiv \prod_{i=1}^B p_i^{a_{ij}} \pmod p$ si traduce, applicando il logaritmo in base $\alpha = 2$ a entrambi i membri, nella congruenza lineare equivalente modulo $p - 1 = 226$:
+
+  
+
+$$x_j \equiv \sum_{i=1}^B a_{ij} \log_2 p_i \pmod{226}$$
+
+Dalle quattro fattorizzazioni del **Punto (a)** otteniamo il seguente sistema di congruenze lineari modulo $226$:
+
+  
+
+$$\begin{cases} 4 \log_2 2 + \log_2 11 \equiv 32 \pmod{226} & (1) \\ \log_2 2 + \log_2 5 + \log_2 11 \equiv 40 \pmod{226} & (2) \\ 2 \log_2 2 + \log_2 3 + \log_2 5 \equiv 59 \pmod{226} & (3) \\ 2 \log_2 2 + \log_2 7 \equiv 156 \pmod{226} & (4) \end{cases}$$
+
+Poiché sappiamo che $\mathbf{\log_2 2 = 1}$, il sistema è già in forma triangolare e possiamo ricavare direttamente tutte le incognite per sostituzione successiva modulo $226$:
+
+  
+
+1. **Calcolo di $\log_2 11$ dalla congruenza $(1)$:**
+    
+      
+    
+    $$\log_2 11 \equiv (32 - 4 \log_2 2) \bmod 226 = (32 - 4 \times 1) \bmod 226 = \mathbf{28}$$
+    
+2. **Calcolo di $\log_2 5$ dalla congruenza $(2)$ (sostituendo $\log_2 2 = 1$ e $\log_2 11 = 28$):**
+    
+      
+    
+    $$\log_2 5 \equiv (40 - \log_2 2 - \log_2 11) \bmod 226 = (40 - 1 - 28) \bmod 226 = \mathbf{11}$$
+    
+3. **Calcolo di $\log_2 3$ dalla congruenza $(3)$ (sostituendo $\log_2 2 = 1$ e $\log_2 5 = 11$):**
+    
+      
+    
+    $$\log_2 3 \equiv (59 - 2 \log_2 2 - \log_2 5) \bmod 226 = (59 - 2 \times 1 - 11) \bmod 226 = \mathbf{46}$$
+    
+4. **Calcolo di $\log_2 7$ dalla congruenza $(4)$ (sostituendo $\log_2 2 = 1$):**
+    
+      
+    
+    $$\log_2 7 \equiv (156 - 2 \log_2 2) \bmod 226 = (156 - 2 \times 1) \bmod 226 = \mathbf{154}$$
+    
+
+> [!example] Logaritmi Discreti della Factor Base $\mathcal{B}$ in $\mathbb{Z}_{227}^*$
+> 
+>   
+> 
+> $$\log_2 2 = \mathbf{1}, \qquad \log_2 3 = \mathbf{46}, \qquad \log_2 5 = \mathbf{11}, \qquad \log_2 7 = \mathbf{154}, \qquad \log_2 11 = \mathbf{28}$$
+
+### Soluzione del Punto (c) – Calcolo Individuale di $\log_2 173$
+
+Vogliamo determinare $\log_2 \beta$ per $\beta = 173$ applicando il secondo passo dell'`INDEX CALCULUS ALGORITHM` con l'esponente casuale fornito $s = 177$:
+
+  
+
+1. **Calcolo di $\gamma = \beta \alpha^s \bmod p$:** Osservando che $177 = 156 + 16 + 4 + 1$, calcoliamo prima $2^{177} \bmod 227$:
+    
+      
+    
+    $$2^{177} \bmod 227 = (2^{156} \times 2^{16} \times 2^4 \times 2^1) \bmod 227 = (28 \times 160 \times 16 \times 2) \bmod 227 = 143360 \bmod 227 = 96$$
+    
+    Moltiplichiamo ora per $\beta = 173$ modulo $227$:
+    
+      
+    
+    $$\gamma = 173 \times 2^{177} \bmod 227 = (173 \times 96) \bmod 227 = 16608 \bmod 227 = \mathbf{168}$$
+    
+2. **Fattorizzazione di $\gamma = 168$ sulla _factor base_ $\mathcal{B} = \{2, 3, 5, 7, 11\}$:**
+    
+      
+    
+    $$168 = 8 \times 21 = \mathbf{2^3 \times 3^1 \times 7^1}$$
+    
+    Poiché $168$ si fattorizza completamente su $\mathcal{B}$, otteniamo la congruenza moltiplicativa:
+    
+      
+    
+    $$173 \times 2^{177} \equiv 2^3 \times 3^1 \times 7^1 \pmod{227}$$
+    
+3. **Passaggio agli esponenti modulo $p - 1 = 226$ e risoluzione per $\log_2 173$:** Prendendo il logaritmo discreto in base $2$ di entrambi i membri:
+    
+      
+    
+    $$\log_2 173 + 177 \equiv 3 \log_2 2 + 1 \log_2 3 + 1 \log_2 7 \pmod{226}$$
+    
+    Sostituendo i valori noti della _factor base_ ($\log_2 2 = 1$, $\log_2 3 = 46$, $\log_2 7 = 154$) e sottraendo $s = 177$:
+    
+      
+    
+    $$\begin{aligned} \log_2 173 &= (3 \log_2 2 + \log_2 3 + \log_2 7 - 177) \bmod 226 \\ &= (3 \times 1 + 46 + 154 - 177) \bmod 226 \\ &= (203 - 177) \bmod 226 \\ &= \mathbf{26} \end{aligned}$$
+    
+
+> [!example] Risultato Finale Esercizio 7.6(c)
+> 
+>   
+> 
+> $$\log_2 173 = \mathbf{26} \quad \text{in } \mathbb{Z}_{227}^*$$
+> 
+> _(Verifica: $2^{26} \bmod 227 = (2^{16} \times 2^8 \times 2^2) \bmod 227 = (160 \times 29 \times 4) \bmod 227 = 18560 \bmod 227 = 173$)._
