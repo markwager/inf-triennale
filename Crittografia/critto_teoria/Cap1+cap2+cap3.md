@@ -8,7 +8,7 @@ Il Capitolo 1 introduce gli obiettivi fondamentali della crittografia — **conf
 
 ## 1.1 Cryptosystems and Basic Cryptographic Tools (Crittosistemi e Strumenti di Base)
 
-L'obiettivo primario considerato storicamente dalla crittografia è la **confidentiality** (o **secrecy**, confidenzialità/segretezza): fare in modo che le informazioni trasmesse rimangano segrete a chiunque tranne che ai soggetti autorizzati a leggerle.
+L'obiettivo primario considerato dalla crittografia è la **confidentiality** (o **secrecy**, confidenzialità/segretezza): fare in modo che le informazioni trasmesse rimangano segrete a chiunque tranne che ai soggetti autorizzati a leggerle.
 
 - **Lo Scenario Base di Comunicazione:**
   - **Alice** (il mittente) desidera trasmettere un messaggio non cifrato, chiamato **plaintext** (testo in chiaro, denotato con $x$), a **Bob** (il destinatario).
@@ -34,14 +34,14 @@ Nel modello classico, chiamato **secret-key cryptography** (crittografia a chiav
 
 ### 1.1.2 Public-key Cryptosystems (Crittosistemi a Chiave Pubblica)
 
-Uno dei principali limiti dei *secret-key cryptosystems* è la necessità di disporre di un *secure channel* preliminare per condividere la chiave segreta $K$ tra Alice e Bob. Per superare questo ostacolo, Diffie e Hellman (nel 1976) introdussero il concetto di **public-key cryptosystem** (crittosistema a chiave pubblica), realizzato poi concretamente nel 1977 da Rivest, Shamir e Adleman con il crittosistema **RSA**:
+Uno dei principali limiti dei *secret-key cryptosystems* è la necessità di disporre di un *secure channel* preliminare per condividere la chiave segreta $K$ tra Alice e Bob. Per superare questo ostacolo, si introduce la **public-key cryptosystem** (crittosistema a chiave pubblica):
 
 - **Separazione tra Public Key e Private Key:**
   In un *public-key cryptosystem*, la regola di cifratura $e_K$ e la regola di decifratura $d_K$ sono distinte, ed è **computationally infeasible** (computazionalmente infattibile) determinare $d_K$ conoscendo unicamente $e_K$:
   - La regola di cifratura $e_K$ costituisce la **public key** (chiave pubblica) di Bob: Bob può pubblicarla apertamente affinché chiunque possa utilizzarla.
   - La regola di decifratura $d_K$ costituisce la **private key** (chiave privata) di Bob: Bob la mantiene segreta per sé.
 - **Funzionamento:**
-  Quando Alice (o chiunque altro) vuole inviare un messaggio riservato $x$ a Bob, non ha bisogno di condividere preventivamente alcuna chiave segreta con lui: preleva la *public key* $e_K$ di Bob, calcola il *ciphertext* $y = e_K(x)$ e glielo invia sul canale insicuro. Soltanto Bob, essendo l'unico in possesso della *private key* $d_K$, è in grado di decifrare $y$ calcolando $x = d_K(y)$.
+  Quando Alice vuole inviare un messaggio riservato $x$ a Bob, non ha bisogno di condividere preventivamente alcuna chiave segreta con lui: preleva la *public key* $e_K$ di Bob, calcola il *ciphertext* $y = e_K(x)$ e glielo invia sul canale insicuro. Soltanto Bob, essendo l'unico in possesso della *private key* $d_K$, è in grado di decifrare $y$ calcolando $x = d_K(y)$.
 
 ---
 
@@ -65,7 +65,7 @@ I crittosistemi vengono solitamente classificati in **block ciphers** (cifrari a
 
 ### 1.1.4 Hybrid Cryptography (Crittografia Ibrida)
 
-Sebbene i *public-key cryptosystems* risolvano brillantemente il problema della distribuzione delle chiavi su canali insicuri, presentano uno svantaggio pratico: sono molto più lenti rispetto ai *secret-key cryptosystems* (come AES).
+Sebbene i *public-key cryptosystems* risolvano il problema della distribuzione delle chiavi su canali insicuri, presentano uno svantaggio pratico: sono molto più lenti rispetto ai *secret-key cryptosystems* (come AES).
 
 Nella pratica si adotta quindi la **hybrid cryptography** (crittografia ibrida), che unisce i vantaggi di entrambi i modelli in due fasi:
 1. **Scambio della chiave tramite Public-key Cryptography:** All'inizio della sessione di comunicazione, viene utilizzato un *public-key cryptosystem* esclusivamente per cifrare e trasmettere una chiave segreta temporanea (spesso chiamata **session key**, chiave di sessione) $K$ da Alice a Bob.
@@ -115,7 +115,7 @@ Un **signature scheme** (schema di firma digitale) è l'analogo a chiave pubblic
 
 ### 1.2.3 Nonrepudiation (Non Ripudio)
 
-Oltre al fatto che le firme digitali sono verificabili pubblicamente da chiunque, vi è una differenza concettuale decisiva tra un **MAC** e un **signature scheme**: la proprietà di **nonrepudiation** (non ripudio).
+Oltre al fatto che le firme digitali sono verificabili pubblicamente da chiunque, vi è una differenza concettuale tra un **MAC** e un **signature scheme**: la proprietà di **nonrepudiation** (non ripudio).
 
 - **Perché un MAC NON fornisce nonrepudiation:**
   In un MAC, sia Alice sia Bob conoscono la medesima chiave segreta condivisa $K$. Pertanto, Bob è perfettamente in grado di calcolare da solo una coppia valida $(x, h_K(x))$ per qualsiasi messaggio $x$. Se sorge una disputa legale davanti a una terza parte imparziale (un giudice, **judge**):
@@ -142,7 +142,7 @@ La soluzione standard consiste nell'utilizzo dei **certificates** (certificati d
 
 Una **cryptographic hash function** (o **unkeyed hash function**, funzione di hash senza chiave) $h$ è una funzione pubblica che prende in input un messaggio $x$ di lunghezza arbitraria e produce in output una stringa binaria corta e di lunghezza fissa $y = h(x)$ (tipicamente da $160$ a $512$ bit), chiamata **message digest** (o **fingerprint**, impronta digitale del messaggio).
 
-Affinché una funzione di hash sia crittograficamente sicura, deve soddisfare tre proprietà fondamentali:
+Affinché una funzione di hash sia sicura, deve soddisfare tre proprietà fondamentali:
 1. **One-way (o Preimage resistant):** Dato un *message digest* $y$, deve essere computazionalmente infattibile risalire a un input $x$ tale che $h(x) = y$.
 2. **Second preimage resistant:** Dato un messaggio $x$, deve essere computazionalmente infattibile trovare un secondo messaggio $x' \neq x$ tale che $h(x') = h(x)$.
 3. **Collision resistant:** Deve essere computazionalmente infattibile trovare una qualsiasi coppia di messaggi distinti $x \neq x'$ che producano lo stesso *message digest*, ovvero tali che $h(x) = h(x')$ (una coppia del genere è chiamata **collision**, collisione).
@@ -157,7 +157,7 @@ Affinché una funzione di hash sia crittograficamente sicura, deve soddisfare tr
 
 Oltre agli strumenti crittografici di base (*primitives*), la crittografia si occupa della progettazione e dell'analisi dei **cryptographic protocols** (protocolli crittografici).
 
-- Un **cryptographic protocol** è un algoritmo interattivo che coinvolge due o più parti (ad esempio Alice, Bob ed eventualmente una **Trusted Authority, TA**), le quali eseguono una sequenza di calcoli e si scambiano messaggi al fine di raggiungere uno specifico obiettivo di sicurezza in presenza di un avversario.
+- Un **cryptographic protocol** è un algoritmo interattivo che coinvolge due o più parti (ad esempio Alice, Bob), le quali eseguono una sequenza di calcoli e si scambiano messaggi al fine di raggiungere uno specifico obiettivo di sicurezza in presenza di un avversario.
 - Esempi fondamentali di protocolli crittografici trattati nel libro includono:
   - **Key distribution / Key agreement protocols:** Protocolli che permettono ad Alice e Bob di stabilire una nuova *session key* segreta condivisa comunicando su un canale aperto (come il protocollo di scambio chiavi di **Diffie-Hellman**).
   - **Identification / Entity authentication protocols:** Protocolli in cui Alice dimostra in tempo reale a Bob la propria identità (ad esempio dimostrando di possedere una chiave segreta o privata senza rivelarla).
@@ -167,7 +167,7 @@ Oltre agli strumenti crittografici di base (*primitives*), la crittografia si oc
 
 ## 1.4 Security (Modelli di Attacco e Livelli di Sicurezza)
 
-Il processo con cui l'avversario (Oscar) tenta di determinare la chiave segreta $K$ (o di risalire al *plaintext* $\mathbf{x}$), data una stringa di *ciphertext* $\mathbf{y}$, è chiamato **cryptanalysis** (crittoanalisi). Si osservi che se Oscar riesce a determinare la chiave $K$, può decifrare qualsiasi *ciphertext* $\mathbf{y}$ esattamente come farebbe Bob usando $d_K$; pertanto, determinare $K$ è almeno tanto difficile quanto determinare il *plaintext* $\mathbf{x}$ dato $\mathbf{y}$.
+Il processo con cui l'avversario (Oscar) tenta di determinare la chiave segreta $K$, data una stringa di *ciphertext* $\mathbf{y}$, è chiamato **cryptanalysis** (crittoanalisi). Si osservi che se Oscar riesce a determinare la chiave $K$, può decifrare qualsiasi *ciphertext* $\mathbf{y}$ esattamente come farebbe Bob usando $d_K$; pertanto, determinare $K$ è almeno tanto difficile quanto determinare il *plaintext* $\mathbf{x}$ dato $\mathbf{y}$.
 
 > [!important] Kerckhoffs' Principle (Principio di Kerckhoffs)
 > Nel valutare la sicurezza di un crittosistema, si assume sempre che l'avversario (Oscar) conosca perfettamente l'intera struttura del crittosistema utilizzato (ovvero gli insiemi $\mathcal{P}, \mathcal{C}, \mathcal{K}$ e le famiglie di regole $\mathcal{E}, \mathcal{D}$).
@@ -177,7 +177,7 @@ Il processo con cui l'avversario (Oscar) tenta di determinare la chiave segreta 
 
 ### 1.4.1 Attack Models (Modelli di Attacco)
 
-Per valutare la sicurezza di un crittosistema in modo rigoroso, dobbiamo specificare a quali informazioni e capacità ha accesso l'avversario. Stinson elenca **quattro modelli di attacco** standard, ordinati dal più debole (più difficile per Oscar) al più potente (più favorevole a Oscar):
+Stinson elenca **quattro modelli di attacco** standard, ordinati dal più debole (più difficile per Oscar) al più potente (più favorevole a Oscar):
 
 1. **Ciphertext-only attack (Attacco a solo testo cifrato):**
    L'avversario possiede unicamente una stringa di *ciphertext* $\mathbf{y}$ intercettata sul canale.

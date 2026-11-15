@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Gruppi, anelli e campi.md",
+                "file": "Cap1+cap2+cap3.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Gruppi, anelli e campi"
+              "title": "Cap1+cap2+cap3"
             }
           }
         ]
@@ -190,9 +190,9 @@
   },
   "active": "abcc90c66a31f577",
   "lastOpenFiles": [
+    "Gruppi, anelli e campi.md",
     "Cap1+cap2+cap3.md",
     "Cap7.md",
-    "Gruppi, anelli e campi.md",
     "ex cap7.md",
     "Cap8.md",
     "Stinson-Paterson_CryptographyTheoryAndPractice-CRC Press (2019).pdf",
