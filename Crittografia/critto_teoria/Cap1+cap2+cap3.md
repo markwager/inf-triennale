@@ -196,7 +196,7 @@ Stinson elenca **quattro modelli di attacco** standard, ordinati dal più debole
 Oltre a specificare il modello di attacco, Stinson distingue **tre concetti (livelli) fondamentali di sicurezza** in base alle risorse computazionali concesse all'avversario:
 
 #### 1. Il Requisito Preliminare: Resistenza alla Exhaustive Key Search
-- In un attacco di **exhaustive key search** (ricerca esaustiva della chiave, o *brute-force*), l'avversario prova sistematicamente ogni possibile regola di decifratura $d_K$ (per tutte le chiavi $K \in \mathcal{K}$) finché non ottiene una stringa di *plaintext* "dotata di senso" (*meaningful*).
+- In un attacco di **exhaustive key search** (ricerca esaustiva della chiave, o *brute-force*), l'avversario prova ogni possibile regola di decifratura $d_K$ (per tutte le chiavi $K \in \mathcal{K}$) finché non ottiene una stringa di *plaintext* "dotata di senso" (*meaningful*).
 - Affinché un crittosistema sia sicuro nella pratica, è **condizione necessaria ma NON sufficiente** che lo spazio delle chiavi $\mathcal{K}$ sia così grande da rendere computazionalmente infattibile una *exhaustive key search* (come mostra l'esempio del *Substitution Cipher* nel Capitolo 2, che possiede $26! \approx 4 \times 10^{26}$ chiavi ma viene violato istantaneamente tramite l'analisi delle frequenze).
 
 #### 2. Unconditional Security (Sicurezza Incondizionata)
@@ -255,7 +255,8 @@ Il Capitolo 2 introduce la definizione formale di crittosistema, gli strumenti e
 >     $$d_K(e_K(x)) = x \quad \forall x \in \mathcal{P}$$
 >     
 
-- **Osservazione sull'iniettività:** La proprietà 4 impone che, fissata $K$, la funzione $e_K$ debba essere **iniettiva** (due messaggi diversi non possono mai cifrarsi nello stesso identico testo cifrato, altrimenti Bob non saprebbe come decifrare univocamente).
+- **Osservazione sull'iniettività:** La proprietà 4 impone che, fissata $K$, la funzione $e_K$ debba essere **iniettiva** ($x_1 \neq x_2 \implies e_K(x_1) \neq e_K(x_2)$).
+  Questo perchè altrimenti, se non lo fosse avremmo $x_1 \neq x_2 \implies e_K(x_1) = e_K(x_2)$, ma Bob non avrebbe modo di sapere se Alice ha inviato $x_1$ o $x_2$
     
       
     
