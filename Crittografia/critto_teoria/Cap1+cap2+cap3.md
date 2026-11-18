@@ -530,7 +530,8 @@ Il Capitolo 2 introduce la definizione formale di crittosistema, gli strumenti e
     
     $$d_K(y_1, y_2, \dots, y_m) = (y_1 - k_1, y_2 - k_2, \dots, y_m - k_m) \bmod 26$$
     
-- **Spazio delle chiavi:** $|\mathcal{K}| = 26^m$.
+- **Spazio delle chiavi:** $|\mathcal{K}| = 26^m$ --> no ricerca esaustiva
+- Questo cristtosistema è polialfabetico: uno stesso carattere alfabetico può essere mappato in più caratteri alfabetici diversi per via della keyword
     
       
     
@@ -572,7 +573,7 @@ Il Capitolo 2 introduce la definizione formale di crittosistema, gli strumenti e
       
     
     $$e_K(x) = xK \bmod 26 \qquad d_K(y) = yK^{-1} \bmod 26$$
-    
+    Questo crittosistema è polialfabetico
 
 > [!example] Example 2.5 (Cifratura e Decifratura Hill Cipher con matrice $2 \times 2$) Supponiamo che la chiave sia $K = \begin{pmatrix} 11 & 8 \\ 3 & 7 \end{pmatrix}$.
 > 
