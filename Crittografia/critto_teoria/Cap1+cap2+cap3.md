@@ -744,7 +744,7 @@ Vediamo come generare un keystream sincrono lavorando su alfabeti binari a parti
         
 2. **La Chiave $K$, l'Initialization Vector e il Periodo del Keystream:**
     
-    - In questo schema, la chiave $K$ può essere vista come costituita dai $2m$ valori $(k_1, \dots, k_m, c_0, \dots, c_{m-1})$ (oppure, se la relazione di ricorrenza è pubblica/nota e fissata in hardware, la chiave segreta consiste nella sola $m$-tupla iniziale $(k_1, \dots, k_m)$).
+    - In questo schema, la chiave $K$ può essere vista come costituita dai $2m$ valori $(k_1, \dots, k_m, c_0, \dots, c_{m-1})$.
         
     - Il vettore iniziale $(k_1, \dots, k_m)$ è chiamato **initialization vector**.
         
@@ -876,7 +876,7 @@ Con l'analisi delle frequenze bastano **due sole corrispondenze** per risolvere 
 
 ### 2. Crittoanalisi del Substitution Cipher (Ciphertext-Only)
 
-Con $26!$ chiavi si procede per deduzione statistica su lettere singole, digrammi, trigrammi e struttura vocalica/consonantica.
+Con $26!$ chiavi si procede per analisi statistica su lettere singole, digrammi, trigrammi e struttura vocalica/consonantica.
 
   
 
