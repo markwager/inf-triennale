@@ -652,8 +652,32 @@ Prima di costruire i campi finiti di ordine $p^k$, elenchiamo le definizioni e i
 >     
 
 - **Teorema:** Su qualsiasi campo finito $F$ e per ogni intero $k \ge 1$, esiste sempre almeno un polinomio irriducibile di grado $k$ in $F[x]$.
+
+
+> [!abstract] Definizione 1.90 L&N (Campo di Spezzamento — _Splitting Field_) Sia $f \in K[x]$ un polinomio di grado positivo e sia $F$ un'estensione del campo $K$ (_extension field_ di $K$). Si dice che $f$ **si spezza** (_splits_) in $F$ se $f$ può essere scritto come prodotto di fattori lineari in $F[x]$, cioè se esistono elementi $\alpha_1, \alpha_2, \dots, \alpha_n \in F$ tali che:
+> 
+>   
+> 
+> $$f(x) = a(x - \alpha_1)(x - \alpha_2) \cdots (x - \alpha_n)$$
+> 
+> dove $a$ è il coefficiente direttivo (_leading coefficient_) di $f$.
+> 
+>   
+> 
+> Il campo $F$ è detto un **campo di spezzamento** (_splitting field_) di $f$ su $K$ se $f$ si spezza in $F$ e se, inoltre, vale:
+> 
+>   
+> 
+> $$F = K(\alpha_1, \alpha_2, \dots, \alpha_n)$$
+
+- **Notazione $K(\alpha_1, \dots, \alpha_n)$:** Rappresenta l'estensione di $K$ ottenuta aggiungendo gli elementi $\alpha_1, \dots, \alpha_n$, definita come l'intersezione di tutti i sottocampi di $F$ che contengono sia $K$ sia $\{\alpha_1, \dots, \alpha_n\}$ — ovvero il **più piccolo sottocampo** di $F$ contenente $K$ e tutte le radici $\alpha_1, \dots, \alpha_n$.
     
-      
+- **Minimalità:** Un campo di spezzamento $F$ di $f$ su $K$ è quindi il campo più piccolo che contiene tutte le radici di $f$, nel senso che nessun sottocampo proprio di $F$ che estende $K$ contiene tutte le radici di $f$.
+    
+
+> [!important] Teorema 1.91 L&N (Esistenza e Unicità del Campo di Spezzamento — _Existence and Uniqueness of Splitting Field_) Se $K$ è un campo e $f$ è un qualsiasi polinomio di grado positivo in $K[x]$, allora **esiste** un campo di spezzamento di $f$ su $K$. Inoltre, due qualsiasi campi di spezzamento di $f$ su $K$ sono **isomorfi** tramite un isomorfismo che lascia fissi gli elementi di $K$ e manda le radici di $f$ le une nelle altre.
+
+- **Osservazione:** Poiché due campi isomorfi possono essere identificati, il Teorema 1.91 permette di parlare **del** campo di spezzamento di $f$ su $K$ (unico a meno di isomorfismo). Inoltre, essendo ottenuto da $K$ aggiungendo un numero finito di elementi algebrici su $K$, il campo di spezzamento di $f$ su $K$ è sempre un'estensione finita di $K$.
     
 
 ### 3. Costruzione di Campi Finiti (Campi di Galois) e Dimostrazioni Complete
