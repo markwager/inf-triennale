@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Cap1+cap2+cap3.md",
+                "file": "Cap5.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Cap1+cap2+cap3"
+              "title": "Cap5"
             }
           }
         ]
@@ -83,8 +83,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 200,
-    "collapsed": true
+    "width": 200
   },
   "right": {
     "id": "7ff625c4cf5bbafe",
@@ -191,17 +190,17 @@
   },
   "active": "abcc90c66a31f577",
   "lastOpenFiles": [
-    "Gruppi, anelli e campi.md",
+    "Cap7.md",
     "Cap8.md",
-    "Cap1+cap2+cap3.md",
-    "Ex cap3+cap4.md",
     "Ex cap2.md",
+    "Ex cap3+cap4.md",
+    "ex cap7.md",
+    "Cap1+cap2+cap3.md",
+    "Cap5.md",
+    "Gruppi, anelli e campi.md",
     "Senza nome.canvas",
     "Senza nome.base",
-    "Cap5.md",
     "Cap6.md",
-    "Cap7.md",
-    "ex cap7.md",
     "Stinson-Paterson_CryptographyTheoryAndPractice-CRC Press (2019).pdf",
     "Pasted image 20261018181904.png",
     "Cap4.md",
