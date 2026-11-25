@@ -3,7 +3,7 @@
 
 
 
-Nei capitoli precedenti abbiamo studiato i crittosistemi a chiave segreta (block ciphers e stream ciphers), il cui obiettivo è garantire la confidenzialità (_secrecy_). Tuttavia, la sola cifratura non protegge l'**integrità dei dati** (_data integrity_) né la **message authentication** (autenticazione dei messaggi) contro un avversario attivo.
+Nei capitoli precedenti abbiamo studiato i crittosistemi a chiave segreta, il cui obiettivo è garantire la confidenzialità (_secrecy_). Tuttavia, la sola cifratura non protegge l'**integrità dei dati** (_data integrity_) né la **message authentication** (autenticazione dei messaggi) contro un avversario attivo.
 
 
   
@@ -12,9 +12,8 @@ Nei capitoli precedenti abbiamo studiato i crittosistemi a chiave segreta (block
 
   
 
-  
 
-Una **cryptographic hash function** può essere utilizzata per fornire garanzia di **data integrity**. Prende in input un messaggio di lunghezza arbitraria e produce in output un valore di lunghezza fissa (e ridotta) chiamato **message digest**.
+Una **cryptographic hash function** può essere utilizzata per fornire **data integrity**. Prende in input un messaggio di lunghezza arbitraria e produce in output un valore di lunghezza fissa (e ridotta) chiamato **message digest**.
 
   
 
@@ -30,9 +29,6 @@ Le funzioni di hash si dividono in due tipologie:
     
       
     
-
-  
-
   
 
 ### 5.1.1 Definizione Formale di Hash Family
@@ -80,8 +76,6 @@ Le funzioni di hash si dividono in due tipologie:
         
           
         
-
-  
 
   
 
@@ -143,10 +137,6 @@ Supponiamo che Alice trasmetta un messaggio $x \in \mathcal{X}$ a Bob su un cana
         - Oppure combinandola con una chiave segreta per costruire un MAC (come in **HMAC**, Sezione 5.5.1).
             
               
-            
-
-  
-
   
 
 ## 5.2 Security of Hash Functions (Sicurezza delle Funzioni di Hash)
@@ -265,7 +255,8 @@ Per analizzare la difficoltà dei problemi **Preimage**, **Second Preimage** e *
           
         
 
-> [!important] Theorem 5.1: Independence Theorem Supponiamo che una hash function $h \in \mathcal{F}^{\mathcal{X}, \mathcal{Y}}$ sia scelta uniformemente a caso, e sia $\mathcal{X}_0 \subseteq \mathcal{X}$. Supponiamo che i valori $h(x)$ siano stati determinati (interrogando l'oracolo per $h$) se e solo se $x \in \mathcal{X}_0$. Allora:
+> [!important] Theorem 5.1: Independence Theorem
+>  Supponiamo che una hash function $h \in \mathcal{F}^{\mathcal{X}, \mathcal{Y}}$ sia scelta uniformemente a caso, e sia $\mathcal{X}_0 \subseteq \mathcal{X}$. Supponiamo che i valori $h(x)$ siano stati determinati (interrogando l'oracolo per $h$) se e solo se $x \in \mathcal{X}_0$. Allora:
 > 
 >   
 > 

@@ -8,7 +8,7 @@ Il Capitolo 1 introduce gli obiettivi fondamentali della crittografia — **conf
 
 ## 1.1 Cryptosystems and Basic Cryptographic Tools (Crittosistemi e Strumenti di Base)
 
-L'obiettivo primario considerato storicamente dalla crittografia è la **confidentiality** (o **secrecy**, confidenzialità/segretezza): fare in modo che le informazioni trasmesse rimangano segrete a chiunque tranne che ai soggetti autorizzati a leggerle.
+L'obiettivo primario considerato dalla crittografia è la **confidentiality** (o **secrecy**, confidenzialità/segretezza): fare in modo che le informazioni trasmesse rimangano segrete a chiunque tranne che ai soggetti autorizzati a leggerle.
 
 - **Lo Scenario Base di Comunicazione:**
   - **Alice** (il mittente) desidera trasmettere un messaggio non cifrato, chiamato **plaintext** (testo in chiaro, denotato con $x$), a **Bob** (il destinatario).
@@ -34,14 +34,14 @@ Nel modello classico, chiamato **secret-key cryptography** (crittografia a chiav
 
 ### 1.1.2 Public-key Cryptosystems (Crittosistemi a Chiave Pubblica)
 
-Uno dei principali limiti dei *secret-key cryptosystems* è la necessità di disporre di un *secure channel* preliminare per condividere la chiave segreta $K$ tra Alice e Bob. Per superare questo ostacolo, Diffie e Hellman (nel 1976) introdussero il concetto di **public-key cryptosystem** (crittosistema a chiave pubblica), realizzato poi concretamente nel 1977 da Rivest, Shamir e Adleman con il crittosistema **RSA**:
+Uno dei principali limiti dei *secret-key cryptosystems* è la necessità di disporre di un *secure channel* preliminare per condividere la chiave segreta $K$ tra Alice e Bob. Per superare questo ostacolo, si introduce la **public-key cryptosystem** (crittosistema a chiave pubblica):
 
 - **Separazione tra Public Key e Private Key:**
   In un *public-key cryptosystem*, la regola di cifratura $e_K$ e la regola di decifratura $d_K$ sono distinte, ed è **computationally infeasible** (computazionalmente infattibile) determinare $d_K$ conoscendo unicamente $e_K$:
   - La regola di cifratura $e_K$ costituisce la **public key** (chiave pubblica) di Bob: Bob può pubblicarla apertamente affinché chiunque possa utilizzarla.
   - La regola di decifratura $d_K$ costituisce la **private key** (chiave privata) di Bob: Bob la mantiene segreta per sé.
 - **Funzionamento:**
-  Quando Alice (o chiunque altro) vuole inviare un messaggio riservato $x$ a Bob, non ha bisogno di condividere preventivamente alcuna chiave segreta con lui: preleva la *public key* $e_K$ di Bob, calcola il *ciphertext* $y = e_K(x)$ e glielo invia sul canale insicuro. Soltanto Bob, essendo l'unico in possesso della *private key* $d_K$, è in grado di decifrare $y$ calcolando $x = d_K(y)$.
+  Quando Alice vuole inviare un messaggio riservato $x$ a Bob, non ha bisogno di condividere preventivamente alcuna chiave segreta con lui: preleva la *public key* $e_K$ di Bob, calcola il *ciphertext* $y = e_K(x)$ e glielo invia sul canale insicuro. Soltanto Bob, essendo l'unico in possesso della *private key* $d_K$, è in grado di decifrare $y$ calcolando $x = d_K(y)$.
 
 ---
 
@@ -65,7 +65,7 @@ I crittosistemi vengono solitamente classificati in **block ciphers** (cifrari a
 
 ### 1.1.4 Hybrid Cryptography (Crittografia Ibrida)
 
-Sebbene i *public-key cryptosystems* risolvano brillantemente il problema della distribuzione delle chiavi su canali insicuri, presentano uno svantaggio pratico: sono molto più lenti rispetto ai *secret-key cryptosystems* (come AES).
+Sebbene i *public-key cryptosystems* risolvano il problema della distribuzione delle chiavi su canali insicuri, presentano uno svantaggio pratico: sono molto più lenti rispetto ai *secret-key cryptosystems* (come AES).
 
 Nella pratica si adotta quindi la **hybrid cryptography** (crittografia ibrida), che unisce i vantaggi di entrambi i modelli in due fasi:
 1. **Scambio della chiave tramite Public-key Cryptography:** All'inizio della sessione di comunicazione, viene utilizzato un *public-key cryptosystem* esclusivamente per cifrare e trasmettere una chiave segreta temporanea (spesso chiamata **session key**, chiave di sessione) $K$ da Alice a Bob.
@@ -115,7 +115,7 @@ Un **signature scheme** (schema di firma digitale) è l'analogo a chiave pubblic
 
 ### 1.2.3 Nonrepudiation (Non Ripudio)
 
-Oltre al fatto che le firme digitali sono verificabili pubblicamente da chiunque, vi è una differenza concettuale decisiva tra un **MAC** e un **signature scheme**: la proprietà di **nonrepudiation** (non ripudio).
+Oltre al fatto che le firme digitali sono verificabili pubblicamente da chiunque, vi è una differenza concettuale tra un **MAC** e un **signature scheme**: la proprietà di **nonrepudiation** (non ripudio).
 
 - **Perché un MAC NON fornisce nonrepudiation:**
   In un MAC, sia Alice sia Bob conoscono la medesima chiave segreta condivisa $K$. Pertanto, Bob è perfettamente in grado di calcolare da solo una coppia valida $(x, h_K(x))$ per qualsiasi messaggio $x$. Se sorge una disputa legale davanti a una terza parte imparziale (un giudice, **judge**):
@@ -142,7 +142,7 @@ La soluzione standard consiste nell'utilizzo dei **certificates** (certificati d
 
 Una **cryptographic hash function** (o **unkeyed hash function**, funzione di hash senza chiave) $h$ è una funzione pubblica che prende in input un messaggio $x$ di lunghezza arbitraria e produce in output una stringa binaria corta e di lunghezza fissa $y = h(x)$ (tipicamente da $160$ a $512$ bit), chiamata **message digest** (o **fingerprint**, impronta digitale del messaggio).
 
-Affinché una funzione di hash sia crittograficamente sicura, deve soddisfare tre proprietà fondamentali:
+Affinché una funzione di hash sia sicura, deve soddisfare tre proprietà fondamentali:
 1. **One-way (o Preimage resistant):** Dato un *message digest* $y$, deve essere computazionalmente infattibile risalire a un input $x$ tale che $h(x) = y$.
 2. **Second preimage resistant:** Dato un messaggio $x$, deve essere computazionalmente infattibile trovare un secondo messaggio $x' \neq x$ tale che $h(x') = h(x)$.
 3. **Collision resistant:** Deve essere computazionalmente infattibile trovare una qualsiasi coppia di messaggi distinti $x \neq x'$ che producano lo stesso *message digest*, ovvero tali che $h(x) = h(x')$ (una coppia del genere è chiamata **collision**, collisione).
@@ -157,7 +157,7 @@ Affinché una funzione di hash sia crittograficamente sicura, deve soddisfare tr
 
 Oltre agli strumenti crittografici di base (*primitives*), la crittografia si occupa della progettazione e dell'analisi dei **cryptographic protocols** (protocolli crittografici).
 
-- Un **cryptographic protocol** è un algoritmo interattivo che coinvolge due o più parti (ad esempio Alice, Bob ed eventualmente una **Trusted Authority, TA**), le quali eseguono una sequenza di calcoli e si scambiano messaggi al fine di raggiungere uno specifico obiettivo di sicurezza in presenza di un avversario.
+- Un **cryptographic protocol** è un algoritmo interattivo che coinvolge due o più parti (ad esempio Alice, Bob), le quali eseguono una sequenza di calcoli e si scambiano messaggi al fine di raggiungere uno specifico obiettivo di sicurezza in presenza di un avversario.
 - Esempi fondamentali di protocolli crittografici trattati nel libro includono:
   - **Key distribution / Key agreement protocols:** Protocolli che permettono ad Alice e Bob di stabilire una nuova *session key* segreta condivisa comunicando su un canale aperto (come il protocollo di scambio chiavi di **Diffie-Hellman**).
   - **Identification / Entity authentication protocols:** Protocolli in cui Alice dimostra in tempo reale a Bob la propria identità (ad esempio dimostrando di possedere una chiave segreta o privata senza rivelarla).
@@ -167,7 +167,7 @@ Oltre agli strumenti crittografici di base (*primitives*), la crittografia si oc
 
 ## 1.4 Security (Modelli di Attacco e Livelli di Sicurezza)
 
-Il processo con cui l'avversario (Oscar) tenta di determinare la chiave segreta $K$ (o di risalire al *plaintext* $\mathbf{x}$), data una stringa di *ciphertext* $\mathbf{y}$, è chiamato **cryptanalysis** (crittoanalisi). Si osservi che se Oscar riesce a determinare la chiave $K$, può decifrare qualsiasi *ciphertext* $\mathbf{y}$ esattamente come farebbe Bob usando $d_K$; pertanto, determinare $K$ è almeno tanto difficile quanto determinare il *plaintext* $\mathbf{x}$ dato $\mathbf{y}$.
+Il processo con cui l'avversario (Oscar) tenta di determinare la chiave segreta $K$, data una stringa di *ciphertext* $\mathbf{y}$, è chiamato **cryptanalysis** (crittoanalisi). Si osservi che se Oscar riesce a determinare la chiave $K$, può decifrare qualsiasi *ciphertext* $\mathbf{y}$ esattamente come farebbe Bob usando $d_K$; pertanto, determinare $K$ è almeno tanto difficile quanto determinare il *plaintext* $\mathbf{x}$ dato $\mathbf{y}$.
 
 > [!important] Kerckhoffs' Principle (Principio di Kerckhoffs)
 > Nel valutare la sicurezza di un crittosistema, si assume sempre che l'avversario (Oscar) conosca perfettamente l'intera struttura del crittosistema utilizzato (ovvero gli insiemi $\mathcal{P}, \mathcal{C}, \mathcal{K}$ e le famiglie di regole $\mathcal{E}, \mathcal{D}$).
@@ -177,7 +177,7 @@ Il processo con cui l'avversario (Oscar) tenta di determinare la chiave segreta 
 
 ### 1.4.1 Attack Models (Modelli di Attacco)
 
-Per valutare la sicurezza di un crittosistema in modo rigoroso, dobbiamo specificare a quali informazioni e capacità ha accesso l'avversario. Stinson elenca **quattro modelli di attacco** standard, ordinati dal più debole (più difficile per Oscar) al più potente (più favorevole a Oscar):
+Stinson elenca **quattro modelli di attacco** standard, ordinati dal più debole (più difficile per Oscar) al più potente (più favorevole a Oscar):
 
 1. **Ciphertext-only attack (Attacco a solo testo cifrato):**
    L'avversario possiede unicamente una stringa di *ciphertext* $\mathbf{y}$ intercettata sul canale.
@@ -196,7 +196,7 @@ Per valutare la sicurezza di un crittosistema in modo rigoroso, dobbiamo specifi
 Oltre a specificare il modello di attacco, Stinson distingue **tre concetti (livelli) fondamentali di sicurezza** in base alle risorse computazionali concesse all'avversario:
 
 #### 1. Il Requisito Preliminare: Resistenza alla Exhaustive Key Search
-- In un attacco di **exhaustive key search** (ricerca esaustiva della chiave, o *brute-force*), l'avversario prova sistematicamente ogni possibile regola di decifratura $d_K$ (per tutte le chiavi $K \in \mathcal{K}$) finché non ottiene una stringa di *plaintext* "dotata di senso" (*meaningful*).
+- In un attacco di **exhaustive key search** (ricerca esaustiva della chiave, o *brute-force*), l'avversario prova ogni possibile regola di decifratura $d_K$ (per tutte le chiavi $K \in \mathcal{K}$) finché non ottiene una stringa di *plaintext* "dotata di senso" (*meaningful*).
 - Affinché un crittosistema sia sicuro nella pratica, è **condizione necessaria ma NON sufficiente** che lo spazio delle chiavi $\mathcal{K}$ sia così grande da rendere computazionalmente infattibile una *exhaustive key search* (come mostra l'esempio del *Substitution Cipher* nel Capitolo 2, che possiede $26! \approx 4 \times 10^{26}$ chiavi ma viene violato istantaneamente tramite l'analisi delle frequenze).
 
 #### 2. Unconditional Security (Sicurezza Incondizionata)
@@ -255,7 +255,8 @@ Il Capitolo 2 introduce la definizione formale di crittosistema, gli strumenti e
 >     $$d_K(e_K(x)) = x \quad \forall x \in \mathcal{P}$$
 >     
 
-- **Osservazione sull'iniettività:** La proprietà 4 impone che, fissata $K$, la funzione $e_K$ debba essere **iniettiva** (due messaggi diversi non possono mai cifrarsi nello stesso identico testo cifrato, altrimenti Bob non saprebbe come decifrare univocamente).
+- **Osservazione sull'iniettività:** La proprietà 4 impone che, fissata $K$, la funzione $e_K$ debba essere **iniettiva** ($x_1 \neq x_2 \implies e_K(x_1) \neq e_K(x_2)$).
+  Questo perchè altrimenti, se non lo fosse avremmo $x_1 \neq x_2 \implies e_K(x_1) = e_K(x_2)$, ma Bob non avrebbe modo di sapere se Alice ha inviato $x_1$ o $x_2$
     
       
     
@@ -529,7 +530,8 @@ Il Capitolo 2 introduce la definizione formale di crittosistema, gli strumenti e
     
     $$d_K(y_1, y_2, \dots, y_m) = (y_1 - k_1, y_2 - k_2, \dots, y_m - k_m) \bmod 26$$
     
-- **Spazio delle chiavi:** $|\mathcal{K}| = 26^m$.
+- **Spazio delle chiavi:** $|\mathcal{K}| = 26^m$ --> no ricerca esaustiva
+- Questo cristtosistema è polialfabetico: uno stesso carattere alfabetico può essere mappato in più caratteri alfabetici diversi per via della keyword
     
       
     
@@ -571,7 +573,7 @@ Il Capitolo 2 introduce la definizione formale di crittosistema, gli strumenti e
       
     
     $$e_K(x) = xK \bmod 26 \qquad d_K(y) = yK^{-1} \bmod 26$$
-    
+    Questo crittosistema è polialfabetico
 
 > [!example] Example 2.5 (Cifratura e Decifratura Hill Cipher con matrice $2 \times 2$) Supponiamo che la chiave sia $K = \begin{pmatrix} 11 & 8 \\ 3 & 7 \end{pmatrix}$.
 > 
@@ -742,7 +744,7 @@ Vediamo come generare un keystream sincrono lavorando su alfabeti binari a parti
         
 2. **La Chiave $K$, l'Initialization Vector e il Periodo del Keystream:**
     
-    - In questo schema, la chiave $K$ può essere vista come costituita dai $2m$ valori $(k_1, \dots, k_m, c_0, \dots, c_{m-1})$ (oppure, se la relazione di ricorrenza è pubblica/nota e fissata in hardware, la chiave segreta consiste nella sola $m$-tupla iniziale $(k_1, \dots, k_m)$).
+    - In questo schema, la chiave $K$ può essere vista come costituita dai $2m$ valori $(k_1, \dots, k_m, c_0, \dots, c_{m-1})$.
         
     - Il vettore iniziale $(k_1, \dots, k_m)$ è chiamato **initialization vector**.
         
@@ -874,7 +876,7 @@ Con l'analisi delle frequenze bastano **due sole corrispondenze** per risolvere 
 
 ### 2. Crittoanalisi del Substitution Cipher (Ciphertext-Only)
 
-Con $26!$ chiavi si procede per deduzione statistica su lettere singole, digrammi, trigrammi e struttura vocalica/consonantica.
+Con $26!$ chiavi si procede per analisi statistica su lettere singole, digrammi, trigrammi e struttura vocalica/consonantica.
 
   
 
@@ -905,7 +907,7 @@ Con $26!$ chiavi si procede per deduzione statistica su lettere singole, digramm
 
 ### 3. Crittoanalisi del Vigenère Cipher (Ciphertext-Only)
 
-- **Fase 1A (Test di Kasiski):** Si cercano sottostringhe identiche di lunghezza $\ge 3$, si calcolano le distanze $\delta_i$ tra le loro posizioni e si trova $m = \gcd(\delta_1, \delta_2, \dots)$.
+- **Fase 1A (Test di Kasiski):** Si cercano sottostringhe identiche di lunghezza $\ge 3$ con l'occorrenza più alta, si calcolano le distanze $\delta_i$ tra le loro posizioni e si trova $m = \gcd(\delta_1, \delta_2, \dots)$.
     
       
     
@@ -1099,83 +1101,184 @@ $$(c_0, c_1, \dots, c_{m-1}) = (z_{m+1}, z_{m+2}, \dots, z_{2m}) \begin{pmatrix}
 |**Autokey Cipher**|Stream Cipher Non-sincrono|$26$|$K \in \mathbb{Z}_{26}$, $z_i = x_{i-1}$|Ricerca esaustiva (solo 26 chiavi iniziali!)|
 |**LFSR Stream Cipher**|Stream Cipher Sincrono ($\mathbb{Z}_2$)|$2^m - 1$ stati non nulli|Ricorrenza lineare di grado $m$|Known-plaintext ($2m$ bit $\to$ inversione matrice su $\mathbb{Z}_2$)|
 
-# Capitolo 3: La Teoria di Shannon, la Segretezza Perfetta e il One-Time Pad
-
-Il Capitolo 3 introduce le nozioni formali di sicurezza crittografica concentrandosi sulla **sicurezza incondizionata** (_unconditional security_), sul **One-Time Pad** e sui concetti matematici di probabilità, teoria dell'informazione e **segretezza perfetta** (_perfect secrecy_) sviluppati da Claude Shannon (1949).
+Modifiche applicate al Capitolo 3 per allinearlo alla notazione, alla numerazione e alla struttura della 4ª edizione di Stinson & Paterson:
 
   
 
-## 3.1 Introduzione
-
-- **Obiettivo del capitolo:** Valutare la sicurezza di un crittosistema assumendo che l'avversario (Oscar) disponga di **potenza computazionale illimitata** (_unconditional security_) e conduca un attacco _ciphertext-only_ (osservando un singolo testo cifrato $y$ cifrato con una chiave $K$ usata una sola volta).
+- **Uniformazione dei simboli delle variabili aleatorie:** Sostituita la notazione mista $\mathbf{P} / \mathbf{X}$ degli appunti precedenti con i simboli esatti del testo: variabili aleatorie in grassetto $\mathbf{X}, \mathbf{Y}, \mathbf{Z}, \mathbf{K}$ definite su insiemi finiti calligrafici $\mathcal{X}, \mathcal{Y}, \mathcal{Z}$ (e $\mathcal{P}, \mathcal{C}, \mathcal{K}$ nel crittosistema), con probabilità congiunta $\Pr[x, y]$ al posto di $\Pr[\mathbf{P}=x \land \mathbf{K}=K]$.
     
-      
+- **Numerazione fedele al libro (Sezioni 3.1–3.3):** Separata la **Sezione 3.2 (Elementary Probability Theory)** dalla **Sezione 3.3 (Perfect Secrecy)**, allineando tutte le etichette: **Definition 3.1**, **Example 3.1**, **Definition 3.2**, **Theorem 3.1** (Bayes), **Corollary 3.2**, **Example 3.2**, **Definition 3.3** (_Perfect Secrecy_), **Example 3.3** (che prima era numerato 3.1), **Theorem 3.3** (_Shift Cipher_), **Theorem 3.4** (_Shannon's Theorem_) e **Cryptosystem 3.1** (_One-time Pad_).
     
-- **Perché la sicurezza computazionale non basta da sola:** Molti cifrari (come il Substitution Cipher con $26!$ chiavi) impediscono la ricerca esaustiva della chiave, ma crollano comunque perché la struttura statistica del testo cifrato rivela informazioni sul testo in chiaro.
-    
-      
-    
-- **L'approccio probabilistico di Shannon:** Per dimostrare matematicamente se un testo cifrato $y$ tradisce o meno informazioni sul testo in chiaro $x$, dobbiamo modellare la scelta del messaggio e la scelta della chiave come **variabili aleatorie discrete** governate da distribuzioni di probabilità.
-    
-      
+- **Inserimento di definizioni, corollari ed esempi mancanti:** Aggiunti la definizione formale di variabile aleatoria discreta e di evento (**Definition 3.1**), i due esempi sul lancio dei dadi (**Example 3.1** ed **Example 3.2**), **Theorem 3.1** e **Corollary 3.2** (che collega direttamente l'indipendenza alla segretezza perfetta), mantenendo intatti gli approfondimenti già presenti nei tuoi appunti (Quadrati Latini, Esercizio 3.4, esempio numerico del _One-time Pad_ e _Two-Time Pad_).
     
 
-## 3.2 Segretezza Perfetta (Perfect Secrecy)
+# Capitolo 3: Shannon's Theory, Perfect Secrecy, and the One-Time Pad
 
-### 3.2.1 Richiami di Probabilità Discreta e Variabili Aleatorie
-
-Per studiare la segretezza perfetta servono quattro strumenti fondamentali del calcolo delle probabilità:
+Il Capitolo 3 introduce le nozioni formali di sicurezza crittografica concentrandosi sulla **unconditional security** (sicurezza incondizionata), presentando il **One-time Pad** e i concetti matematici di probabilità discreta, teoria dell'informazione e **perfect secrecy** (segretezza perfetta) sviluppati da Claude Shannon.
 
   
 
-1. **Variabili Aleatorie del Crittosistema:**
+## 3.1 Introduction (Introduzione)
+
+- **Obiettivo del capitolo:** Valutare la sicurezza di un crittosistema assumendo che l'avversario (Oscar) disponga di **risorse computazionali illimitate** (_unconditional security_) e conduca un attacco _ciphertext-only_, osservando un singolo testo cifrato $y$ cifrato con una chiave $K$ utilizzata una sola volta.
     
-      
-    - Sia $\mathbf{P}$ la variabile aleatoria sul testo in chiaro $\mathcal{P}$, con distribuzione di probabilità _a priori_ nota a tutti (incluso Oscar): $\Pr[\mathbf{P} = x]$ (abbreviata in $\Pr[x]$), dove $\sum_{x \in \mathcal{P}} \Pr[x] = 1$.
-        
-          
-        
-    - Sia $\mathbf{K}$ la variabile aleatoria sulla chiave $\mathcal{K}$, scelta da Alice e Bob secondo la distribuzione $\Pr[\mathbf{K} = K]$ (abbreviata in $\Pr[K]$), dove $\sum_{K \in \mathcal{K}} \Pr[K] = 1$.
-        
-          
-        
-    - **Ipotesi di indipendenza:** La chiave $K$ e il messaggio $x$ vengono scelti in modo **statisticamente indipendente**: $\Pr[\mathbf{P} = x \land \mathbf{K} = K] = \Pr[x] \cdot \Pr[K]$.
-        
-          
-        
-2. **Distribuzione di Probabilità sul Testo Cifrato ($\mathcal{C}$):**
+- **Limite della sola sicurezza computazionale:** Molti cifrari (come il _Substitution Cipher_ con $26!$ chiavi) impediscono la ricerca esaustiva della chiave, ma vengono comunque violati perché la struttura statistica del testo cifrato rivela informazioni sul testo in chiaro.
     
-      
-    - **Insieme dei testi cifrati generabili da $K$:** Fissata una chiave $K$, definiamo $C(K) = \{e_K(x) : x \in \mathcal{P}\}$.
-        
-          
-        
-    - **Probabilità condizionata $\Pr[y \mid x]$ (di ottenere il cifrato $y$ dato il messaggio $x$):** È la somma delle probabilità di tutte le chiavi $K$ che trasformano esattamente $x$ in $y$:
-        
-          
-        
-        $$\Pr[y \mid x] = \sum_{\{K \in \mathcal{K} : x = d_K(y)\}} \Pr[K] = \sum_{\{K \in \mathcal{K} : e_K(x) = y\}} \Pr[K]$$
-        
-    - **Probabilità assoluta $\Pr[y]$ (Teorema della Probabilità Totale):** La probabilità complessiva di osservare il testo cifrato $y$ sul canale è la media pesata su tutti i possibili testi in chiaro $x$:
-        
-          
-        
-        $$\Pr[y] = \sum_{x \in \mathcal{P}} \Pr[x] \Pr[y \mid x] = \sum_{\{K : y \in C(K)\}} \Pr[K] \Pr[d_K(y)]$$
-        
-3. **Probabilità a Posteriori $\Pr[x \mid y]$ e Teorema di Bayes:** Quando Oscar intercetta $y$, vuole calcolare la probabilità condizionata **a posteriori** $\Pr[x \mid y]$ che il messaggio originale spedito da Alice fosse $x$. Per il **Teorema di Bayes** (assumendo $\Pr[y] > 0$):
-    
-      
-    
-    $$\Pr[x \mid y] = \frac{\Pr[x] \Pr[y \mid x]}{\Pr[y]} = \frac{\Pr[x] \sum_{\{K : x = d_K(y)\}} \Pr[K]}{\sum_{\{K : y \in C(K)\}} \Pr[K] \Pr[d_K(y)]}$$
+- **L'approccio probabilistico di Shannon:** Per dimostrare matematicamente se un testo cifrato $y$ rivela o meno informazioni sul testo in chiaro $x$, si modellano la scelta del messaggio, della chiave e del testo cifrato come **variabili aleatorie discrete** governate da distribuzioni di probabilità.
     
 
-> [!example] Example 3.1 (Calcolo di $\Pr[y]$, $\Pr[y \mid x]$ e delle Probabilità a Posteriori $\Pr[x \mid y]$)
+## 3.2 Elementary Probability Theory (Teoria Elementare della Probabilità)
+
+> [!abstract] Definition 3.1: Discrete Random Variable (Variabile Aleatoria Discreta)
 > 
-> Sia $\mathcal{P} = \{a, b\}$ con probabilità a priori $\Pr[a] = 1/4$ e $\Pr[b] = 3/4$.
+> Una **variabile aleatoria discreta** (_discrete random variable_) $\mathbf{X}$ consiste in un insieme finito $\mathcal{X}$ e in una **distribuzione di probabilità** definita su $\mathcal{X}$.
 > 
-> Sia $\mathcal{K} = \{K_1, K_2, K_3\}$ con $\Pr[K_1] = 1/2$ e $\Pr[K_2] = \Pr[K_3] = 1/4$.
+> La probabilità che la variabile aleatoria $\mathbf{X}$ assuma il valore $x \in \mathcal{X}$ è denotata con $\Pr[\mathbf{X} = x]$ (spesso abbreviata in $\Pr[x]$ quando la variabile aleatoria è chiara dal contesto), e soddisfa le seguenti proprietà:
 > 
-> Sia $\mathcal{C} = \{1, 2, 3, 4\}$, e siano le funzioni di cifratura definite dalla seguente **matrice di cifratura**:
+>   
+> 
+> 1. $\Pr[\mathbf{X} = x] \ge 0$ per ogni $x \in \mathcal{X}$;
+>     
+> 2. $\sum_{x \in \mathcal{X}} \Pr[\mathbf{X} = x] = 1$.
+>     
+> 
+> Un **evento** (_event_) $E$ è un sottoinsieme $E \subseteq \mathcal{X}$, e la sua probabilità è definita come:
+> 
+>   
+> 
+> $$\Pr[E] = \sum_{x \in E} \Pr[\mathbf{X} = x]$$
+
+> [!example] Example 3.1 (Lancio casuale di una coppia di dadi)
+> 
+> Consideriamo il lancio casuale di una coppia di dadi non truccati. L'esperimento è modellato da una variabile aleatoria $\mathbf{Z}$ definita sull'insieme:
+> 
+>   
+> 
+> $$\mathcal{Z} = \{1, 2, 3, 4, 5, 6\} \times \{1, 2, 3, 4, 5, 6\}$$
+> 
+> in cui ciascuna delle $36$ coppie ordinate $(i, j) \in \mathcal{Z}$ ha la stessa probabilità uniforme:
+> 
+>   
+> 
+> $$\Pr[\mathbf{Z} = (i, j)] = \frac{1}{36} \quad \forall (i, j) \in \mathcal{Z}$$
+> 
+> Se definiamo la variabile aleatoria $\mathbf{X}$ sull'insieme $\mathcal{X} = \{2, 3, \dots, 12\}$ come la **somma** dei valori dei due dadi ($i + j$), la probabilità di ciascun valore $x \in \mathcal{X}$ corrisponde alla probabilità dell'evento $E_x = \{(i, j) \in \mathcal{Z} : i + j = x\}$:
+> 
+>   
+> 
+> |**x**|**2**|**3**|**4**|**5**|**6**|**7**|**8**|**9**|**10**|**11**|**12**|
+> |---|---|---|---|---|---|---|---|---|---|---|---|
+> |**$\Pr[\mathbf{X} = x]$**|$\frac{1}{36}$|$\frac{2}{36}$|$\frac{3}{36}$|$\frac{4}{36}$|$\frac{5}{36}$|$\frac{6}{36}$|$\frac{5}{36}$|$\frac{4}{36}$|$\frac{3}{36}$|$\frac{2}{36}$|$\frac{1}{36}$|
+> 
+> Ad esempio, per l'evento $E_4 = \{(1, 3), (2, 2), (3, 1)\}$ vale $\Pr[\mathbf{X} = 4] = \frac{3}{36} = \frac{1}{12}$, mentre per $E_7$ vale $\Pr[\mathbf{X} = 7] = \frac{6}{36} = \frac{1}{6}$.
+> 
+>   
+
+> [!abstract] Definition 3.2: Probabilità Congiunta, Condizionata e Indipendenza
+> 
+> Siano $\mathbf{X}$ e $\mathbf{Y}$ due variabili aleatorie definite rispettivamente sugli insiemi finiti $\mathcal{X}$ e $\mathcal{Y}$:
+> 
+>   
+> 
+> 1. La **probabilità congiunta** (_joint probability_) $\Pr[\mathbf{X} = x, \mathbf{Y} = y]$ (abbreviata in $\Pr[x, y]$) è la probabilità che $\mathbf{X}$ assuma il valore $x$ **e** $\mathbf{Y}$ assuma il valore $y$.
+>     
+> 2. La **probabilità condizionata** (_conditional probability_) $\Pr[\mathbf{X} = x \mid \mathbf{Y} = y]$ (abbreviata in $\Pr[x \mid y]$) denota la probabilità che $\mathbf{X}$ assuma il valore $x$ **dato che** $\mathbf{Y}$ assume il valore $y$. Per $\Pr[y] > 0$, essa soddisfa:
+>     
+>     $$\Pr[x \mid y] = \frac{\Pr[x, y]}{\Pr[y]} \quad \Longleftrightarrow \quad \Pr[x, y] = \Pr[y]\Pr[x \mid y] = \Pr[x]\Pr[y \mid x]$$
+>     
+> 3. Le variabili aleatorie $\mathbf{X}$ e $\mathbf{Y}$ si dicono **indipendenti** (_independent random variables_) se:
+>     
+>     $$\Pr[x, y] = \Pr[x]\Pr[y] \quad \forall x \in \mathcal{X}, \; \forall y \in \mathcal{Y}$$
+>     
+
+> [!important] Theorem 3.1: Bayes' Theorem (Teorema di Bayes)
+> 
+> Se $\Pr[y] > 0$, allora:
+> 
+>   
+> 
+> $$\Pr[x \mid y] = \frac{\Pr[x]\Pr[y \mid x]}{\Pr[y]}$$
+
+> [!important] Corollary 3.2: Caratterizzazione dell'Indipendenza
+> 
+> Le variabili aleatorie $\mathbf{X}$ e $\mathbf{Y}$ sono **indipendenti** se e solo se:
+> 
+>   
+> 
+> $$\Pr[x \mid y] = \Pr[x] \quad \forall x \in \mathcal{X}, \; \forall y \in \mathcal{Y} \text{ (con } \Pr[y] > 0\text{)}$$
+
+> [!example] Example 3.2 (Probabilità condizionata, Bayes e non-indipendenza sui dadi)
+> 
+> Consideriamo ancora il lancio casuale di una coppia di dadi. Sia $\mathbf{X}$ la variabile aleatoria su $\mathcal{X} = \{2, \dots, 12\}$ data dalla **somma** dei due dadi, e sia $\mathbf{Y}$ la variabile aleatoria su $\mathcal{Y} = \{1, 2, 3, 4, 5, 6\}$ data dal valore del **primo dado** (con $\Pr[\mathbf{Y} = y] = \frac{1}{6}$ per ogni $y \in \mathcal{Y}$).
+> 
+>   
+> 
+> 4. **Probabilità congiunta:** L'unico esito con somma $4$ e primo dado pari a $3$ è la coppia $(3, 1)$, quindi:
+>     
+>     $$\Pr[\mathbf{X} = 4, \mathbf{Y} = 3] = \frac{1}{36}$$
+>     
+> 5. **Verifica della non-indipendenza (tramite Corollary 3.2):** Poiché $\Pr[\mathbf{X} = 4] = \frac{3}{36} = \frac{1}{12}$, calcoliamo:
+>     
+>     $$\Pr[\mathbf{Y} = 3 \mid \mathbf{X} = 4] = \frac{\Pr[\mathbf{X} = 4, \mathbf{Y} = 3]}{\Pr[\mathbf{X} = 4]} = \frac{1/36}{3/36} = \frac{1}{3}$$
+>     
+>     Poiché $\Pr[\mathbf{Y} = 3 \mid \mathbf{X} = 4] = \frac{1}{3} \neq \frac{1}{6} = \Pr[\mathbf{Y} = 3]$, per il **Corollary 3.2** le variabili $\mathbf{X}$ e $\mathbf{Y}$ **non** sono indipendenti.
+>     
+> 6. **Applicazione di Bayes (Theorem 3.1):** Per determinare la probabilità che la somma sia $4$ sapendo che il primo dado ha dato $3$:
+>     
+>     $$\Pr[\mathbf{X} = 4 \mid \mathbf{Y} = 3] = \frac{\Pr[\mathbf{X} = 4]\Pr[\mathbf{Y} = 3 \mid \mathbf{X} = 4]}{\Pr[\mathbf{Y} = 3]} = \frac{(3/36)(1/3)}{1/6} = \frac{1/36}{1/6} = \frac{1}{6}$$
+>     
+
+## 3.3 Perfect Secrecy (Segretezza Perfetta)
+
+### 3.3.1 Modello Probabilistico di un Crittosistema
+
+Dato un crittosistema $(\mathcal{P}, \mathcal{C}, \mathcal{K}, \mathcal{E}, \mathcal{D})$:
+
+  
+
+1. **Variabili aleatorie $\mathbf{X}$, $\mathbf{K}$ e $\mathbf{Y}$:**
+    
+    - Sia $\mathbf{X}$ la variabile aleatoria sullo spazio dei testi in chiaro $\mathcal{P}$, con distribuzione di probabilità _a priori_ $\Pr[\mathbf{X} = x]$ nota a tutti (incluso Oscar).
+        
+    - Sia $\mathbf{K}$ la variabile aleatoria sullo spazio delle chiavi $\mathcal{K}$, scelta da Alice e Bob secondo la distribuzione $\Pr[\mathbf{K} = K]$.
+        
+    - **Ipotesi di indipendenza:** Si assume che la chiave $\mathbf{K}$ e il testo in chiaro $\mathbf{X}$ siano **variabili aleatorie indipendenti**, ovvero $\Pr[\mathbf{X} = x, \mathbf{K} = K] = \Pr[\mathbf{X} = x]\Pr[\mathbf{K} = K]$.
+        
+    - Le distribuzioni di $\mathbf{X}$ e $\mathbf{K}$ inducono una distribuzione di probabilità sulla variabile aleatoria $\mathbf{Y}$ definita sullo spazio dei testi cifrati $\mathcal{C}$.
+        
+2. **Distribuzione sul testo cifrato $\Pr[\mathbf{Y} = y]$:** Per ogni chiave $K \in \mathcal{K}$, definiamo l'insieme dei possibili testi cifrati generabili da $K$ come:
+    
+    $$C(K) = \{e_K(x) : x \in \mathcal{P}\}$$
+    
+    Allora, per ogni $y \in \mathcal{C}$, la probabilità di osservare il testo cifrato $y$ è:
+    
+    $$\Pr[\mathbf{Y} = y] = \sum_{\{K \in \mathcal{K} : y \in C(K)\}} \Pr[\mathbf{K} = K]\Pr[\mathbf{X} = d_K(y)]$$
+    
+3. **Probabilità condizionata $\Pr[\mathbf{Y} = y \mid \mathbf{X} = x]$:** Per ogni $x \in \mathcal{P}$ e $y \in \mathcal{C}$, la probabilità di ottenere il cifrato $y$ dato il messaggio $x$ è la somma delle probabilità di tutte le chiavi che mappano $x$ in $y$:
+    
+    $$\Pr[\mathbf{Y} = y \mid \mathbf{X} = x] = \sum_{\{K \in \mathcal{K} : e_K(x) = y\}} \Pr[\mathbf{K} = K]$$
+    
+4. **Probabilità a posteriori $\Pr[\mathbf{X} = x \mid \mathbf{Y} = y]$ (tramite Theorem 3.1):** Applicando il **Teorema di Bayes** (assumendo $\Pr[\mathbf{Y} = y] > 0$) si ottiene la probabilità _a posteriori_ che il messaggio inviato fosse $x$, dato il testo cifrato osservato $y$:
+    
+    $$\Pr[\mathbf{X} = x \mid \mathbf{Y} = y] = \frac{\Pr[\mathbf{X} = x]\Pr[\mathbf{Y} = y \mid \mathbf{X} = x]}{\Pr[\mathbf{Y} = y]} = \frac{\Pr[\mathbf{X} = x]\sum_{\{K \in \mathcal{K} : e_K(x) = y\}} \Pr[\mathbf{K} = K]}{\sum_{\{K \in \mathcal{K} : y \in C(K)\}} \Pr[\mathbf{K} = K]\Pr[\mathbf{X} = d_K(y)]}$$
+    
+
+### 3.3.2 Definizione di Segretezza Perfetta ed Esempio di Sistema Non Perfetto
+
+> [!abstract] Definition 3.3: Perfect Secrecy (Segretezza Perfetta) Un crittosistema $(\mathcal{P}, \mathcal{C}, \mathcal{K}, \mathcal{E}, \mathcal{D})$ gode di **perfect secrecy** (segretezza perfetta) se, per ogni $x \in \mathcal{P}$ e per ogni $y \in \mathcal{C}$ (con $\Pr[\mathbf{Y} = y] > 0$), la probabilità _a posteriori_ che il testo in chiaro sia $x$ dato il testo cifrato $y$ è uguale alla probabilità _a priori_ che il testo in chiaro sia $x$:
+> 
+>   
+> 
+> $$\Pr[\mathbf{X} = x \mid \mathbf{Y} = y] = \Pr[\mathbf{X} = x]$$
+
+- **Legame con il Corollary 3.2 e il Theorem 3.1:** Per il **Corollary 3.2**, un crittosistema ha segretezza perfetta se e solo se le variabili aleatorie $\mathbf{X}$ e $\mathbf{Y}$ sono **indipendenti**. Inoltre, per il **Theorem 3.1** (assumendo $\Pr[\mathbf{X} = x] > 0$ e $\Pr[\mathbf{Y} = y] > 0$), vale l'equivalenza:
+    
+    $$\Pr[\mathbf{X} = x \mid \mathbf{Y} = y] = \Pr[\mathbf{X} = x] \quad \Longleftrightarrow \quad \Pr[\mathbf{Y} = y \mid \mathbf{X} = x] = \Pr[\mathbf{Y} = y]$$
+    
+- **Indipendenza dalla distribuzione di $\mathbf{X}$ (Esercizio 3.6):** Poiché $\Pr[\mathbf{Y} = y \mid \mathbf{X} = x]$ dipende esclusivamente dalle regole di cifratura e dalla distribuzione delle chiavi $\Pr[\mathbf{K} = K]$, se un crittosistema gode di segretezza perfetta per una data distribuzione sui testi in chiaro, **mantiene la segretezza perfetta per qualunque distribuzione di probabilità su $\mathcal{P}$**.
+    
+
+> [!example] Example 3.3 (Calcolo di $\Pr[\mathbf{Y} = y]$ e delle probabilità a posteriori $\Pr[\mathbf{X} = x \mid \mathbf{Y} = y]$) Sia $\mathcal{P} = \{a, b\}$ con $\Pr[\mathbf{X} = a] = \frac{1}{4}$ e $\Pr[\mathbf{X} = b] = \frac{3}{4}$. Sia $\mathcal{K} = \{K_1, K_2, K_3\}$ con $\Pr[\mathbf{K} = K_1] = \frac{1}{2}$ e $\Pr[\mathbf{K} = K_2] = \Pr[\mathbf{K} = K_3] = \frac{1}{4}$. Sia $\mathcal{C} = \{1, 2, 3, 4\}$, con funzioni di cifratura specificate dalla seguente matrice di cifratura:
 > 
 >   
 > 
@@ -1185,237 +1288,136 @@ Per studiare la segretezza perfetta servono quattro strumenti fondamentali del c
 > |**$K_2$**|$2$|$3$|
 > |**$K_3$**|$3$|$4$|
 > 
-> 1. **Calcolo delle probabilità dei testi cifrati $\Pr[y]$:**
+> 1. **Distribuzione di probabilità su $\mathcal{C}$ ($\Pr[\mathbf{Y} = y]$):**
 >     
->       
->     - $\Pr[1] = \Pr[K_1]\Pr[a] = \frac{1}{2} \times \frac{1}{4} = \mathbf{\frac{1}{8}}$
+>     - $\Pr[\mathbf{Y} = 1] = \Pr[\mathbf{K} = K_1]\Pr[\mathbf{X} = a] = \frac{1}{2} \cdot \frac{1}{4} = \mathbf{\frac{1}{8}}$
 >         
->           
+>     - $\Pr[\mathbf{Y} = 2] = \Pr[\mathbf{K} = K_1]\Pr[\mathbf{X} = b] + \Pr[\mathbf{K} = K_2]\Pr[\mathbf{X} = a] = \left(\frac{1}{2} \cdot \frac{3}{4}\right) + \left(\frac{1}{4} \cdot \frac{1}{4}\right) = \mathbf{\frac{7}{16}}$
 >         
->     - $\Pr[2] = \Pr[K_1]\Pr[b] + \Pr[K_2]\Pr[a] = \left(\frac{1}{2} \times \frac{3}{4}\right) + \left(\frac{1}{4} \times \frac{1}{4}\right) = \frac{3}{8} + \frac{1}{16} = \mathbf{\frac{7}{16}}$
+>     - $\Pr[\mathbf{Y} = 3] = \Pr[\mathbf{K} = K_2]\Pr[\mathbf{X} = b] + \Pr[\mathbf{K} = K_3]\Pr[\mathbf{X} = a] = \left(\frac{1}{4} \cdot \frac{3}{4}\right) + \left(\frac{1}{4} \cdot \frac{1}{4}\right) = \mathbf{\frac{1}{4}}$
 >         
->           
+>     - $\Pr[\mathbf{Y} = 4] = \Pr[\mathbf{K} = K_3]\Pr[\mathbf{X} = b] = \frac{1}{4} \cdot \frac{3}{4} = \mathbf{\frac{3}{16}}$ _(Verifica: $\frac{1}{8} + \frac{7}{16} + \frac{1}{4} + \frac{3}{16} = 1$)._
 >         
->     - $\Pr[3] = \Pr[K_2]\Pr[b] + \Pr[K_3]\Pr[a] = \left(\frac{1}{4} \times \frac{3}{4}\right) + \left(\frac{1}{4} \times \frac{1}{4}\right) = \frac{3}{16} + \frac{1}{16} = \mathbf{\frac{1}{4}}$
->         
->           
->         
->     - $\Pr[4] = \Pr[K_3]\Pr[b] = \frac{1}{4} \times \frac{3}{4} = \mathbf{\frac{3}{16}}$
->         
->         _(Verifica: $\frac{1}{8} + \frac{7}{16} + \frac{1}{4} + \frac{3}{16} = 1$)._
->         
->           
->         
-> 2. **Calcolo delle probabilità a posteriori $\Pr[x \mid y]$ tramite il Teorema di Bayes:**
+> 2. **Probabilità a posteriori $\Pr[\mathbf{X} = x \mid \mathbf{Y} = y]$ (via Theorem 3.1):**
 >     
->       
->     - Se Oscar intercetta $y = 1$: $\Pr[a \mid 1] = 1$ e $\Pr[b \mid 1] = 0$ (perché solo $a$ può cifrarsi in $1$!).
+>     - Per $y = 1$: $\Pr[a \mid 1] = \mathbf{1}$ e $\Pr[b \mid 1] = \mathbf{0}$ (solo $a$ si cifra in $1$).
 >         
->           
+>     - Per $y = 2$: $\Pr[a \mid 2] = \frac{(1/4)(1/4)}{7/16} = \mathbf{\frac{1}{7}}$ e $\Pr[b \mid 2] = \frac{(3/4)(1/2)}{7/16} = \mathbf{\frac{6}{7}}$.
 >         
->     - Se Oscar intercetta $y = 2$: $\Pr[a \mid 2] = \frac{\Pr[a]\Pr[2 \mid a]}{\Pr[2]} = \frac{(1/4)(1/4)}{7/16} = \mathbf{\frac{1}{7}}$, mentre $\Pr[b \mid 2] = \mathbf{\frac{6}{7}}$.
+>     - Per $y = 3$: $\Pr[a \mid 3] = \frac{(1/4)(1/4)}{1/4} = \mathbf{\frac{1}{4}}$ e $\Pr[b \mid 3] = \frac{(3/4)(1/4)}{1/4} = \mathbf{\frac{3}{4}}$.
 >         
->           
->         
->     - Se Oscar intercetta $y = 3$: $\Pr[a \mid 3] = \frac{(1/4)(1/4)}{1/4} = \mathbf{\frac{1}{4}}$, mentre $\Pr[b \mid 3] = \mathbf{\frac{3}{4}}$.
->         
->           
->         
->     - Se Oscar intercetta $y = 4$: $\Pr[a \mid 4] = 0$ e $\Pr[b \mid 4] = 1$ (perché solo $b$ può cifrarsi in $4$!).
->         
->           
+>     - Per $y = 4$: $\Pr[a \mid 4] = \mathbf{0}$ e $\Pr[b \mid 4] = \mathbf{1}$ (solo $b$ si cifra in $4$).
 >         
 > 
-> **Conclusione sull'Esempio 3.1:** Questo crittosistema **NON** ha segretezza perfetta! Sebbene per $y = 3$ valga $\Pr[a \mid 3] = 1/4 = \Pr[a]$, per $y = 1, 2, 4$ le probabilità a posteriori cambiano drasticamente (addirittura con $y=1$ o $y=4$ Oscar scopre con certezza assoluta il messaggio).
+> **Conclusione:** Il crittosistema **non** fornisce segretezza perfetta, perché sebbene $\Pr[a \mid 3] = \Pr[a] = \frac{1}{4}$, per $y \in \{1, 2, 4\}$ vale $\Pr[x \mid y] \neq \Pr[x]$ (e per $y=1$ o $y=4$ Oscar determina $x$ con certezza assoluta).
 > 
 >   
 
-### 3.2.2 Definizione Formale di Segretezza Perfetta e Lemmi Equivalenti
+> [!important] Theorem 3.3: Segretezza Perfetta dello Shift Cipher
+> Supponiamo che le $26$ chiavi dello **Shift Cipher** vengano scelte con probabilità uniforme $\Pr[\mathbf{K} = K] = \frac{1}{26}$ per ogni $K \in \mathbb{Z}_{26}$. Allora, per qualunque distribuzione di probabilità sui testi in chiaro $\mathbf{X}$ (su un singolo carattere in $\mathbb{Z}_{26}$), lo Shift Cipher fornisce **perfect secrecy**.
 
-> [!abstract] Definizione 3.1: Segretezza Perfetta (Perfect Secrecy) Un crittosistema $(\mathcal{P}, \mathcal{C}, \mathcal{K}, \mathcal{E}, \mathcal{D})$ gode di **segretezza perfetta** se, per ogni elemento di testo in chiaro $x \in \mathcal{P}$ e per ogni elemento di testo cifrato $y \in \mathcal{C}$ (con $\Pr[y] > 0$), la probabilità _a posteriori_ che il testo in chiaro sia $x$, dato che è stato osservato il testo cifrato $y$, è identica alla probabilità _a priori_ che il testo in chiaro sia $x$:
-> 
->   
-> 
-> $$\Pr[x \mid y] = \Pr[x]$$
+**Dimostrazione:**
 
-#### Condizione Equivalente (tramite il Teorema di Bayes)
+1. **Calcolo della distribuzione di probabilità del testo cifrato $\Pr[\mathbf{Y} = y]$:**
+   Ricordiamo che, per ogni chiave $K \in \mathbb{Z}_{26}$, vale $C(K) = \mathbb{Z}_{26}$ e la regola di decifratura è $d_K(y) = (y - K) \bmod 26$. Applicando la formula generale per $\Pr[\mathbf{Y} = y]$, per qualsiasi $y \in \mathbb{Z}_{26}$ otteniamo:
+   $$\begin{aligned}
+   \Pr[\mathbf{Y} = y] &= \sum_{K \in \mathbb{Z}_{26}} \Pr[\mathbf{K} = K]\Pr[\mathbf{X} = d_K(y)] \\
+   &= \sum_{K \in \mathbb{Z}_{26}} \frac{1}{26}\Pr[\mathbf{X} = (y - K) \bmod 26] \\
+   &= \frac{1}{26} \sum_{K \in \mathbb{Z}_{26}} \Pr[\mathbf{X} = (y - K) \bmod 26]
+   \end{aligned}$$
+   Fissato $y \in \mathbb{Z}_{26}$, al variare di $K$ su tutto $\mathbb{Z}_{26}$ i valori $(y - K) \bmod 26$ formano una permutazione di $\mathbb{Z}_{26}$. Pertanto:
+   $$\sum_{K \in \mathbb{Z}_{26}} \Pr[\mathbf{X} = (y - K) \bmod 26] = \sum_{x \in \mathbb{Z}_{26}} \Pr[\mathbf{X} = x] = 1$$
+   Di conseguenza:
+   $$\Pr[\mathbf{Y} = y] = \frac{1}{26} \cdot 1 = \frac{1}{26} \quad \forall y \in \mathbb{Z}_{26}$$
 
-- Considerando gli $x \in \mathcal{P}$ con $\Pr[x] > 0$ e gli $y \in \mathcal{C}$ con $\Pr[y] > 0$, applicando il Teorema di Bayes $\Pr[x \mid y] = \frac{\Pr[y \mid x]\Pr[x]}{\Pr[y]}$ e dividendo per $\Pr[x] > 0$, si ottiene:
-    
-      
-    
-    $$\Pr[x \mid y] = \Pr[x] \quad \forall x \in \mathcal{P}, y \in \mathcal{C} \quad \Longleftrightarrow \quad \Pr[y \mid x] = \Pr[y] \quad \forall x \in \mathcal{P}, y \in \mathcal{C}$$
-    
-- **Proprietà cruciale (Esercizio 3.6):** Poiché $\Pr[y \mid x]$ dipende esclusivamente dall'algoritmo e dalla distribuzione delle chiavi $\Pr[K]$, se un crittosistema raggiunge la segretezza perfetta per una particolare distribuzione di probabilità sui testi in chiaro, **mantiene la segretezza perfetta per qualsiasi distribuzione di probabilità sui testi in chiaro**.
-    
-      
+2. **Calcolo della probabilità condizionata $\Pr[\mathbf{Y} = y \mid \mathbf{X} = x]$:**
+   Per ogni $x, y \in \mathbb{Z}_{26}$, esiste un'unica chiave $K \in \mathbb{Z}_{26}$ tale che $e_K(x) = y$, ossia $K = (y - x) \bmod 26$. La sommatoria su $\{K \in \mathbb{Z}_{26} : e_K(x) = y\}$ si riduce quindi a un solo termine:
+   $$\Pr[\mathbf{Y} = y \mid \mathbf{X} = x] = \Pr[\mathbf{K} = (y - x) \bmod 26] = \frac{1}{26} \quad \forall x, y \in \mathbb{Z}_{26}$$
+
+3. **Applicazione del Theorem 3.1 (Teorema di Bayes):**
+   Sostituendo i valori appena trovati nel Teorema di Bayes, per ogni $x, y \in \mathbb{Z}_{26}$ otteniamo:
+   $$\Pr[\mathbf{X} = x \mid \mathbf{Y} = y] = \frac{\Pr[\mathbf{X} = x]\Pr[\mathbf{Y} = y \mid \mathbf{X} = x]}{\Pr[\mathbf{Y} = y]} = \frac{\Pr[\mathbf{X} = x] \cdot \frac{1}{26}}{\frac{1}{26}} = \Pr[\mathbf{X} = x]$$
+   Poiché $\Pr[\mathbf{X} = x \mid \mathbf{Y} = y] = \Pr[\mathbf{X} = x]$ per ogni $x, y \in \mathbb{Z}_{26}$, lo Shift Cipher soddisfa la definizione di **perfect secrecy**. $\blacksquare$
+- **Interpretazione operativa:** Se Oscar intercetta ad esempio $y = 10$ (`K`), provando tutte le $26$ chiavi equiprobabili ottiene come decifrature $d_K(10) = (10 - K) \bmod 26$ tutti e $26$ i caratteri dell'alfabeto, ciascuno con la propria probabilità _a priori_ $\Pr[\mathbf{X} = x]$. 
     
 
-### 3.2.3 Disuguaglianza Fondamentale sulle Cardinalità ($\vert{}\mathcal{K}\vert{} \ge \vert{}\mathcal{C}\vert{} \ge \vert{}\mathcal{P}\vert{}$)
+#### Disuguaglianza Fondamentale sulle Cardinalità ($\vert{}\mathcal{K}\vert{} \ge \vert{}\mathcal{C}\vert{} \ge \vert{}\mathcal{P}\vert{}$)
 
-Supponiamo che un crittosistema $(\mathcal{P}, \mathcal{C}, \mathcal{K}, \mathcal{E}, \mathcal{D})$ abbia segretezza perfetta:
+In qualsiasi crittosistema dotato di segretezza perfetta (assumendo $\Pr[\mathbf{Y} = y] > 0$ per ogni $y \in \mathcal{C}$):
 
   
 
-1. **Perché $\vert{}\mathcal{C}\vert{} \ge \vert{}\mathcal{P}\vert{}$ (vale in ogni crittosistema):** Ogni funzione di cifratura $e_K : \mathcal{P} \to \mathcal{C}$ deve essere **iniettiva** affinché la decifratura $d_K(e_K(x)) = x$ sia univoca.
+1. **$\vert{}\mathcal{C}\vert{} \ge \vert{}\mathcal{P}\vert{}$:** Vale in ogni crittosistema perché ogni regola di cifratura $e_K : \mathcal{P} \to \mathcal{C}$ deve essere iniettiva.
     
-      
-    
-2. **Perché $\vert{}\mathcal{K}\vert{} \ge \vert{}\mathcal{C}\vert{}$ (necessario per la segretezza perfetta):** Fissiamo un qualsiasi $x \in \mathcal{P}$. Per ogni $y \in \mathcal{C}$, la condizione di segretezza perfetta impone $\Pr[y \mid x] = \Pr[y] > 0$, quindi deve esistere **almeno una chiave** $K \in \mathcal{K}$ tale che $e_K(x) = y$. Poiché una singola chiave applicata a $x$ produce un solo $y$, servono almeno $\vert{}\mathcal{C}\vert{}$ chiavi distinte:
-    
-      
+2. **$\vert{}\mathcal{K}\vert{} \ge \vert{}\mathcal{C}\vert{}$:** Fissato un qualsiasi $x \in \mathcal{P}$, per ogni $y \in \mathcal{C}$ la segretezza perfetta richiede $\Pr[\mathbf{Y} = y \mid \mathbf{X} = x] = \Pr[\mathbf{Y} = y] > 0$, quindi deve esistere almeno una chiave $K \in \mathcal{K}$ tale che $e_K(x) = y$. Poiché ciascuna chiave associa a $x$ un solo valore $y$, servono almeno $\vert{}\mathcal{C}\vert{}$ chiavi distinte:
     
     $$\vert{}\mathcal{K}\vert{} \ge \vert{}\mathcal{C}\vert{} \ge \vert{}\mathcal{P}\vert{}$$
     
 
-> [!example] Example 3.2 / Theorem 3.1 (Segretezza Perfetta dello Shift Cipher su 1 carattere) Lo Shift Cipher modulo 26 fornisce **segretezza perfetta** quando una chiave $K \in \mathbb{Z}_{26}$ scelta con probabilità uniforme ($\Pr[K] = 1/26$) viene usata per cifrare **un singolo carattere** $x \in \mathbb{Z}_{26}$.
+### 3.3.4 Il Teorema di Shannon e il One-Time Pad
+
+> [!important] Theorem 3.4: Shannon's Theorem (Teorema di Shannon) Sia $(\mathcal{P}, \mathcal{C}, \mathcal{K}, \mathcal{E}, \mathcal{D})$ un crittosistema tale che $\vert{}\mathcal{K}\vert{} = \vert{}\mathcal{C}\vert{} = \vert{}\mathcal{P}\vert{}$. Allora il crittosistema fornisce **perfect secrecy** se e solo se sono soddisfatte entrambe le seguenti condizioni:
 > 
 >   
 > 
-> - **Dimostrazione:** Per ogni $x, y \in \mathbb{Z}_{26}$, l'equazione $(x + K) \equiv y \pmod{26}$ ammette l'unica soluzione $K = (y - x) \bmod 26$. Pertanto:
+> 1. Ogni chiave $K \in \mathcal{K}$ è scelta con la stessa probabilità uniforme:
 >     
->       
+>     $$\Pr[\mathbf{K} = K] = \frac{1}{\vert{}\mathcal{K}\vert{}} \quad \forall K \in \mathcal{K}$$
 >     
->     $$\Pr[y \mid x] = \Pr[K = (y - x) \bmod 26] = \frac{1}{26}$$
->     
->       
->     
->     Calcoliamo la probabilità marginale $\Pr[y]$ per qualsiasi $y \in \mathbb{Z}_{26}$:
->     
->       
->     
->     $$\Pr[y] = \sum_{x \in \mathbb{Z}_{26}} \Pr[x] \Pr[y \mid x] = \frac{1}{26} \sum_{x \in \mathbb{Z}_{26}} \Pr[x] = \frac{1}{26} \times 1 = \frac{1}{26}$$
->     
->       
->     
->     Allora, per il Teorema di Bayes:
->     
->       
->     
->     $$\Pr[x \mid y] = \frac{\Pr[x]\Pr[y \mid x]}{\Pr[y]} = \frac{\Pr[x](1/26)}{1/26} = \Pr[x]$$
->     
-> - **Cosa succede se Oscar intercetta ad esempio $y = 10$ (`K`)?** Provando tutte le 26 chiavi equiprobabili $K \in \{0, \dots, 25\}$, Oscar ottiene come possibili decifrature $d_K(10) = (10 - K) \bmod 26$ **tutti e 26 i caratteri in chiaro dell'alfabeto**, ciascuno con la sua esatta probabilità a priori $\Pr[x]$. Non può scartare né preferire alcuna chiave o messaggio!
->     
->       
->     
-> - **Nota per i cifrari generali:** Per lo stesso principio, il _Substitution Cipher_ è perfettamente sicuro se cifra 1 sola lettera (con $\Pr[\pi] = 1/26!$) e il _Vigenère Cipher_ con keyword di lunghezza $m$ è perfettamente sicuro se cifra un solo blocco di $m$ lettere (con $\Pr[K] = 1/26^m$).
->     
->       
+> 2. Per ogni $x \in \mathcal{P}$ e per ogni $y \in \mathcal{C}$, esiste un'**unica** chiave $K \in \mathcal{K}$ tale che $e_K(x) = y$.
 >     
 
-## 3.3 Il Teorema di Shannon e il One-Time Pad
+#### Dimostrazione completa del Theorem 3.4
 
-### 3.3.1 Il Teorema di Caratterizzazione di Shannon (Caso $\vert{}\mathcal{K}\vert{} = \vert{}\mathcal{C}\vert{} = \vert{}\mathcal{P}\vert{}$)
-
-> [!important] Teorema 3.2: Teorema di Shannon Sia $(\mathcal{P}, \mathcal{C}, \mathcal{K}, \mathcal{E}, \mathcal{D})$ un crittosistema in cui $\vert{}\mathcal{K}\vert{} = \vert{}\mathcal{C}\vert{} = \vert{}\mathcal{P}\vert{}$. Allora il crittosistema fornisce **segretezza perfetta** se e solo se sono verificate entrambe le seguenti condizioni:
-> 
->   
-> 
-> 1. **Unicità della chiave ponte:** Per ogni $x \in \mathcal{P}$ e per ogni $y \in \mathcal{C}$, esiste **un'unica** chiave $K \in \mathcal{K}$ tale che $e_K(x) = y$.
->     
->       
->     
-> 2. **Equiprobabilità delle chiavi:** Ogni chiave $K \in \mathcal{K}$ viene scelta con la stessa identica probabilità uniforme:
->     
->       
->     
->     $$\Pr[K] = \frac{1}{\vert{}\mathcal{K}\vert{}} \quad \forall K \in \mathcal{K}$$
->     
-
-#### Dimostrazione completa del Teorema di Shannon
-
-- **($\Longrightarrow$ Supponiamo che il sistema abbia segretezza perfetta):**
+- **($\Longrightarrow$ Supponiamo che il crittosistema fornisca perfect secrecy):**
     
-      
-    1. Fissato $x \in \mathcal{P}$, per ogni $y \in \mathcal{C}$ deve esistere almeno una chiave $K$ tale che $e_K(x) = y$. Poiché $\vert{}\mathcal{K}\vert{} = \vert{}\mathcal{C}\vert{}$, la mappa $K \mapsto e_K(x)$ è biiettiva: esiste _esattamente una_ chiave $K_i$ tale che $e_{K_i}(x_i) = y$ (**Condizione 1 dimostrata**).
+    1. Fissato $x \in \mathcal{P}$, per ogni $y \in \mathcal{C}$ deve esistere almeno una chiave $K \in \mathcal{K}$ tale che $e_K(x) = y$ (altrimenti $\Pr[y \mid x] = 0 \neq \Pr[y]$). Poiché $|\mathcal{K}| = |\mathcal{C}|$, non possono esserci due chiavi distinte che mappano $x$ nello stesso $y$: esiste quindi un'**unica** chiave $K$ tale che $e_K(x) = y$ (**Condizione 2 dimostrata**).
         
-          
+    2. Poniamo $n = |\mathcal{K}|$, indichiamo $\mathcal{P} = \{x_i : 1 \le i \le n\}$ e fissiamo un elemento di testo cifrato $y \in \mathcal{C}$. Per la Condizione 2, possiamo etichettare le chiavi come $K_1, K_2, \dots, K_n$ in modo tale che $e_{K_i}(x_i) = y$ per $1 \le i \le n$.
         
-    2. Rinominando le $n = \vert{}\mathcal{K}\vert{}$ chiavi in modo che $e_{K_i}(x_i) = y$ per $1 \le i \le n$, per il Teorema di Bayes abbiamo $\Pr[x_i \mid y] = \frac{\Pr[x_i]\Pr[y \mid x_i]}{\Pr[y]} = \frac{\Pr[x_i]\Pr[K_i]}{\Pr[y]}$.
+    3. Per il **Theorem 3.1** (Bayes), per ogni $1 \le i \le n$ vale:
         
-          
+        $$\Pr[\mathbf{X} = x_i \mid \mathbf{Y} = y] = \frac{\Pr[\mathbf{X} = x_i]\Pr[\mathbf{Y} = y \mid \mathbf{X} = x_i]}{\Pr[\mathbf{Y} = y]} = \frac{\Pr[\mathbf{X} = x_i]\Pr[\mathbf{K} = K_i]}{\Pr[\mathbf{Y} = y]}$$
         
-    3. Poiché vale la segretezza perfetta ($\Pr[x_i \mid y] = \Pr[x_i]$), dividendo per $\Pr[x_i]$ otteniamo $\Pr[K_i] = \Pr[y]$ per ogni $1 \le i \le n$. Tutte le chiavi hanno quindi la stessa probabilità costante $\Pr[y]$, che dovendo sommare a $1$ vale necessariamente $\Pr[K_i] = 1/\vert{}\mathcal{K}\vert{}$ (**Condizione 2 dimostrata**).
+    4. Per ipotesi di segretezza perfetta, $\Pr[\mathbf{X} = x_i \mid \mathbf{Y} = y] = \Pr[\mathbf{X} = x_i]$; assumendo $\Pr[\mathbf{X} = x_i] > 0$ e dividendo entrambi i membri per $\Pr[\mathbf{X} = x_i]$, otteniamo $\Pr[\mathbf{K} = K_i] = \Pr[\mathbf{Y} = y]$ per ogni $1 \le i \le n$. Tutte le $n$ chiavi hanno dunque la stessa probabilità costante, che dovendo sommare a $1$ vale necessariamente $\Pr[\mathbf{K} = K_i] = \frac{1}{|\mathcal{K}|}$ (**Condizione 1 dimostrata**).
         
-          
-        
-- **($\Longleftarrow$ Supponiamo che valgano le Condizioni 1 e 2):** Per ogni $x \in \mathcal{P}$ e $y \in \mathcal{C}$ esiste un'unica chiave $K$ tale che $e_K(x) = y$, con $\Pr[K] = 1/\vert{}\mathcal{K}\vert{}$, quindi $\Pr[y \mid x] = 1/\vert{}\mathcal{K}\vert{}$. Allora $\Pr[y] = \sum_{x \in \mathcal{P}} \Pr[x] \frac{1}{\vert{}\mathcal{K}\vert{}} = \frac{1}{\vert{}\mathcal{K}\vert{}} = \Pr[y \mid x]$, che per Bayes equivale a $\Pr[x \mid y] = \Pr[x]$. $\blacksquare$
+- **($\Longleftarrow$ Supponiamo che valgano le Condizioni 1 e 2):** Fissati $x \in \mathcal{P}$ e $y \in \mathcal{C}$, esiste un'unica chiave $K \in \mathcal{K}$ tale che $e_K(x) = y$, e tale chiave ha probabilità $\frac{1}{|\mathcal{K}|}$. Pertanto $\Pr[\mathbf{Y} = y \mid \mathbf{X} = x] = \frac{1}{|\mathcal{K}|}$. Ne segue che:
     
-      
+    $$\Pr[\mathbf{Y} = y] = \sum_{x \in \mathcal{P}} \Pr[\mathbf{X} = x]\Pr[\mathbf{Y} = y \mid \mathbf{X} = x] = \frac{1}{|\mathcal{K}|}\sum_{x \in \mathcal{P}} \Pr[\mathbf{X} = x] = \frac{1}{|\mathcal{K}|} = \Pr[\mathbf{Y} = y \mid \mathbf{X} = x]$$
+    
+    Applicando il **Theorem 3.1**, otteniamo $\Pr[\mathbf{X} = x \mid \mathbf{Y} = y] = \Pr[\mathbf{X} = x]$ per ogni $x \in \mathcal{P}, y \in \mathcal{C}$. $\blacksquare$
     
 
-> [!example] Esempio di Matrice di Cifratura con Segretezza Perfetta (Quadrati Latini e Caso $\vert{}\mathcal{K}\vert{} > \vert{}\mathcal{C}\vert{} > \vert{}\mathcal{P}\vert{}$)
+> [!example] Matrici di Cifratura Perfette: Quadrati Latini e Caso $|\mathcal{K}| > |\mathcal{C}| > |\mathcal{P}|$
 > 
 >   
 > 
-> 1. **Caso $\vert{}\mathcal{K}\vert{} = \vert{}\mathcal{C}\vert{} = \vert{}\mathcal{P}\vert{} = 4$ (Quadrato Latino):** Se $\mathcal{P} = \mathcal{C} = \{1, 2, 3, 4\}$ e $\mathcal{K} = \{K_1, K_2, K_3, K_4\}$ con $\Pr[K_i] = 1/4$, una matrice di cifratura dà segretezza perfetta se e solo se è un **Quadrato Latino** (ogni simbolo di $\mathcal{C}$ compare esattamente una volta in ogni riga e una volta in ogni colonna). (Attenzione alla Tabella dell'Esercizio 5.15 vista nel libro: lì compare una matrice $6 \times 4$ in cui i simboli $\{1, 2, 3\}$ compaiono esattamente 2 volte per colonna, usata per costruire famiglie di hash fortemente universali).
+> 1. **Quadrato Latino ($\vert{}\mathcal{K}\vert{} = \vert{}\mathcal{C}\vert{} = \vert{}\mathcal{P}\vert{} = n$):** Per il **Theorem 3.4**, con chiavi equiprobabili $\Pr[\mathbf{K} = K_i] = \frac{1}{n}$, la matrice di cifratura fornisce segretezza perfetta se e solo se è un **Quadrato Latino** (_Latin square_), ossia ogni simbolo $y \in \mathcal{C}$ compare esattamente una volta in ogni riga (iniettività di $e_K$) e una volta in ogni colonna (unicità della chiave $K$ tale che $e_K(x) = y$).
 >     
->       
->     
-> 2. **Caso generale con cardinalità diverse (Esercizio 3.4 del libro):** Sia $\mathcal{P} = \{a, b\}$, $\mathcal{C} = \{1, 2, 3, 4\}$ e $\mathcal{K} = \{K_1, K_2, K_3, K_4, K_5, K_6\}$ ($\vert{}\mathcal{K}\vert{} = 6 > \vert{}\mathcal{C}\vert{} = 4 > \vert{}\mathcal{P}\vert{} = 2$). Se la matrice di cifratura ha righe:
->     
->     $K_1: (1, 2), \; K_2: (2, 3), \; K_3: (3, 4), \; K_4: (4, 1), \; K_5: (1, 3), \; K_6: (2, 4)$
->     
->     allora scegliendo probabilità non uniformi per le chiavi (es. $\Pr[K_1]=\Pr[K_3]=p$, $\Pr[K_2]=\Pr[K_4]=q$, $\Pr[K_5]=\Pr[K_6]=r$ con $2p+2q+2r=1$), si ottiene comunque $\Pr[y \mid a] = \Pr[y \mid b]$ per ogni $y \in \{1, 2, 3, 4\}$, realizzando la segretezza perfetta anche con chiavi non equiprobabili perché $\vert{}\mathcal{K}\vert{} > \vert{}\mathcal{C}\vert{}$.
->     
->       
+> 2. **Caso $|\mathcal{K}| > |\mathcal{C}| > |\mathcal{P}|$ (Esercizio 3.4):** Se $\mathcal{P} = \{a, b\}$, $\mathcal{C} = \{1, 2, 3, 4\}$ e $\mathcal{K} = \{K_1, \dots, K_6\}$ con righe $K_1:(1,2),\; K_2:(2,3),\; K_3:(3,4),\; K_4:(4,1),\; K_5:(1,3),\; K_6:(2,4)$, scegliendo probabilità anche non uniformi $\Pr[K_1]=\Pr[K_3]=p$, $\Pr[K_2]=\Pr[K_4]=q$, $\Pr[K_5]=\Pr[K_6]=r$ (con $2p + 2q + 2r = 1$), si ottiene comunque $\Pr[\mathbf{Y} = y \mid \mathbf{X} = a] = \Pr[\mathbf{Y} = y \mid \mathbf{X} = b]$ per ogni $y \in \mathcal{C}$. Questo mostra che l'equiprobabilità delle chiavi del Theorem 3.4 è necessaria solo quando $|\mathcal{K}| = |\mathcal{C}| = |\mathcal{P}|$.
 >     
 
-### 3.3.2 Il One-Time Pad (Cifrario di Vernam)
+> [!abstract] Cryptosystem 3.1: One-time Pad
+> Sia $n \ge 1$ un intero, e prendiamo $\mathcal{P} = \mathcal{C} = \mathcal{K} = (\mathbb{Z}_2)^n$. Per $K \in (\mathbb{Z}_2)^n$, definiamo $e_K(x)$ come la somma vettoriale modulo $2$ di $K$ e $x$ (o, equivalentemente, l'exclusive-or delle due bitstring associate). Quindi, se $x = (x_1, \dots, x_n)$ e $K = (K_1, \dots, K_n)$, allora
+> $$e_K(x) = (x_1 + K_1, \dots, x_n + K_n) \bmod 2.$$
+> La decifratura è identica alla cifratura. Se $y = (y_1, \dots, y_n)$, allora
+> $$d_K(y) = (y_1 + K_1, \dots, y_n + K_n) \bmod 2.$$
 
-> [!abstract] Cryptosystem 3.1: One-Time Pad Sia $n \ge 1$ un intero positivo. Si definisce $\mathcal{P} = \mathcal{C} = \mathcal{K} = (\mathbb{Z}_2)^n$ (tutte le stringhe binarie di lunghezza $n$). Per una chiave $K = (K_1, \dots, K_n) \in (\mathbb{Z}_2)^n$ scelta con probabilità uniforme $\Pr[K] = 2^{-n}$, la cifratura e la decifratura per ogni $x = (x_1, \dots, x_n), y = (y_1, \dots, y_n) \in (\mathbb{Z}_2)^n$ sono definite dalla somma vettoriale modulo 2 (**XOR bit a bit**, $\oplus$):
+> [!example] Esempio Numerico del One-time Pad e Vulnerabilità del Riutilizzo della Chiave (Two-Time Pad)
 > 
 >   
 > 
-> $$e_K(x) = (x_1 + K_1, \dots, x_n + K_n) \bmod 2 = x \oplus K$$
-> 
->   
-> 
-> $$d_K(y) = (y_1 + K_1, \dots, y_n + K_n) \bmod 2 = y \oplus K$$
-> 
->   
-
-> [!example] Esempio Numerico del One-Time Pad e Attacco al Riutilizzo della Chiave
-> 
->   
-> 
-> 1. **Cifratura e Decifratura ($n = 5$):**
+> 1. **Cifratura e Decifratura ($n = 5$):** Dato $x = (1, 0, 1, 1, 0)$ e la chiave casuale $K = (0, 1, 1, 0, 1)$ (con $\Pr[\mathbf{K} = K] = 2^{-5} = \frac{1}{32}$):
 >     
->       
->     - Sia il plaintext $x = (1, 0, 1, 1, 0)$ e la chiave casuale estratta $K = (0, 1, 1, 0, 1)$ (con $\Pr[K] = 1/2^5 = 1/32$).
+>     - **Cifratura:** $y = e_K(x) = x \oplus K = \mathbf{(1, 1, 0, 1, 1)}$.
 >         
->           
+>     - **Decifratura:** $d_K(y) = y \oplus K = \mathbf{(1, 0, 1, 1, 0)} = x$.
 >         
->     - **Cifratura:** $y = x \oplus K = (1+0, 0+1, 1+1, 1+0, 0+1) \bmod 2 = \mathbf{(1, 1, 0, 1, 1)}$.
->         
->           
->         
->     - **Decifratura:** Bob calcola $y \oplus K = (1+0, 1+1, 0+1, 1+0, 1+1) \bmod 2 = \mathbf{(1, 0, 1, 1, 0)} = x$.
->         
->           
->         
-> 2. **Dimostrazione di Segretezza Perfetta tramite il Teorema di Shannon:**
+> 2. **Dimostrazione di Perfect Secrecy (via Theorem 3.4):** Poiché $|\mathcal{P}| = |\mathcal{C}| = |\mathcal{K}| = 2^n$, ogni chiave è scelta con probabilità uniforme $2^{-n}$ e, fissati $x, y \in (\mathbb{Z}_2)^n$, l'equazione $x \oplus K = y$ ammette l'unica soluzione $K = x \oplus y$, per il **Theorem 3.4** il _One-time Pad_ garantisce segretezza perfetta.
 >     
->       
->     - $\vert{}\mathcal{P}\vert{} = \vert{}\mathcal{C}\vert{} = \vert{}\mathcal{K}\vert{} = 2^n$.
->         
->           
->         
->     - Ogni chiave ha probabilità $\Pr[K] = 2^{-n}$.
->         
->           
->         
->     - Fissati $x$ e $y$, l'equazione $x \oplus K = y$ ha **un'unica soluzione** $K = x \oplus y$. Per il Teorema 3.2, il One-Time Pad ha segretezza perfetta.
->         
->           
->         
-> 3. **Esempio di vulnerabilità se la chiave viene usata due volte (Two-Time Pad):** Se Alice cifra due messaggi $x_1 = \texttt{10110}$ e $x_2 = \texttt{01100}$ con la **stessa chiave** $K = \texttt{01101}$, ottiene $y_1 = \texttt{11011}$ e $y_2 = \texttt{00001}$. Oscar intercetta $y_1, y_2$ e calcola:
+> 3. **Attacco al riutilizzo della chiave (_Two-Time Pad_):** Se Alice cifra due messaggi distinti $x_1 = \texttt{10110}$ e $x_2 = \texttt{01100}$ con la medesima chiave $K = \texttt{01101}$, ottiene $y_1 = \texttt{11011}$ e $y_2 = \texttt{00001}$. Calcolando lo XOR dei due testi cifrati, Oscar elimina la chiave $K$:
 >     
->       
+>     $$y_1 \oplus y_2 = (x_1 \oplus K) \oplus (x_2 \oplus K) = x_1 \oplus x_2 = \texttt{11010}$$
 >     
->     $$y_1 \oplus y_2 = \texttt{11011} \oplus \texttt{00001} = \texttt{11010} = x_1 \oplus x_2$$
+>     ottenendo informazioni dirette sulla correlazione tra i due testi in chiaro (inoltre, in un attacco _known-plaintext_, conoscendo $x_1$ Oscar ricava subito $K = x_1 \oplus y_1$ e decifra $x_2$).
 >     
->       
->     
->     La chiave $K$ è sparita del tutto e Oscar conosce esattamente in quali bit i due messaggi in chiaro coincidono (dove c'è `0`) e in quali differiscono (dove c'è `1`)!
->
