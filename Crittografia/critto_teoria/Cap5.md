@@ -231,46 +231,46 @@ Poiché $\vert{}\mathcal{X}\vert{} > \vert{}\mathcal{Y}\vert{}$, la funzione $h$
 
 ## 5.2.1 The Random Oracle Model (Il Modello dell'Oracolo Casuale)
 
-  
+### Nozione di Funzione di Hash "Ideale"
 
-  
+Prima di analizzare formalmente la difficoltà dei tre problemi, chiariamo cosa intendiamo per **funzione di hash ideale** (o ben progettata):
 
-Per analizzare la difficoltà dei problemi **Preimage**, **Second Preimage** e **Collision** per una funzione di hash "ideale", introduciamo il **random oracle model**:
-
-  
-
-- Denotiamo con **$\mathcal{F}^{\mathcal{X}, \mathcal{Y}}$** l'insieme di tutte le funzioni da $\mathcal{X}$ a $\mathcal{Y}$. Se $\vert{}\mathcal{X}\vert{} = N$ e $\vert{}\mathcal{Y}\vert{} = M$, allora $\vert{}\mathcal{F}^{\mathcal{X}, \mathcal{Y}}\vert{} = M^N$.
+- Una funzione di hash $h$ è "ideale" se **l'unico modo efficiente per determinare il valore** $h(x)$ **per un dato input** $x$ **consiste nel valutare effettivamente la funzione** $h$ **su** $x$, e questo deve rimanere vero anche se sono già stati calcolati molti altri valori $h(x_1), h(x_2), \dots$ in precedenza.
     
-      
+- **Controesempio (Funzione di Hash Lineare):** Per capire quando questa proprietà _non_ vale, consideriamo una funzione di hash lineare $h : \mathbb{Z}_n \times \mathbb{Z}_n \to \mathbb{Z}_n$ definita come:
+    
+    $$h(x, y) = ax + by \bmod n$$
+    
+    dove $a, b \in \mathbb{Z}_n$ e $n \ge 2$. Supponiamo di conoscere il valore di $h$ in appena due punti: $h(x_1, y_1) = z_1$ e $h(x_2, y_2) = z_2$. Allora, per qualsiasi scelta di $r, s \in \mathbb{Z}_n$, vale:
+    
+    $$\begin{aligned} h(rx_1 + sx_2 \bmod n,\; ry_1 + sy_2 \bmod n) &= a(rx_1 + sx_2) + b(ry_1 + sy_2) \bmod n \\ &= r(ax_1 + by_1) + s(ax_2 + by_2) \bmod n \\ &= r\,h(x_1, y_1) + s\,h(x_2, y_2) \bmod n \end{aligned}$$
+    
+    In questo modo, conoscendo l'output in soli due punti, è possibile ricavare il valore di $h$ in moltissimi altri punti **senza mai valutare** $h$ (e senza neppure conoscere le costanti $a$ e $b$). Una funzione del genere è l'opposto di una funzione di hash ideale.
+    
+
+### Formalizzazione tramite il Random Oracle Model (ROM)
+
+Il **random oracle model** fornisce il **modello matematico** di una funzione di hash "ideale", e funge da riferimento (_benchmark_) per valutare la massima sicurezza teorica raggiungibile rispetto ai problemi **Preimage**, **Second Preimage** e **Collision**:
+
+- Denotiamo con $\mathcal{F}^{\mathcal{X}, \mathcal{Y}}$ l'insieme di tutte le funzioni da $\mathcal{X}$ a $\mathcal{Y}$. Se $\vert{}\mathcal{X}\vert{} = N$ e $\vert{}\mathcal{Y}\vert{} = M$, allora $\vert{}\mathcal{F}^{\mathcal{X}, \mathcal{Y}}\vert{} = M^N$.
     
 - Nel **random oracle model**, si assume che una hash function $h \in \mathcal{F}^{\mathcal{X}, \mathcal{Y}}$ sia scelta **uniformemente a caso**, e che ci sia permesso accedere a $h$ **unicamente tramite un oracle** (oracolo):
     
-      
     - Non ci viene data una formula o un algoritmo per calcolare i valori della funzione $h$.
         
-          
+    - Possiamo invece specificare un qualsiasi input $x \in \mathcal{X}$ e chiedere all'oracolo di fornirci il corrispondente output $y = h(x)$.
         
-    - Possiamo invece specificare un qualsiasi input $x \in \mathcal{X}$ e chiedere all'oracolo di fornirci il corrispondente output $y = h(x)$ (questa operazione è chiamata una **query** all'oracolo).
-        
-          
+    - Sebbene un vero oracolo casuale non esista nella realtà, si spera che una funzione di hash reale ben progettata si "comporti" come un oracolo casuale (cioè non ammetta attacchi più efficienti di quelli possibili nel ROM).
         
 
 > [!important] Theorem 5.1: Independence Theorem
 >  Supponiamo che una hash function $h \in \mathcal{F}^{\mathcal{X}, \mathcal{Y}}$ sia scelta uniformemente a caso, e sia $\mathcal{X}_0 \subseteq \mathcal{X}$. Supponiamo che i valori $h(x)$ siano stati determinati (interrogando l'oracolo per $h$) se e solo se $x \in \mathcal{X}_0$. Allora:
 > 
->   
-> 
 > $$\Pr[h(x) = y] = \frac{1}{M}$$
 > 
 > per tutti gli $x \in \mathcal{X} \setminus \mathcal{X}_0$ e tutti gli $y \in \mathcal{Y}$. Inoltre, le probabilità $\Pr[h(x) = y]$ sono **indipendenti** per tutti gli $x \in \mathcal{X} \setminus \mathcal{X}_0$.
-> 
->   
 
-- **Definizione di $(\varepsilon, Q)$-algorithm:** Nel _random oracle model_, misuriamo la complessità di un algoritmo contando il numero di **oracle queries** $Q$ che esso effettua. Un algoritmo randomizzato (**randomized algorithm**) che effettua al massimo $Q$ query all'oracolo e risolve un dato problema con probabilità di successo (**success probability**) almeno $\varepsilon$ viene chiamato un **$(\varepsilon, Q)$-algorithm**.
-    
-      
-    
-
+- **Definizione di** $(\varepsilon, Q)$**-algorithm:** Nel _random oracle model_, misuriamo la complessità di un algoritmo contando il numero di **oracle queries** $Q$ che esso effettua. Un algoritmo randomizzato (**randomized algorithm**, nello specifico di tipo _Las Vegas_) che effettua al massimo $Q$ query all'oracolo e risolve un dato problema con probabilità di successo nel caso medio (**success probability**) $\varepsilon$ viene chiamato un $(\varepsilon, Q)$**-algorithm**.
 
 ### Analisi di `Find-Preimage`, `Find-Second-Preimage` e `Find-Collision` nel ROM
 
@@ -300,18 +300,24 @@ Per analizzare la difficoltà dei problemi **Preimage**, **Second Preimage** e *
 >       
 >     
 
-- **Teorema sulla probabilità di successo di `Find-Preimage`:** Per l'_Independence Theorem_ (Theorem 5.1), per ogni $x \in \mathcal{X}_0$ la probabilità che $h(x) = y$ è $1/M$, e questi eventi sono indipendenti per i $Q$ elementi distinti di $\mathcal{X}_0$. Pertanto la probabilità che nessun $x \in \mathcal{X}_0$ soddisfi $h(x) = y$ è $(1 - 1/M)^Q$. La probabilità di successo di `Find-Preimage` è quindi:
-    
-      
-    
-    $$\varepsilon = 1 - \left(1 - \frac{1}{M}\right)^Q$$
-    
-    Usando lo sviluppo binomiale al primo ordine (valido quando $Q$ è piccolo rispetto a $M$), si ottiene l'approssimazione $\varepsilon \approx \frac{Q}{M}$. Per avere una probabilità di successo costante (es. $\varepsilon = 1/2$), servono $Q = \Theta(M)$ query.
-    
-      
-    
 
-  
+> [!important] Theorem 5.2
+> 
+> Per qualsiasi $\mathcal{X}_0 \subseteq \mathcal{X}$ con $\vert{}\mathcal{X}_0\vert{} = Q$, la probabilità di successo nel caso medio (_average-case success probability_) dell'Algorithm 5.1 (`FIND-PREIMAGE`) è
+> 
+> $$\varepsilon = 1 - \left(1 - \frac{1}{M}\right)^Q.$$
+
+**Dimostrazione:** Sia $y \in \mathcal{Y}$ fissato. Poniamo $\mathcal{X}_0 = \{x_1, \dots, x_Q\}$. Per $1 \le i \le Q$, denotiamo con $E_i$ l'evento «$h(x_i) = y$». Dal Theorem 5.1 segue che gli eventi $E_i$ sono indipendenti, e che $\Pr[E_i] = 1/M$ per tutti gli $1 \le i \le Q$. Pertanto $\Pr[E_i^c] = 1 - 1/M$ per tutti gli $1 \le i \le Q$, dove $E_i^c$ denota il complemento dell'evento $E_i$ (cioè l'evento «$h(x_i) \neq y$»).
+
+Dunque vale:
+
+$$\begin{aligned} \Pr[E_1 \lor E_2 \lor \dots \lor E_Q] &= 1 - \Pr[E_1^c \land E_2^c \land \dots \land E_Q^c] \\ &= 1 - \left(1 - \frac{1}{M}\right)^Q, \end{aligned}$$
+
+dove «$\lor$» denota l'«or» logico e «$\land$» denota l'«and» logico di eventi.
+
+La probabilità di successo dell'Algorithm 5.1, per qualsiasi $y$ fissato, è costante. Pertanto, anche la probabilità di successo mediata su tutti gli $y \in \mathcal{Y}$ è identica. $\blacksquare$
+      
+    
 
   
 
@@ -342,26 +348,23 @@ Per analizzare la difficoltà dei problemi **Preimage**, **Second Preimage** e *
 >       
 >     
 
-- **Probabilità di successo di `Find-Second-Preimage`:** Poiché l'algoritmo usa $1$ query per calcolare $y = h(x)$ e poi interroga l'oracolo su $Q - 1$ nuovi elementi distinti di $\mathcal{X} \setminus \{x\}$, la probabilità di successo con al massimo $Q$ query totali è esattamente:
-    
-      
-    
-    $$\varepsilon = 1 - \left(1 - \frac{1}{M}\right)^{Q - 1}$$
-    
-    Anche qui, per avere probabilità di successo costante, servono $Q = \Theta(M)$ query.
+> [!important] Theorem 5.3
+> 
+> Per qualsiasi $\mathcal{X}_0 \subseteq \mathcal{X} \setminus \{x\}$ con $\vert{}\mathcal{X}_0\vert{} = Q - 1$, la probabilità di successo dell'Algorithm 5.2 (`FIND-SECOND-PREIMAGE`) è
+> 
+> $$\varepsilon = 1 - \left(1 - \frac{1}{M}\right)^{Q - 1}.$$
+
+_(Nota del libro: l'analisi è analoga a quella del Theorem 5.2; l'unica differenza è che si richiede una valutazione «extra» di $h$ per calcolare $y = h(x)$ per il valore di input $x$.)_
     
       
     
 
-  
 
-  
 
 #### 3. Algoritmo per `Collision` (Algorithm 5.3) e Birthday Attack
 
   
 
-  
 
 > [!abstract] Algorithm 5.3: `Find-Collision`$(h, Q)$
 > 
@@ -441,7 +444,7 @@ Per analizzare la difficoltà dei problemi **Preimage**, **Second Preimage** e *
 
   
 
-Nella Sezione 5.2.2 Stinson confronta la difficoltà relativa di risolvere **Preimage**, **Second Preimage** e **Collision** per una generica funzione di hash (senza assumere il _random oracle model_), dimostrando due riduzioni tramite gli **Algorithm 5.4** e **Algorithm 5.5**.
+Nella Sezione 5.2.2 Stinson confronta la difficoltà di risolvere **Preimage**, **Second Preimage** e **Collision** per una generica funzione di hash (senza assumere il _random oracle model_), dimostrando due riduzioni tramite gli **Algorithm 5.4** e **Algorithm 5.5**.
 
   
 
@@ -455,7 +458,7 @@ Nella Sezione 5.2.2 Stinson confronta la difficoltà relativa di risolvere **Pre
 
   
 
-Supponiamo di disporre di un algoritmo (visto come un oracolo o scatola nera) chiamato **`Find-Second-Preimage`** che risolve il problema **Second Preimage** per $h$. Allora possiamo risolvere il problema **Collision** come segue:
+Supponiamo di disporre di un algoritmo chiamato **`Find-Second-Preimage`** che risolve il problema **Second Preimage** per $h$. Allora possiamo risolvere il problema **Collision** come segue:
 
   
 
@@ -476,7 +479,8 @@ Supponiamo di disporre di un algoritmo (visto come un oracolo o scatola nera) ch
 >       
 >     
 
-> [!important] Theorem 5.3 Supponiamo che $h : \mathcal{X} \to \mathcal{Y}$ sia una hash function e supponiamo che esista un $(\varepsilon, Q)$-algorithm `Find-Second-Preimage` che risolve il problema **Second Preimage** per $h$. Allora `Collision-To-Second-Preimage` è un $(\varepsilon, Q)$-algorithm che risolve il problema **Collision** per $h$.
+> [!important] Theorem 5.3
+>  Supponiamo che $h : \mathcal{X} \to \mathcal{Y}$ sia una hash function e supponiamo che esista un $(\varepsilon, Q)$-algorithm `Find-Second-Preimage` che risolve il problema **Second Preimage** per $h$. Allora `Collision-To-Second-Preimage` è un $(\varepsilon, Q)$-algorithm che risolve il problema **Collision** per $h$.
 > 
 >   
 
@@ -515,7 +519,8 @@ Supponiamo ora di disporre di un algoritmo **`Find-Preimage`** che risolve il pr
 >       
 >     
 
-> [!important] Theorem 5.4 Supponiamo che $h : \mathcal{X} \to \mathcal{Y}$ sia una hash function in cui $|\mathcal{X}|$ e $|\mathcal{Y}|$ sono finiti e $|\mathcal{X}| \ge 2|\mathcal{Y}|$. Supponiamo che esista un $(1, Q)$-algorithm `Find-Preimage` che risolve il problema **Preimage** per $h$. Allora `Collision-To-Preimage` è un $(1/2, Q+1)$-algorithm che risolve il problema **Collision** per $h$.
+> [!important] Theorem 5.4
+>  Supponiamo che $h : \mathcal{X} \to \mathcal{Y}$ sia una hash function in cui $|\mathcal{X}|$ e $|\mathcal{Y}|$ sono finiti e $|\mathcal{X}| \ge 2|\mathcal{Y}|$. Supponiamo che esista un $(1, Q)$-algorithm `Find-Preimage` che risolve il problema **Preimage** per $h$. Allora `Collision-To-Preimage` è un $(1/2, Q+1)$-algorithm che risolve il problema **Collision** per $h$.
 > 
 >   
 
@@ -551,9 +556,9 @@ Supponiamo ora di disporre di un algoritmo **`Find-Preimage`** che risolve il pr
           
 ## 5.5 Message Authentication Codes (Codici di Autenticazione dei Messaggi)
 
-Rivolgiamo ora la nostra attenzione ai **message authentication codes (MAC)**, che sono **keyed hash functions** che soddisfano determinate proprietà di sicurezza. Come vedremo, le proprietà di sicurezza richieste da un MAC sono piuttosto diverse da quelle richieste da una (**unkeyed**) **hash function**.
+Rivolgiamo ora la nostra attenzione ai **message authentication codes (MAC)**, che sono **keyed hash functions** che **soddisfano determinate proprietà di sicurezza**. Come vedremo, le proprietà di sicurezza richieste da un MAC sono piuttosto diverse da quelle richieste da una (**unkeyed**) **hash function**.
 
-Un modo comune di costruire un MAC consiste nell'incorporare una **secret key** in una **unkeyed hash function**, includendola come parte del messaggio da sottoporre a hash. Tuttavia, ciò deve essere fatto con attenzione per impedire che vengano eseguiti determinati attacchi. Illustriamo le possibili insidie con un paio di semplici esempi.
+ Queste funzioni con chiave si costruiscono incorporando una **secret key** in una **unkeyed hash function**, includendola come parte del messaggio da sottoporre a hash. Tuttavia, ciò deve essere fatto con attenzione per impedire che vengano eseguiti determinati attacchi. Illustriamo le possibili insidie con un paio di esempi.
 
 ---
 
@@ -561,23 +566,46 @@ Un modo comune di costruire un MAC consiste nell'incorporare una **secret key** 
 
 #### 1. Caso senza Preprocessing Step né Output Transformation
 
-Come primo tentativo, supponiamo di costruire una *keyed hash function* $h_K$ a partire da una **unkeyed iterated hash function**, diciamo $h$, definendo $IV = K$ e mantenendo segreto il suo valore:
+Come primo tentativo di costruire un MAC, supponiamo di definire una *keyed hash function* $h_K$ a partire da una **unkeyed iterated hash function** $h$ (costruita estendendo una funzione di compressione a un dominio infinito), ponendo il valore iniziale uguale alla chiave segreta, ovvero **$IV = K$**, e mantenendo $K$ segreta.
 
-- Per semplicità, supponiamo anche che $h$ non abbia un **preprocessing step** o una **output transformation**.
-- Una tale *hash function* richiede che ogni *input message* $x$ abbia una lunghezza che sia un multiplo di $t$, dove:
+- Per semplicità, supponiamo che $h$ non abbia un **preprocessing step** (nessun *padding*: il messaggio $x$ ha già lunghezza multipla di $t$) né una **output transformation** (non si applica alcuna funzione finale $g$ allo stato $z_r$).
+- La funzione di compressione alla base di $h$ è:
   $$\text{compress} : \{0, 1\}^{m+t} \to \{0, 1\}^m$$
-  è la **compression function** usata per costruire $h$. Inoltre, la chiave $K$ è una **m-bit key**.
+  dove $t$ è la lunghezza di ciascun blocco del messaggio e $K \in \{0, 1\}^m$ è la chiave segreta di $m$ bit.
 
-Mostriamo come un avversario possa costruire un **valid tag** per un certo messaggio, senza conoscere la *secret key* $K$, dati un qualsiasi messaggio $x$ e il suo corrispondente **tag**, $h_K(x)$:
+**Come si calcola il tag $h_K(x)$ (Processing Step):**
 
-- Sia $x'$ una qualsiasi *bitstring* di lunghezza $t$, e consideriamo il messaggio $x \parallel x'$.
-- Il *tag* per questo messaggio, $h_K(x \parallel x')$, viene calcolato come:
-  $$h_K(x \parallel x') = \text{compress}(h_K(x) \parallel x')$$
-- Poiché $h_K(x)$ e $x'$ sono entrambi noti, per un avversario è immediato calcolare $h_K(x \parallel x')$, anche se $K$ è segreta. Questo è chiamato **length extension attack**.
+Dato un messaggio $x$ di lunghezza multipla di $t$, lo si suddivide in $r$ blocchi da $t$ bit:
+$$x = x_1 \parallel x_2 \parallel \cdots \parallel x_r \quad \text{con } |x_i| = t \text{ per } 1 \le i \le r$$
+
+Il calcolo del tag avviene iterando la funzione pubblica `compress` a partire dallo stato iniziale $z_0 = K$:
+$$\begin{aligned}
+z_0 &\leftarrow K \\
+z_1 &\leftarrow \text{compress}(z_0 \parallel x_1) \\
+z_2 &\leftarrow \text{compress}(z_1 \parallel x_2) \\
+&\;\;\vdots \\
+z_r &\leftarrow \text{compress}(z_{r-1} \parallel x_r)
+\end{aligned}$$
+
+Poiché non c'è alcuna *output transformation*, il **tag** di $x$ coincide esattamente con l'ultimo stato calcolato:
+$$h_K(x) = z_r$$
+
+**Il Length Extension Attack:**
+
+Mostriamo ora come un avversario possa costruire un **valid tag** per un nuovo messaggio senza conoscere la *secret key* $K$, disponendo soltanto di un messaggio $x$ e del suo corrispondente tag $h_K(x)$:
+
+1. L'avversario sceglie una qualsiasi *bitstring* $x'$ di lunghezza $t$ e costruisce il messaggio esteso:
+   $$x \parallel x' = x_1 \parallel x_2 \parallel \cdots \parallel x_r \parallel x'$$
+2. Per calcolare il tag valido $h_K(x \parallel x')$, la funzione esegue prima gli stessi identici $r$ passi del calcolo su $x$ (ottenendo $z_r = h_K(x)$), e poi un singolo passo aggiuntivo sul blocco $x'$:
+   $$z_{r+1} = \text{compress}(z_r \parallel x')$$
+3. Sostituendo $z_r = h_K(x)$, si ottiene direttamente:
+   $$h_K(x \parallel x') = z_{r+1} = \text{compress}(h_K(x) \parallel x')$$
+
+Poiché $h_K(x)$ è noto (osservato sul canale), $x'$ è scelto dall'avversario e `compress` è una funzione pubblica, l'avversario può calcolare immediatamente il tag valido $h_K(x \parallel x')$ senza mai aver bisogno di conoscere $K$ (che serviva solo al passo $z_0$). Questo attacco è chiamato **length extension attack**.
 
 #### 2. Caso con Messaggi Sottoposti a Padding ($\text{pad}$)
 
-Anche se i messaggi vengono sottoposti a *padding* (*padded*), è possibile eseguire una modifica dell'attacco precedente:
+Anche se i messaggi vengono sottoposti a *padding* (*padded*) (uso di preprocessamento in cui si aggiungono bit extra alla fine di un messaggio x per far sì che la lunghezza sua sia un multiplo di t), è possibile eseguire una modifica dell'attacco precedente:
 
 1. Supponiamo ad esempio che nel **preprocessing step** si abbia:
    $$y = x \parallel \text{pad}(x)$$
@@ -611,7 +639,7 @@ $$(x_1, y_1), (x_2, y_2), \dots, (x_Q, y_Q)$$
 Si distinguono due scenari a seconda di come vengono ottenute queste $Q$ coppie:
 
 1. **Known message attack:** Queste $Q$ *message-tag pairs* sono coppie che Oscar osserva mentre vengono inviate da Alice a Bob (o da Bob ad Alice). Questo scenario è chiamato **known message attack**, a indicare che i messaggi $x_1, \dots, x_Q$ sono noti a Oscar, ma sono stati Alice o Bob a decidere quali messaggi trasmettere.
-2. **Chosen message attack:** Uno scenario alternativo si ha quando a Oscar è permesso scegliere personalmente i messaggi $x_1, \dots, x_Q$. A Oscar è quindi consentito chiedere ad Alice o Bob (o, equivalentemente, a un **signing oracle**) i corrispondenti *tags* $y_1, \dots, y_Q$. Questa variante è chiamata **chosen message attack**.
+2. **Chosen message attack:** Uno scenario alternativo si ha quando a Oscar è permesso scegliere personalmente i messaggi $x_1, \dots, x_Q$. A Oscar è quindi consentito chiedere ad Alice o Bob i corrispondenti *tags* $y_1, \dots, y_Q$. Questa variante è chiamata **chosen message attack**.
 
 > [!abstract] Definizione di Forgery e di $(\varepsilon, Q)$-forger
 > In entrambi gli scenari (*known message attack* o *chosen message attack*), l'avversario ottiene una lista di *message-tag pairs* (tutte valide sotto la medesima chiave ignota $K$):
@@ -666,15 +694,12 @@ Stinson distingue due approcci generali per combinare cifratura e autenticazione
 
   
 
-  
-
 ### Galois Counter Mode (GCM)
 
   
-
   
 
-Il **Galois Counter Mode (GCM)** utilizza un metodo di tipo **encrypt-then-MAC**: il plaintext viene prima cifrato usando **AES in counter mode**, e poi viene calcolato un **MAC** sul ciphertext risultante. Inoltre, GCM consente di autenticare anche ulteriori **authenticated data** (dati autenticati che non vengono cifrati, ma che vengono inclusi nel calcolo dell'**authentication tag**).
+Il **Galois Counter Mode (GCM)** utilizza un metodo di tipo **encrypt-then-MAC**: il plaintext viene prima cifrato usando **AES in counter mode**, e poi viene calcolato un **MAC** sul ciphertext risultante. Inoltre, GCM consente di autenticare anche ulteriori **authenticated data**.
 
   
 
