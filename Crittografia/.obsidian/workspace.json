@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "critto_teoria/Campi finiti.md",
+                "file": "critto_teoria/Gruppi, anelli e campi.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Campi finiti"
+              "title": "Gruppi, anelli e campi"
             }
           }
         ]
@@ -190,6 +190,10 @@
   },
   "active": "e5ced6ad334d1ed8",
   "lastOpenFiles": [
+    "critto_teoria/Gruppi, anelli e campi.md",
+    "critto_teoria/Cap7.md",
+    "critto_teoria/Cap6.md",
+    "critto_teoria/Cap4.md",
     "critto_teoria/Cap1+cap2+cap3.md"
   ]
 }
