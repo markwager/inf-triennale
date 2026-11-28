@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Cap6.md",
+                "file": "Gruppi, anelli e campi.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Cap6"
+              "title": "Gruppi, anelli e campi"
             }
           }
         ]
@@ -83,7 +83,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 200
+    "width": 200,
+    "collapsed": true
   },
   "right": {
     "id": "7ff625c4cf5bbafe",
@@ -190,13 +191,13 @@
   },
   "active": "abcc90c66a31f577",
   "lastOpenFiles": [
+    "Cap6.md",
     "Cap7.md",
     "Cap8.md",
     "Ex cap2.md",
     "Ex cap3+cap4.md",
     "ex cap7.md",
     "Cap1+cap2+cap3.md",
-    "Cap6.md",
     "Cap5.md",
     "Cap4.md",
     "Gruppi, anelli e campi.md",

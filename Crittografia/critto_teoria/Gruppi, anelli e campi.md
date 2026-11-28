@@ -360,20 +360,44 @@ _(Sintesi integrata da Stinson, Appendice A.3, e Lidl & Niederreiter, Cap. 1, §
 >     
 >       
 >     
+  
 
-- **Principio di Induzione della Struttura tramite Biiezione:** Sia $(R, +, \cdot)$ un anello e $S$ un insieme qualsiasi legato a $R$ da una funzione biunivoca $\psi : R \to S$. Possiamo trasferire le operazioni di $R$ su $S$ definendo per ogni $x, y \in S$:
+**Principio di Induzione della Struttura tramite Biiezione**
+Sia $R$ un anello e sia $\varphi : R \to S$ una funzione biunivoca (iniettiva e suriettiva) da $R$ a un insieme $S$. Tramite $\varphi$ si definisce una struttura di anello su $S$ che rende $\varphi$ un isomorfismo:
+
+  
+
+- presi due elementi qualunque $s_1, s_2 \in S$, siano $r_1, r_2 \in R$ gli unici elementi tali che $\varphi(r_1) = s_1$ e $\varphi(r_2) = s_2$;
     
-      
+- si definiscono la somma e il prodotto su $S$ ponendo:
     
-    $$x \oplus y = \psi(\psi^{-1}(x) + \psi^{-1}(y)) \qquad \text{e} \qquad x \odot y = \psi(\psi^{-1}(x) \cdot \psi^{-1}(y))$$
+
+$$s_1 + s_2 = \varphi(r_1 + r_2) \qquad \text{e} \qquad s_1 s_2 = \varphi(r_1 r_2)$$
+
+Dotato di queste due operazioni (dette _struttura di anello indotta da $\varphi$_), l'insieme $S$ diventa automaticamente un anello isomorfo a $R$.
+
+  
+
+L'unica cosa a cui fare attenzione leggendo le formule è il ruolo dei due lati dell'uguale: a sinistra ($s_1 + s_2$ e $s_1 s_2$) stai **definendo** le operazioni dentro $S$, mentre dentro le parentesi a destra ($r_1 + r_2$ e $r_1 r_2$) stai **eseguendo** le operazioni che già esistono in $R$.
+
+  
+
+### Applicazione diretta sull'Example 1.42 ($\mathbb{Z}/(5) \cong \mathbb{F}_5$)
+
+- **Anello di partenza:** $R = \mathbb{Z}/(5) = \{[0], [1], [2], [3], [4]\}$.
     
-    In questo modo $(S, \oplus, \odot)$ diventa automaticamente un anello isomorfo a $R$.
+- **Insieme di arrivo:** $S = \mathbb{F}_5 = \{0, 1, 2, 3, 4\}$.
     
-      
-    - _Esempio pratico in Crittografia (AES e rappresentazione binaria):_ Prendiamo l'anello quoziente delle classi di resto $R = \mathbb{Z}_2[x]/(x^2 + x + 1) = \{[0], [1], [x], [x+1]\}$ e l'insieme delle coppie di bit $S = (\mathbb{Z}_2)^2 = \{00, 01, 10, 11\}$. Usando la biiezione $\psi([ax + b]) = (a, b)_2$ (cioè $[0] \leftrightarrow 00$, $[1] \leftrightarrow 01$, $[x] \leftrightarrow 10$, $[x+1] \leftrightarrow 11$), induciamo su $S$ il prodotto di $\mathbb{F}_4$: ad esempio, per moltiplicare le stringhe di bit $10 \odot 11$, passiamo alle classi di resto $[x] \cdot [x+1] = [x^2 + x] = [1]$ (poiché $x^2 + x + 1 \in (x^2 + x + 1) = [0]$), e torniamo ai bit ottenendo $10 \odot 11 = 01$.
+- **Biiezione $\varphi : \mathbb{Z}/(5) \to \mathbb{F}_5$:** $\varphi([0]) = 0$, $\varphi([1]) = 1$, $\varphi([2]) = 2$, $\varphi([3]) = 3$, $\varphi([4]) = 4$.
+    
+- **Calcolo di somma e prodotto in $\mathbb{F}_5$:** prendendo ad esempio $s_1 = 3$ e $s_2 = 4$, gli unici elementi corrispondenti in $\mathbb{Z}/(5)$ sono $r_1 = [3]$ e $r_2 = [4]$, quindi:
+    
+    - **Somma:** $3 + 4 = \varphi([3] + [4]) = \varphi([7]) = \varphi([2]) = 2$
         
-          
+    - **Prodotto:** $3 \cdot 4 = \varphi([3][4]) = \varphi([12]) = \varphi([2]) = 2$
         
+
+Ripetendo questo calcolo per tutte le coppie ottieni esattamente le tabelle di somma e moltiplicazione di $\mathbb{F}_5$ dell'Example 1.42.
 
 ### 4. The Chinese Remainder Theorem (Il Teorema Cinese del Resto)
 
@@ -520,25 +544,42 @@ _(Sintesi integrata da Stinson, Appendice A.4, e Lidl & Niederreiter, Cap. 1, §
         
           
         
-- **Teorema (Example A.4.2 Stinson / Theorem 1.38 L&N):** L'anello delle classi di resto $(\mathbb{Z}_n, \cdot, +) = \mathbb{Z}/(n)$ è un campo finito **se e solo se** $n$ è un numero primo.
-    
-      
-    - **Dimostrazione:**
-        
-          
-        1. **($\Leftarrow$ Se $n$ è primo):** Per ogni classe di resto non nulla $[b] \in \{[1], \dots, [n-1]\}$, poiché $1 \le b < n$ e $n$ è primo, vale $\gcd(b, n) = 1$. Per l'identità di Bézout esistono interi $s, t$ tali che $sb + tn = 1 (= \gcd(b, n))$. Passando alle classi di resto modulo l'ideale principale $(n)$ (dove $[tn] = [0]$), si ha $[s] \cdot [b] + [tn] = [1] \implies [s] \cdot [b] = [1]$, quindi esiste la classe inversa $[b]^{-1} = [s \bmod n]$ calcolabile con l'Algoritmo Euclideo Esteso. Dunque $\mathbb{Z}/(n) = \mathbb{Z}_n$ è un campo.
-            
-              
-            
-        2. **($\Rightarrow$ Se $\mathbb{Z}_n$ è un campo, $n$ è primo - Remark A.4.4):** Per contrapposizione, se $n$ non è primo, ammette una fattorizzazione $n = n_1 n_2$ con $1 < n_1, n_2 < n$. Allora le classi di resto $[n_1] \neq [0]$ e $[n_2] \neq [0]$ in $\mathbb{Z}_n$, ma il loro prodotto appartiene all'ideale $(n)$: $[n_1] \cdot [n_2] = [n_1 n_2] = [n] = [0]$ (sono divisori dello zero). Supponendo per assurdo che $[n_1]$ abbia una classe inversa $[r] \in \mathbb{Z}_n$ tale che $[r] \cdot [n_1] = [1]$, moltiplicando per $[n_2]$ si ha da un lato $([r] \cdot [n_1]) \cdot [n_2] = [1] \cdot [n_2] = [n_2] \neq [0]$, e dall'altro $[r] \cdot ([n_1] \cdot [n_2]) = [r] \cdot [0] = [0]$, ottenendo l'assurdo $[n_2] = [0]$. Pertanto $[n_1]$ non è invertibile e $\mathbb{Z}_n$ non è un campo. $\blacksquare$
-            
-              
-            
-- **Remark A.4.3:** Gli inversi moltiplicativi modulo un primo $p$ si calcolano con l'**Algoritmo Euclideo Esteso**.
-    
-      
-    - _Esempio in $\mathbb{Z}_7 = \mathbb{Z}/(7)$:_ Poiché $7$ è primo, $\mathbb{Z}_7$ è un campo. Calcoliamo $[3]^{-1}$ in $\mathbb{Z}/(7)$: dividendo $7 = 2 \times 3 + 1 \implies 1 = 1 \times 7 + (-2) \times 3$. Passando alle classi di resto modulo l'ideale $(7)$ (dove $[7] = [0]$), abbiamo $[1] = [7] + [-2] \cdot [3] = [-2] \cdot [3] = [5] \cdot [3]$. Quindi $[3]^{-1} = [5]$ (infatti $[3] \cdot [5] = [15] = [1 + 2 \times 7] = [1]$).
-        
+- **Definizione (Dominio di Integrità — _Integral Domain_, Definition 1.29(iii) L&N):** Un anello $R$ è chiamato **dominio di integrità** (_integral domain_) se è un anello commutativo con identità $e \neq 0$ (ovvero $1 \neq 0$) in cui, per ogni $a, b \in R$:
+
+  $$ab = 0 \implies a = 0 \text{ oppure } b = 0$$
+
+  In modo equivalente, è un anello commutativo con identità $e \neq 0$ privo di **divisori dello zero**. Se $R$ possiede un numero finito di elementi, viene chiamato **dominio di integrità finito** (_finite integral domain_).
+
+  - _Osservazione (L&N, Cap. 1, §2):_ Ogni **campo** è in particolare un dominio di integrità: se $ab = 0$ con $a \neq 0$, moltiplicando entrambi i membri per l'inverso $a^{-1}$ si ottiene $b = eb = (a^{-1}a)b = a^{-1}(ab) = a^{-1} \cdot 0 = 0$. Il viceversa non vale in generale per anelli infiniti (ad esempio $\mathbb{Z}$ è un dominio di integrità ma non è un campo), mentre vale sempre nel caso finito.
+
+- **Teorema 1.31 L&N (Ogni dominio di integrità finito è un campo):** Ogni **dominio di integrità finito** (_finite integral domain_) è un **campo** (_field_).
+
+  - **Dimostrazione:** Siano $a_1, a_2, \dots, a_n$ tutti gli elementi del dominio di integrità finito $R$, e sia $e \neq 0$ la sua identità moltiplicativa. Fissato un qualunque elemento non nullo $a \in R$ ($a \neq 0$), consideriamo gli $n$ prodotti:
+
+    $$aa_1,\; aa_2,\; \dots,\; aa_n$$
+
+    1. **I prodotti sono tutti distinti:** Se per due indici $i, j$ si avesse $aa_i = aa_j$, allora $a(a_i - a_j) = 0$. Poiché $R$ è un dominio di integrità e $a \neq 0$, ne segue necessariamente $a_i - a_j = 0$, cioè $a_i = a_j$.
+    2. **Esauriscono tutti gli elementi di $R$:** Poiché $R$ ha esattamente $n$ elementi e i prodotti $aa_1, aa_2, \dots, aa_n$ sono $n$ elementi distinti di $R$, ogni elemento di $R$ è della forma $aa_i$ per un opportuno indice $i$ con $1 \le i \le n$.
+    3. **Esistenza dell'inverso moltiplicativo:** In particolare, anche l'identità $e \in R$ deve essere di questa forma: esiste quindi un indice $i$ ($1 \le i \le n$) tale che:
+
+       $$aa_i = e$$
+
+       Poiché $R$ è commutativo, vale anche $a_ia = e$, dunque $a_i$ è l'inverso moltiplicativo di $a$ ($a^{-1} = a_i$). Data l'arbitrarietà di $a \neq 0$, ogni elemento non nullo di $R$ possiede un inverso moltiplicativo, e pertanto $R$ è un campo. $\blacksquare$
+
+- **Teorema (Theorem 1.38 L&N / Example A.4.2 Stinson):** L'anello delle classi di resto $\mathbb{Z}/(n)$ (isomorfo a $\mathbb{Z}_n$) è un campo finito **se e solo se** $n$ è un numero primo.
+
+  - **Dimostrazione (collegata al Teorema 1.31):**
+    1. **($\Leftarrow$ Se $n = p$ è primo, allora $\mathbb{Z}/(p)$ è un campo — Theorem 1.38 L&N):** L'anello delle classi di resto $\mathbb{Z}/(p)$ è un anello commutativo finito (di $p$ elementi) con identità $[1] \neq [0]$. Per il **Teorema 1.31**, è sufficiente dimostrare che $\mathbb{Z}/(p)$ è un **dominio di integrità**. Supponiamo che per due classi $[a], [b] \in \mathbb{Z}/(p)$ valga:
+
+       $$[a][b] = [ab] = [0]$$
+
+       Per definizione di classe di resto modulo l'ideale principale $(p)$, ciò accade se e solo se $ab = kp$ per qualche intero $k$, ovvero se e solo se $p$ divide $ab$. Poiché $p$ è un numero primo, $p$ divide il prodotto $ab$ se e solo se $p$ divide almeno uno dei due fattori ($p \mid a$ oppure $p \mid b$), il che equivale a $[a] = [0]$ oppure $[b] = [0]$. Dunque $\mathbb{Z}/(p)$ è un dominio di integrità finito, e per il **Teorema 1.31** è un campo finito.
+
+    2. **($\Rightarrow$ Se $\mathbb{Z}/(n)$ è un campo, allora $n$ è primo):** Per contrapposizione, supponiamo che $n$ non sia primo. Se $n = 1$, in $\mathbb{Z}/(1)$ si ha $[1] = [0]$, quindi non è un campo. Se invece $n \ge 2$ è composto, esso ammette una fattorizzazione $n = n_1 n_2$ con $1 < n_1, n_2 < n$. In $\mathbb{Z}/(n)$ le classi $[n_1]$ e $[n_2]$ sono entrambe non nulle (poiché né $n_1$ né $n_2$ è multiplo di $n$), ma il loro prodotto è:
+
+       $$[n_1][n_2] = [n_1 n_2] = [n] = [0]$$
+
+       Pertanto $\mathbb{Z}/(n)$ possiede divisori dello zero e **non è un dominio di integrità**. Poiché ogni campo è in particolare un dominio di integrità, $\mathbb{Z}/(n)$ non può essere un campo. $\blacksquare$
           
         
 - **Remark:** Il prodotto diretto tra due campi $A \times B$ non è mai un campo a causa della presenza dei divisori dello zero $(1,0)$ e $(0,1)$, per i quali $(1,0) \cdot (0,1) = (0,0)$.
@@ -619,7 +660,9 @@ Prima di costruire i campi finiti di ordine $p^k$, elenchiamo le definizioni e i
           
         
 
-> [!example] Esempio A.4.5 (Test di Irriducibilità in $\mathbb{Z}_2[x]$ fino al grado 4) Appliamo il Corollario 1.64 ai polinomi su $\mathbb{Z}_2 = \{0, 1\}$:
+> [!example] Esempio A.4.5 (Test di Irriducibilità in $\mathbb{Z}_2[x]$ fino al grado 4)
+> 
+> Applichiamo il Corollario 1.64 ai polinomi su $\mathbb{Z}_2 = \{0, 1\}$:
 > 
 >   
 > 
@@ -881,7 +924,8 @@ Prima di costruire i campi finiti di ordine $p^k$, elenchiamo le definizioni e i
     $$[t_k(x)] \cdot [a(x)] = [1] \implies [a(x)]^{-1} = [t_k(x) \bmod f(x)]$$
     
 
-> [!example] Esempio A.4.14 (Svolgimento Passo-Passo dell'Algoritmo Euclideo Esteso in $\mathbb{F}_{16}$) Calcoliamo la classe di resto inversa $[x^3 + x]^{-1}$ nel campo finito $\mathbb{F}_{16} = \mathbb{Z}_2[x]/(x^4 + x + 1)$, dove l'ideale principale è generato dal polinomio irriducibile $f(x) = x^4 + x + 1$ (quindi $[x^4 + x + 1] = [0]$ e in $\mathbb{Z}_2$ vale $- = +$):
+> [!example] Esempio A.4.14 (Svolgimento Passo-Passo dell'Algoritmo Euclideo Esteso in $\mathbb{F}_{16}$)
+>  Calcoliamo la classe di resto inversa $[x^3 + x]^{-1}$ nel campo finito $\mathbb{F}_{16} = \mathbb{Z}_2[x]/(x^4 + x + 1)$, dove l'ideale principale è generato dal polinomio irriducibile $f(x) = x^4 + x + 1$ (quindi $[x^4 + x + 1] = [0]$ e in $\mathbb{Z}_2$ vale $- = +$):
 > 
 >   
 > 
